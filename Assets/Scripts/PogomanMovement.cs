@@ -7,8 +7,9 @@ public class PogoPlayer : MonoBehaviour
     [Header("References")]
     [SerializeField] private Transform model;
 
-    [Header("Movement")]
-    [SerializeField] private float airAcceleration = 12f;
+    [Header("Air Movement")]
+    [SerializeField] private float airAcceleration = 20f;
+    [SerializeField] private float airDeceleration = 12f;
     [SerializeField] private float maxAirSpeed = 7f;
 
     [Header("Pogo")]
@@ -19,7 +20,8 @@ public class PogoPlayer : MonoBehaviour
     [SerializeField] private float diveTiltSpeed = 8f;
 
     [Header("Slide")]
-    [SerializeField] private float slideAcceleration = 25f;
+    [SerializeField] private float slideAcceleration = 30f;
+    [SerializeField] private float slideDeceleration = 8f;
     [SerializeField] private float maxSlideSpeed = 18f;
     [SerializeField] private float slideTurnStrength = 2.5f;
 
@@ -45,8 +47,6 @@ public class PogoPlayer : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         capsule = GetComponent<CapsuleCollider>();
 
-        // El Rigidbody no debe inclinarse físicamente.
-        // Solamente inclinaremos el modelo.
         rb.freezeRotation = true;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
     }
@@ -91,21 +91,53 @@ public class PogoPlayer : MonoBehaviour
     private void HandleNormalMovement()
     {
         if (grounded)
-        {
             return;
-        }
 
-        // Movimiento WASD en el aire.
-        Vector3 inputDirection = new Vector3(
+        Vector3 desiredDirection = new Vector3(
             input.x,
             0f,
             input.y
         );
 
-        rb.AddForce(
-            inputDirection * airAcceleration,
-            ForceMode.Acceleration
+        Vector3 velocity = rb.linearVelocity;
+
+        Vector3 horizontalVelocity = new Vector3(
+            velocity.x,
+            0f,
+            velocity.z
         );
+
+        if (desiredDirection.sqrMagnitude > 0.01f)
+        {
+            desiredDirection.Normalize();
+
+            // Nos acercamos gradualmente a la velocidad deseada.
+            Vector3 targetVelocity =
+                desiredDirection * maxAirSpeed;
+
+            Vector3 difference =
+                targetVelocity - horizontalVelocity;
+
+            rb.AddForce(
+                difference * airAcceleration,
+                ForceMode.Acceleration
+            );
+        }
+        else
+        {
+            // Si no pulsamos nada, frenamos.
+            horizontalVelocity = Vector3.MoveTowards(
+                horizontalVelocity,
+                Vector3.zero,
+                airDeceleration * Time.fixedDeltaTime
+            );
+
+            rb.linearVelocity = new Vector3(
+                horizontalVelocity.x,
+                velocity.y,
+                horizontalVelocity.z
+            );
+        }
 
         LimitHorizontalSpeed(maxAirSpeed);
     }
@@ -114,34 +146,52 @@ public class PogoPlayer : MonoBehaviour
     {
         if (!grounded)
         {
-            // Mientras está en el aire y mantenemos Ctrl,
-            // hacemos que caiga mucho más rápido.
-            rb.AddForce(
-                Vector3.down * diveAcceleration,
-                ForceMode.Acceleration
-            );
-
-            // Todavía podemos controlar la dirección,
-            // pero menos que en el movimiento normal.
-            Vector3 airDirection = new Vector3(
-                input.x,
-                0f,
-                input.y
-            );
-
-            rb.AddForce(
-                airDirection * (airAcceleration * 0.5f),
-                ForceMode.Acceleration
-            );
-
-            LimitHorizontalSpeed(maxSlideSpeed);
-
+            HandleDive();
             return;
         }
 
-        // Ya estamos tocando el piso:
-        // comienza el slide.
         HandleSlideMovement();
+    }
+
+    private void HandleDive()
+    {
+        // Caída mucho más rápida mientras mantenemos Ctrl.
+        rb.AddForce(
+            Vector3.down * diveAcceleration,
+            ForceMode.Acceleration
+        );
+
+        // Aún podemos controlar la dirección,
+        // pero menos que normalmente.
+        Vector3 desiredDirection = new Vector3(
+            input.x,
+            0f,
+            input.y
+        );
+
+        if (desiredDirection.sqrMagnitude > 0.01f)
+        {
+            desiredDirection.Normalize();
+
+            Vector3 velocity = rb.linearVelocity;
+
+            Vector3 horizontalVelocity = new Vector3(
+                velocity.x,
+                0f,
+                velocity.z
+            );
+
+            Vector3 targetVelocity =
+                desiredDirection * maxAirSpeed;
+
+            Vector3 difference =
+                targetVelocity - horizontalVelocity;
+
+            rb.AddForce(
+                difference * (airAcceleration * 0.5f),
+                ForceMode.Acceleration
+            );
+        }
     }
 
     private void HandleSlideMovement()
@@ -154,8 +204,10 @@ public class PogoPlayer : MonoBehaviour
             velocity.z
         );
 
-        // Si todavía no tenemos velocidad suficiente,
-        // usamos el input para empezar a movernos.
+        /*
+         * Si acabamos de aterrizar y todavía no tenemos
+         * una dirección, usamos el input.
+         */
         if (horizontalVelocity.sqrMagnitude < 0.1f)
         {
             Vector3 inputDirection = new Vector3(
@@ -166,19 +218,38 @@ public class PogoPlayer : MonoBehaviour
 
             if (inputDirection.sqrMagnitude > 0.01f)
             {
-                rb.AddForce(
-                    inputDirection * slideAcceleration,
-                    ForceMode.Acceleration
-                );
+                horizontalVelocity =
+                    inputDirection.normalized * 4f;
+            }
+            else
+            {
+                // Dirección inicial por defecto.
+                horizontalVelocity =
+                    transform.forward * 4f;
             }
 
-            return;
+            rb.linearVelocity = new Vector3(
+                horizontalVelocity.x,
+                velocity.y,
+                horizontalVelocity.z
+            );
         }
 
-        // Dirección actual del slide.
-        Vector3 slideDirection = horizontalVelocity.normalized;
+        /*
+         * El slide siempre continúa hacia delante.
+         *
+         * WASD ya no determina si nos movemos o no.
+         * Una vez que estamos deslizándonos,
+         * tenemos velocidad automáticamente.
+         */
 
-        // Dirección que quiere el jugador.
+        Vector3 slideDirection =
+            horizontalVelocity.normalized;
+
+        /*
+         * A/D/W/S pueden modificar la dirección,
+         * pero solamente ligeramente.
+         */
         Vector3 inputDirectionDesired = new Vector3(
             input.x,
             0f,
@@ -189,26 +260,32 @@ public class PogoPlayer : MonoBehaviour
         {
             inputDirectionDesired.Normalize();
 
-            // En vez de girar instantáneamente hacia donde
-            // apunta WASD, interpolamos lentamente.
             slideDirection = Vector3.Slerp(
                 slideDirection,
                 inputDirectionDesired,
                 slideTurnStrength * Time.fixedDeltaTime
             );
-
-            rb.AddForce(
-                slideDirection * slideAcceleration,
-                ForceMode.Acceleration
-            );
         }
+
+        /*
+         * Aceleramos constantemente en la dirección
+         * del slide.
+         */
+        rb.AddForce(
+            slideDirection * slideAcceleration,
+            ForceMode.Acceleration
+        );
+
+        /*
+         * Si dejamos de presionar WASD no frenamos.
+         * El slide continúa automáticamente.
+         */
 
         LimitHorizontalSpeed(maxSlideSpeed);
     }
 
     private void HandleLanding()
     {
-        // Acabamos de tocar el suelo.
         if (grounded && !wasGrounded)
         {
             if (!ctrlHeld)
@@ -217,8 +294,6 @@ public class PogoPlayer : MonoBehaviour
             }
             else
             {
-                // Si aterrizamos manteniendo Ctrl,
-                // entramos directamente en slide.
                 StartSlide();
             }
         }
@@ -226,7 +301,6 @@ public class PogoPlayer : MonoBehaviour
 
     private void HandleCtrlRelease()
     {
-        // Estaba haciendo slide y acaba de soltar Ctrl.
         if (wasCtrlHeld && !ctrlHeld)
         {
             if (grounded)
@@ -240,8 +314,8 @@ public class PogoPlayer : MonoBehaviour
     {
         Vector3 velocity = rb.linearVelocity;
 
-        // Quitamos cualquier velocidad vertical anterior.
         velocity.y = 0f;
+
         rb.linearVelocity = velocity;
 
         rb.AddForce(
@@ -260,27 +334,21 @@ public class PogoPlayer : MonoBehaviour
             velocity.z
         );
 
-        // Si llegamos al suelo sin suficiente velocidad,
-        // empezamos a movernos en la dirección del input.
-        if (horizontalVelocity.magnitude < 1f)
+        /*
+         * Si ya tenemos velocidad al aterrizar,
+         * conservamos esa dirección.
+         */
+        if (horizontalVelocity.sqrMagnitude < 0.1f)
         {
-            Vector3 inputDirection = new Vector3(
-                input.x,
-                0f,
-                input.y
-            );
-
-            if (inputDirection.sqrMagnitude > 0.01f)
-            {
-                inputDirection.Normalize();
-
-                rb.linearVelocity = new Vector3(
-                    inputDirection.x * 5f,
-                    0f,
-                    inputDirection.z * 5f
-                );
-            }
+            horizontalVelocity =
+                transform.forward * 4f;
         }
+
+        rb.linearVelocity = new Vector3(
+            horizontalVelocity.x,
+            0f,
+            horizontalVelocity.z
+        );
     }
 
     private void CheckGround()
@@ -320,7 +388,8 @@ public class PogoPlayer : MonoBehaviour
         if (horizontal.magnitude <= maxSpeed)
             return;
 
-        horizontal = horizontal.normalized * maxSpeed;
+        horizontal =
+            horizontal.normalized * maxSpeed;
 
         rb.linearVelocity = new Vector3(
             horizontal.x,
@@ -340,12 +409,10 @@ public class PogoPlayer : MonoBehaviour
         {
             if (!grounded)
             {
-                // En el aire empieza a inclinarse progresivamente.
                 targetTilt = 70f;
             }
             else
             {
-                // En el suelo queda completamente acostado.
                 targetTilt = 90f;
             }
         }
