@@ -2,172 +2,301 @@ using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CapsuleCollider))]
-public class PogoCapsule : MonoBehaviour
+public class PogoPlayer : MonoBehaviour
 {
-    [Header("Normal")]
-    [SerializeField] private float jumpForce = 8f;
-    [SerializeField] private float airControl = 18f;
+    [Header("References")]
+    [SerializeField] private Transform model;
+
+    [Header("Movement")]
+    [SerializeField] private float airAcceleration = 12f;
     [SerializeField] private float maxAirSpeed = 7f;
 
-    [Header("Slide")]
-    [SerializeField] private float slideSpeed = 18f;
-    [SerializeField] private float slideControl = 3f;
-    [SerializeField] private float diveForce = 35f;
-    [SerializeField] private float slideTilt = 70f;
+    [Header("Pogo")]
+    [SerializeField] private float jumpForce = 8f;
 
-    [Header("Ground")]
-    [SerializeField] private float groundCheckDistance = 0.15f;
+    [Header("Dive")]
+    [SerializeField] private float diveAcceleration = 35f;
+    [SerializeField] private float diveTiltSpeed = 8f;
+
+    [Header("Slide")]
+    [SerializeField] private float slideAcceleration = 25f;
+    [SerializeField] private float maxSlideSpeed = 18f;
+    [SerializeField] private float slideTurnStrength = 2.5f;
+
+    [Header("Ground Check")]
     [SerializeField] private LayerMask groundLayer = ~0;
+    [SerializeField] private float groundCheckDistance = 0.12f;
 
     private Rigidbody rb;
     private CapsuleCollider capsule;
 
-    private bool isGrounded;
-    private bool wasGrounded;
-    private bool sliding;
+    private Vector2 input;
 
-    private Vector3 moveInput;
+    private bool grounded;
+    private bool wasGrounded;
+
+    private bool ctrlHeld;
+    private bool wasCtrlHeld;
+
+    private float currentTilt;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         capsule = GetComponent<CapsuleCollider>();
 
+        // El Rigidbody no debe inclinarse físicamente.
+        // Solamente inclinaremos el modelo.
         rb.freezeRotation = true;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
     }
 
     private void Update()
     {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
+        input = new Vector2(
+            Input.GetAxisRaw("Horizontal"),
+            Input.GetAxisRaw("Vertical")
+        );
 
-        moveInput = new Vector3(horizontal, 0f, vertical).normalized;
+        input = Vector2.ClampMagnitude(input, 1f);
 
-        sliding = Input.GetKey(KeyCode.LeftControl) ||
-                  Input.GetKey(KeyCode.RightControl);
+        ctrlHeld =
+            Input.GetKey(KeyCode.LeftControl) ||
+            Input.GetKey(KeyCode.RightControl);
+
+        UpdateVisualRotation();
     }
 
     private void FixedUpdate()
     {
         CheckGround();
 
-        if (sliding)
+        HandleCtrlRelease();
+
+        if (ctrlHeld)
         {
-            SlideMovement();
+            HandleDiveOrSlide();
         }
         else
         {
-            NormalMovement();
+            HandleNormalMovement();
         }
 
         HandleLanding();
+
+        wasGrounded = grounded;
+        wasCtrlHeld = ctrlHeld;
     }
 
-    private void NormalMovement()
+    private void HandleNormalMovement()
     {
-        // Control aéreo relativamente difícil.
-        Vector3 desiredDirection = moveInput * airControl;
+        if (grounded)
+        {
+            return;
+        }
 
-        Vector3 horizontalVelocity = new Vector3(
-            rb.linearVelocity.x,
+        // Movimiento WASD en el aire.
+        Vector3 inputDirection = new Vector3(
+            input.x,
             0f,
-            rb.linearVelocity.z
+            input.y
         );
 
-        if (horizontalVelocity.magnitude < maxAirSpeed)
-        {
-            rb.AddForce(desiredDirection, ForceMode.Acceleration);
-        }
+        rb.AddForce(
+            inputDirection * airAcceleration,
+            ForceMode.Acceleration
+        );
+
+        LimitHorizontalSpeed(maxAirSpeed);
     }
 
-    private void SlideMovement()
+    private void HandleDiveOrSlide()
     {
-        // Si todavía estamos en el aire,
-        // aceleramos hacia abajo.
-        if (!isGrounded)
+        if (!grounded)
         {
-            rb.AddForce(Vector3.down * diveForce, ForceMode.Acceleration);
+            // Mientras está en el aire y mantenemos Ctrl,
+            // hacemos que caiga mucho más rápido.
+            rb.AddForce(
+                Vector3.down * diveAcceleration,
+                ForceMode.Acceleration
+            );
+
+            // Todavía podemos controlar la dirección,
+            // pero menos que en el movimiento normal.
+            Vector3 airDirection = new Vector3(
+                input.x,
+                0f,
+                input.y
+            );
+
+            rb.AddForce(
+                airDirection * (airAcceleration * 0.5f),
+                ForceMode.Acceleration
+            );
+
+            LimitHorizontalSpeed(maxSlideSpeed);
+
+            return;
         }
 
-        // Dirección hacia donde queremos movernos.
-        Vector3 forward = transform.forward;
+        // Ya estamos tocando el piso:
+        // comienza el slide.
+        HandleSlideMovement();
+    }
 
-        // Poco control lateral mientras deslizamos.
-        Vector3 lateral = transform.right * moveInput.x;
-
-        Vector3 direction = (forward + lateral * slideControl).normalized;
-
-        rb.AddForce(direction * slideSpeed, ForceMode.Acceleration);
-
-        // Limitar velocidad horizontal.
+    private void HandleSlideMovement()
+    {
         Vector3 velocity = rb.linearVelocity;
 
-        Vector3 horizontal = new Vector3(
+        Vector3 horizontalVelocity = new Vector3(
             velocity.x,
             0f,
             velocity.z
         );
 
-        if (horizontal.magnitude > slideSpeed)
+        // Si todavía no tenemos velocidad suficiente,
+        // usamos el input para empezar a movernos.
+        if (horizontalVelocity.sqrMagnitude < 0.1f)
         {
-            horizontal = horizontal.normalized * slideSpeed;
+            Vector3 inputDirection = new Vector3(
+                input.x,
+                0f,
+                input.y
+            );
 
-            rb.linearVelocity = new Vector3(
-                horizontal.x,
-                velocity.y,
-                horizontal.z
+            if (inputDirection.sqrMagnitude > 0.01f)
+            {
+                rb.AddForce(
+                    inputDirection * slideAcceleration,
+                    ForceMode.Acceleration
+                );
+            }
+
+            return;
+        }
+
+        // Dirección actual del slide.
+        Vector3 slideDirection = horizontalVelocity.normalized;
+
+        // Dirección que quiere el jugador.
+        Vector3 inputDirectionDesired = new Vector3(
+            input.x,
+            0f,
+            input.y
+        );
+
+        if (inputDirectionDesired.sqrMagnitude > 0.01f)
+        {
+            inputDirectionDesired.Normalize();
+
+            // En vez de girar instantáneamente hacia donde
+            // apunta WASD, interpolamos lentamente.
+            slideDirection = Vector3.Slerp(
+                slideDirection,
+                inputDirectionDesired,
+                slideTurnStrength * Time.fixedDeltaTime
+            );
+
+            rb.AddForce(
+                slideDirection * slideAcceleration,
+                ForceMode.Acceleration
             );
         }
 
-        // Inclinar visualmente la cápsula.
-        RotateForSlide();
+        LimitHorizontalSpeed(maxSlideSpeed);
     }
 
     private void HandleLanding()
     {
         // Acabamos de tocar el suelo.
-        if (isGrounded && !wasGrounded)
+        if (grounded && !wasGrounded)
         {
-            if (!sliding)
+            if (!ctrlHeld)
             {
                 Bounce();
             }
             else
             {
-                // Rebote mucho más pequeño mientras deslizamos.
-                rb.AddForce(Vector3.up * jumpForce * 0.35f,
-                    ForceMode.VelocityChange);
+                // Si aterrizamos manteniendo Ctrl,
+                // entramos directamente en slide.
+                StartSlide();
             }
         }
+    }
 
-        wasGrounded = isGrounded;
+    private void HandleCtrlRelease()
+    {
+        // Estaba haciendo slide y acaba de soltar Ctrl.
+        if (wasCtrlHeld && !ctrlHeld)
+        {
+            if (grounded)
+            {
+                Bounce();
+            }
+        }
     }
 
     private void Bounce()
     {
-        // Eliminar velocidad vertical anterior.
         Vector3 velocity = rb.linearVelocity;
 
-        rb.linearVelocity = new Vector3(
+        // Quitamos cualquier velocidad vertical anterior.
+        velocity.y = 0f;
+        rb.linearVelocity = velocity;
+
+        rb.AddForce(
+            Vector3.up * jumpForce,
+            ForceMode.VelocityChange
+        );
+    }
+
+    private void StartSlide()
+    {
+        Vector3 velocity = rb.linearVelocity;
+
+        Vector3 horizontalVelocity = new Vector3(
             velocity.x,
             0f,
             velocity.z
         );
 
-        rb.AddForce(Vector3.up * jumpForce, ForceMode.VelocityChange);
+        // Si llegamos al suelo sin suficiente velocidad,
+        // empezamos a movernos en la dirección del input.
+        if (horizontalVelocity.magnitude < 1f)
+        {
+            Vector3 inputDirection = new Vector3(
+                input.x,
+                0f,
+                input.y
+            );
+
+            if (inputDirection.sqrMagnitude > 0.01f)
+            {
+                inputDirection.Normalize();
+
+                rb.linearVelocity = new Vector3(
+                    inputDirection.x * 5f,
+                    0f,
+                    inputDirection.z * 5f
+                );
+            }
+        }
     }
 
     private void CheckGround()
     {
-        Vector3 origin = transform.position + Vector3.up * 0.05f;
+        Vector3 origin =
+            transform.position +
+            Vector3.up * 0.05f;
 
         float radius = capsule.radius * 0.9f;
 
         float distance =
-            capsule.height / 2f - capsule.radius + groundCheckDistance;
+            capsule.height / 2f -
+            capsule.radius +
+            groundCheckDistance;
 
-        isGrounded = Physics.SphereCast(
+        grounded = Physics.SphereCast(
             origin,
             radius,
             Vector3.down,
@@ -178,7 +307,7 @@ public class PogoCapsule : MonoBehaviour
         );
     }
 
-    private void RotateForSlide()
+    private void LimitHorizontalSpeed(float maxSpeed)
     {
         Vector3 velocity = rb.linearVelocity;
 
@@ -188,22 +317,82 @@ public class PogoCapsule : MonoBehaviour
             velocity.z
         );
 
-        if (horizontal.sqrMagnitude < 0.01f)
+        if (horizontal.magnitude <= maxSpeed)
             return;
 
-        Quaternion targetRotation =
-            Quaternion.LookRotation(horizontal.normalized);
+        horizontal = horizontal.normalized * maxSpeed;
 
-        targetRotation *= Quaternion.Euler(
-            slideTilt,
+        rb.linearVelocity = new Vector3(
+            horizontal.x,
+            velocity.y,
+            horizontal.z
+        );
+    }
+
+    private void UpdateVisualRotation()
+    {
+        if (model == null)
+            return;
+
+        float targetTilt = 0f;
+
+        if (ctrlHeld)
+        {
+            if (!grounded)
+            {
+                // En el aire empieza a inclinarse progresivamente.
+                targetTilt = 70f;
+            }
+            else
+            {
+                // En el suelo queda completamente acostado.
+                targetTilt = 90f;
+            }
+        }
+
+        currentTilt = Mathf.Lerp(
+            currentTilt,
+            targetTilt,
+            diveTiltSpeed * Time.deltaTime
+        );
+
+        Vector3 horizontalVelocity = new Vector3(
+            rb.linearVelocity.x,
             0f,
-            0f
+            rb.linearVelocity.z
         );
 
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation,
-            targetRotation,
-            10f * Time.fixedDeltaTime
-        );
+        if (horizontalVelocity.sqrMagnitude > 0.1f)
+        {
+            Quaternion movementRotation =
+                Quaternion.LookRotation(
+                    horizontalVelocity.normalized,
+                    Vector3.up
+                );
+
+            Quaternion tiltRotation =
+                Quaternion.AngleAxis(
+                    currentTilt,
+                    Vector3.right
+                );
+
+            model.rotation =
+                movementRotation * tiltRotation;
+        }
+        else
+        {
+            Quaternion tiltRotation =
+                Quaternion.Euler(
+                    currentTilt,
+                    model.eulerAngles.y,
+                    0f
+                );
+
+            model.rotation = Quaternion.Slerp(
+                model.rotation,
+                tiltRotation,
+                diveTiltSpeed * Time.deltaTime
+            );
+        }
     }
 }
