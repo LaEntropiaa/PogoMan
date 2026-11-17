@@ -23,10 +23,20 @@ public class PogoCamera : MonoBehaviour
     [SerializeField] private LayerMask collisionLayer = ~0;
     [SerializeField] private float collisionRadius = 0.2f;
 
+    [Header("FOV")]
+    [SerializeField] private float normalFov = 60f;
+    [SerializeField] private float slideFov = 75f;
+    [SerializeField] private float fovSpeed = 8f;
+
+    [Header("Player")]
+    [SerializeField] private PogoPlayer player;
+
     private float yaw;
     private float pitch;
 
     private Vector3 currentPosition;
+
+    private Camera cam;
 
     private void Start()
     {
@@ -37,10 +47,21 @@ public class PogoCamera : MonoBehaviour
             return;
         }
 
+        cam = GetComponent<Camera>();
+
+        if (cam == null)
+        {
+            Debug.LogError("PogoCamera: No Camera component found.");
+            enabled = false;
+            return;
+        }
+
         yaw = target.eulerAngles.y;
         pitch = 15f;
 
         currentPosition = transform.position;
+
+        cam.fieldOfView = normalFov;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -51,6 +72,8 @@ public class PogoCamera : MonoBehaviour
         HandleMouse();
 
         FollowTarget();
+
+        HandleFov();
     }
 
     private void HandleMouse()
@@ -72,6 +95,20 @@ public class PogoCamera : MonoBehaviour
         );
     }
 
+    private void HandleFov()
+    {
+        float targetFov =
+            player != null && player.IsSliding
+                ? slideFov
+                : normalFov;
+
+        cam.fieldOfView = Mathf.Lerp(
+            cam.fieldOfView,
+            targetFov,
+            fovSpeed * Time.deltaTime
+        );
+    }
+
     private void FollowTarget()
     {
         Quaternion rotation =
@@ -85,9 +122,6 @@ public class PogoCamera : MonoBehaviour
             target.position -
             rotation * Vector3.forward * distance;
 
-        /*
-         * Evita que la cámara atraviese paredes.
-         */
         Vector3 direction =
             desiredPosition - target.position;
 
@@ -115,9 +149,6 @@ public class PogoCamera : MonoBehaviour
             }
         }
 
-        /*
-         * Movimiento suave de la cámara.
-         */
         currentPosition = Vector3.Lerp(
             currentPosition,
             desiredPosition,
@@ -126,9 +157,6 @@ public class PogoCamera : MonoBehaviour
 
         transform.position = currentPosition;
 
-        /*
-         * La cámara mira hacia el jugador.
-         */
         Quaternion targetRotation =
             Quaternion.LookRotation(
                 target.position - transform.position

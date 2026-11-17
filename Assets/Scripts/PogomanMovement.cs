@@ -39,6 +39,7 @@ public class PogoPlayer : MonoBehaviour
 
     private bool ctrlHeld;
     private bool wasCtrlHeld;
+    public bool IsSliding => ctrlHeld && grounded;
 
     private float currentTilt;
 
