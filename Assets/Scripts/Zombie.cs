@@ -118,5 +118,7 @@ public class Zombie : Enemy
         }
 
         rb.linearVelocity = Vector3.zero;
+
+        Destroy(gameObject, 1.0f);
     }
 }
