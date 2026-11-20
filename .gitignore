@@ -109,3 +109,7 @@ InitTestScene*.unity*
 # Música provisional con copyright: solo local, NO se sube (repo público)
 Assets/UI/Menu/Audio/Musica/
 Assets/UI/Menu/Audio/Musica.meta
+
+# Música de juego sin licencia confirmada: solo local (repo público)
+Assets/Audio/
+Assets/Audio.meta
