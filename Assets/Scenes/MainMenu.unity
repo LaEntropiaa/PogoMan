@@ -15923,13 +15923,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuIntroSequence
   playIntroSequence: 1
   allowSkip: 1
-  musicStartOffsetSeconds: 80
-  logoImpactMusicTimeSeconds: 85.64
+  musicStartOffsetSeconds: 72.76
+  logoImpactMusicTimeSeconds: 79.76
   initialBlackSeconds: 0.6
   fallbackLeadInSeconds: 3
   logo: {fileID: 1297267494}
   logoGroup: {fileID: 1297267495}
-  logoAppearDelay: 1.6
+  logoAppearDelay: 5.5
   logoFadeInDuration: 0.9
   logoInitialScale: 0.28
   logoAnticipationScale: 0.38
