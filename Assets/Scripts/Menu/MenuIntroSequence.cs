@@ -23,7 +23,7 @@ public class MenuIntroSequence : MonoBehaviour
 
     [Header("Sincronización musical")]
     [Tooltip("Segundo de la canción desde el que empieza a sonar en el menú.")]
-    [SerializeField] private float musicStartOffsetSeconds = 81.64f;
+    [SerializeField] private float musicStartOffsetSeconds = 79f;
     [Tooltip("Segundo de la canción en el que el logo impacta.")]
     [SerializeField] private float logoImpactMusicTimeSeconds = 85.64f;
     [Tooltip("Tiempo en negro antes de que empiece la música.")]
@@ -35,7 +35,7 @@ public class MenuIntroSequence : MonoBehaviour
     [SerializeField] private RectTransform logo;
     [SerializeField] private CanvasGroup logoGroup;
     [Tooltip("Segundos después de que empieza la música para que aparezca el logo.")]
-    [SerializeField] private float logoAppearDelay = 0.4f;
+    [SerializeField] private float logoAppearDelay = 2.6f;
     [SerializeField] private float logoFadeInDuration = 0.9f;
     [SerializeField] private float logoInitialScale = 0.28f;
     [Tooltip("Escala que alcanza creciendo despacio antes del golpe.")]
