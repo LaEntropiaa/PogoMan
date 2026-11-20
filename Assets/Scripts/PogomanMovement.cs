@@ -4,8 +4,21 @@ using UnityEngine;
 [RequireComponent(typeof(CapsuleCollider))]
 public class PogoPlayer : MonoBehaviour
 {
+    [Header("Camera")]
+    [SerializeField] private Transform cameraTransform;
+
     [Header("References")]
     [SerializeField] private Transform model;
+    [SerializeField] private Animator animator;
+
+    [Header("Health")]
+    [SerializeField] private float maxHealth = 100f;
+
+    [Header("Ground Attack")]
+    [SerializeField] private float attackDamage = 50f;
+    [SerializeField] private float attackRadius = 2.5f;
+    [SerializeField] private LayerMask enemyLayer;
+    [SerializeField] private GameObject impactEffectPrefab;
 
     [Header("Air Movement")]
     [SerializeField] private float airAcceleration = 20f;
@@ -39,21 +52,57 @@ public class PogoPlayer : MonoBehaviour
 
     private bool ctrlHeld;
     private bool wasCtrlHeld;
+
     public bool IsSliding => ctrlHeld && grounded;
 
     private float currentTilt;
+    private float currentHealth;
+
+    private bool isDead;
+
+    private static readonly int AttackTrigger =
+        Animator.StringToHash("Attack");
+
+    private static readonly int DeathTrigger =
+        Animator.StringToHash("Death");
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         capsule = GetComponent<CapsuleCollider>();
 
+        currentHealth = maxHealth;
+
         rb.freezeRotation = true;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        if (cameraTransform == null)
+        {
+            Camera mainCamera = Camera.main;
+
+            if (mainCamera != null)
+            {
+                cameraTransform = mainCamera.transform;
+            }
+            else
+            {
+                Debug.LogWarning(
+                    "PogoPlayer: No camera assigned."
+                );
+            }
+        }
     }
 
     private void Update()
     {
+        if (isDead)
+            return;
+
         input = new Vector2(
             Input.GetAxisRaw("Horizontal"),
             Input.GetAxisRaw("Vertical")
@@ -70,6 +119,9 @@ public class PogoPlayer : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (isDead)
+            return;
+
         CheckGround();
 
         HandleCtrlRelease();
@@ -89,30 +141,55 @@ public class PogoPlayer : MonoBehaviour
         wasCtrlHeld = ctrlHeld;
     }
 
+    private Vector3 GetInputDirection()
+    {
+        if (cameraTransform == null)
+            return Vector3.zero;
+
+        Vector3 forward = cameraTransform.forward;
+        Vector3 right = cameraTransform.right;
+
+        // Ignoramos el pitch de la cámara.
+        forward.y = 0f;
+        right.y = 0f;
+
+        if (forward.sqrMagnitude > 0.001f)
+            forward.Normalize();
+
+        if (right.sqrMagnitude > 0.001f)
+            right.Normalize();
+
+        Vector3 direction =
+            right * input.x +
+            forward * input.y;
+
+        return Vector3.ClampMagnitude(direction, 1f);
+    }
+
     private void HandleNormalMovement()
     {
+        // El movimiento aéreo solamente ocurre
+        // cuando estamos en el aire.
         if (grounded)
             return;
 
-        Vector3 desiredDirection = new Vector3(
-            input.x,
-            0f,
-            input.y
-        );
+        Vector3 desiredDirection =
+            GetInputDirection();
 
-        Vector3 velocity = rb.linearVelocity;
+        Vector3 velocity =
+            rb.linearVelocity;
 
-        Vector3 horizontalVelocity = new Vector3(
-            velocity.x,
-            0f,
-            velocity.z
-        );
+        Vector3 horizontalVelocity =
+            new Vector3(
+                velocity.x,
+                0f,
+                velocity.z
+            );
 
         if (desiredDirection.sqrMagnitude > 0.01f)
         {
             desiredDirection.Normalize();
 
-            // Nos acercamos gradualmente a la velocidad deseada.
             Vector3 targetVelocity =
                 desiredDirection * maxAirSpeed;
 
@@ -126,18 +203,20 @@ public class PogoPlayer : MonoBehaviour
         }
         else
         {
-            // Si no pulsamos nada, frenamos.
-            horizontalVelocity = Vector3.MoveTowards(
-                horizontalVelocity,
-                Vector3.zero,
-                airDeceleration * Time.fixedDeltaTime
-            );
+            horizontalVelocity =
+                Vector3.MoveTowards(
+                    horizontalVelocity,
+                    Vector3.zero,
+                    airDeceleration *
+                    Time.fixedDeltaTime
+                );
 
-            rb.linearVelocity = new Vector3(
-                horizontalVelocity.x,
-                velocity.y,
-                horizontalVelocity.z
-            );
+            rb.linearVelocity =
+                new Vector3(
+                    horizontalVelocity.x,
+                    velocity.y,
+                    horizontalVelocity.z
+                );
         }
 
         LimitHorizontalSpeed(maxAirSpeed);
@@ -156,147 +235,137 @@ public class PogoPlayer : MonoBehaviour
 
     private void HandleDive()
     {
-        // Caída mucho más rápida mientras mantenemos Ctrl.
         rb.AddForce(
             Vector3.down * diveAcceleration,
             ForceMode.Acceleration
         );
 
-        // Aún podemos controlar la dirección,
-        // pero menos que normalmente.
-        Vector3 desiredDirection = new Vector3(
-            input.x,
-            0f,
-            input.y
-        );
+        Vector3 desiredDirection =
+            GetInputDirection();
 
-        if (desiredDirection.sqrMagnitude > 0.01f)
-        {
-            desiredDirection.Normalize();
+        if (desiredDirection.sqrMagnitude < 0.01f)
+            return;
 
-            Vector3 velocity = rb.linearVelocity;
+        desiredDirection.Normalize();
 
-            Vector3 horizontalVelocity = new Vector3(
+        Vector3 velocity =
+            rb.linearVelocity;
+
+        Vector3 horizontalVelocity =
+            new Vector3(
                 velocity.x,
                 0f,
                 velocity.z
             );
 
-            Vector3 targetVelocity =
-                desiredDirection * maxAirSpeed;
+        Vector3 targetVelocity =
+            desiredDirection * maxAirSpeed;
 
-            Vector3 difference =
-                targetVelocity - horizontalVelocity;
+        Vector3 difference =
+            targetVelocity - horizontalVelocity;
 
-            rb.AddForce(
-                difference * (airAcceleration * 0.5f),
-                ForceMode.Acceleration
-            );
-        }
+        rb.AddForce(
+            difference * (airAcceleration * 0.5f),
+            ForceMode.Acceleration
+        );
     }
 
     private void HandleSlideMovement()
     {
-        Vector3 velocity = rb.linearVelocity;
+        Vector3 velocity =
+            rb.linearVelocity;
 
-        Vector3 horizontalVelocity = new Vector3(
-            velocity.x,
-            0f,
-            velocity.z
-        );
-
-        /*
-         * Si acabamos de aterrizar y todavía no tenemos
-         * una dirección, usamos el input.
-         */
-        if (horizontalVelocity.sqrMagnitude < 0.1f)
-        {
-            Vector3 inputDirection = new Vector3(
-                input.x,
+        Vector3 slideDirection =
+            new Vector3(
+                velocity.x,
                 0f,
-                input.y
+                velocity.z
             );
+
+        // Si prácticamente no tenemos velocidad,
+        // usamos la dirección de entrada.
+        if (slideDirection.sqrMagnitude < 0.1f)
+        {
+            Vector3 inputDirection =
+                GetInputDirection();
 
             if (inputDirection.sqrMagnitude > 0.01f)
             {
-                horizontalVelocity =
+                slideDirection =
                     inputDirection.normalized * 4f;
             }
             else
             {
-                // Dirección inicial por defecto.
-                horizontalVelocity =
-                    transform.forward * 4f;
+                // Si tampoco hay input,
+                // usamos la dirección actual del modelo.
+                Vector3 forward = model != null
+                    ? model.forward
+                    : transform.forward;
+
+                forward.y = 0f;
+
+                if (forward.sqrMagnitude > 0.01f)
+                    slideDirection =
+                        forward.normalized * 4f;
             }
 
-            rb.linearVelocity = new Vector3(
-                horizontalVelocity.x,
-                velocity.y,
-                horizontalVelocity.z
-            );
+            rb.linearVelocity =
+                new Vector3(
+                    slideDirection.x,
+                    velocity.y,
+                    slideDirection.z
+                );
         }
 
-        /*
-         * El slide siempre continúa hacia delante.
-         *
-         * WASD ya no determina si nos movemos o no.
-         * Una vez que estamos deslizándonos,
-         * tenemos velocidad automáticamente.
-         */
+        slideDirection.y = 0f;
 
-        Vector3 slideDirection =
-            horizontalVelocity.normalized;
+        if (slideDirection.sqrMagnitude < 0.01f)
+            return;
 
-        /*
-         * A/D/W/S pueden modificar la dirección,
-         * pero solamente ligeramente.
-         */
-        Vector3 inputDirectionDesired = new Vector3(
-            input.x,
-            0f,
-            input.y
-        );
+        slideDirection.Normalize();
 
-        if (inputDirectionDesired.sqrMagnitude > 0.01f)
+        // La dirección deseada también es relativa
+        // a la cámara.
+        Vector3 desiredDirection =
+            GetInputDirection();
+
+        if (desiredDirection.sqrMagnitude > 0.01f)
         {
-            inputDirectionDesired.Normalize();
+            desiredDirection.Normalize();
 
-            slideDirection = Vector3.Slerp(
-                slideDirection,
-                inputDirectionDesired,
-                slideTurnStrength * Time.fixedDeltaTime
-            );
+            slideDirection =
+                Vector3.Slerp(
+                    slideDirection,
+                    desiredDirection,
+                    slideTurnStrength *
+                    Time.fixedDeltaTime
+                );
+
+            slideDirection.Normalize();
         }
 
-        /*
-         * Aceleramos constantemente en la dirección
-         * del slide.
-         */
         rb.AddForce(
             slideDirection * slideAcceleration,
             ForceMode.Acceleration
         );
-
-        /*
-         * Si dejamos de presionar WASD no frenamos.
-         * El slide continúa automáticamente.
-         */
 
         LimitHorizontalSpeed(maxSlideSpeed);
     }
 
     private void HandleLanding()
     {
-        if (grounded && !wasGrounded)
+        if (!grounded || wasGrounded)
+            return;
+
+        PerformGroundAttack();
+
+        if (!ctrlHeld)
         {
-            if (!ctrlHeld)
-            {
-                Bounce();
-            }
-            else
-            {
-                StartSlide();
-            }
+            Bounce();
+        }
+        else
+        {
+            StartSlide();
         }
     }
 
@@ -313,7 +382,8 @@ public class PogoPlayer : MonoBehaviour
 
     private void Bounce()
     {
-        Vector3 velocity = rb.linearVelocity;
+        Vector3 velocity =
+            rb.linearVelocity;
 
         velocity.y = 0f;
 
@@ -327,28 +397,133 @@ public class PogoPlayer : MonoBehaviour
 
     private void StartSlide()
     {
-        Vector3 velocity = rb.linearVelocity;
+        Vector3 velocity =
+            rb.linearVelocity;
 
-        Vector3 horizontalVelocity = new Vector3(
-            velocity.x,
-            0f,
-            velocity.z
-        );
+        Vector3 horizontalVelocity =
+            new Vector3(
+                velocity.x,
+                0f,
+                velocity.z
+            );
 
-        /*
-         * Si ya tenemos velocidad al aterrizar,
-         * conservamos esa dirección.
-         */
         if (horizontalVelocity.sqrMagnitude < 0.1f)
         {
-            horizontalVelocity =
-                transform.forward * 4f;
+            Vector3 inputDirection =
+                GetInputDirection();
+
+            if (inputDirection.sqrMagnitude > 0.01f)
+            {
+                horizontalVelocity =
+                    inputDirection.normalized * 4f;
+            }
+            else
+            {
+                Vector3 forward = model != null
+                    ? model.forward
+                    : transform.forward;
+
+                forward.y = 0f;
+
+                if (forward.sqrMagnitude > 0.01f)
+                {
+                    horizontalVelocity =
+                        forward.normalized * 4f;
+                }
+            }
         }
 
-        rb.linearVelocity = new Vector3(
-            horizontalVelocity.x,
-            0f,
-            horizontalVelocity.z
+        rb.linearVelocity =
+            new Vector3(
+                horizontalVelocity.x,
+                0f,
+                horizontalVelocity.z
+            );
+    }
+
+    private void PerformGroundAttack()
+    {
+        if (isDead)
+            return;
+
+        if (animator != null)
+        {
+            animator.SetTrigger(AttackTrigger);
+        }
+
+        Vector3 impactPosition =
+            new Vector3(
+                transform.position.x,
+                capsule.bounds.min.y + 0.05f,
+                transform.position.z
+            );
+
+        if (impactEffectPrefab != null)
+        {
+            Instantiate(
+                impactEffectPrefab,
+                impactPosition,
+                Quaternion.identity
+            );
+        }
+
+        Collider[] hits =
+            Physics.OverlapSphere(
+                impactPosition,
+                attackRadius,
+                enemyLayer,
+                QueryTriggerInteraction.Ignore
+            );
+
+        foreach (Collider hit in hits)
+        {
+            Zombie zombie =
+                hit.GetComponentInParent<Zombie>();
+
+            if (zombie == null)
+                continue;
+
+            zombie.TakeDamage(attackDamage);
+        }
+    }
+
+    public void TakeDamage(float damage)
+    {
+        if (isDead)
+            return;
+
+        currentHealth -= damage;
+
+        Debug.Log(
+            $"PogoPlayer recibió {damage} de daño. " +
+            $"Vida: {currentHealth}/{maxHealth}"
+        );
+
+        if (currentHealth <= 0f)
+        {
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        if (isDead)
+            return;
+
+        isDead = true;
+
+        rb.linearVelocity =
+            Vector3.zero;
+
+        if (animator != null)
+        {
+            animator.SetTrigger(
+                DeathTrigger
+            );
+        }
+
+        Debug.Log(
+            "PogoPlayer murió."
         );
     }
 
@@ -358,45 +533,52 @@ public class PogoPlayer : MonoBehaviour
             transform.position +
             Vector3.up * 0.05f;
 
-        float radius = capsule.radius * 0.9f;
+        float radius =
+            capsule.radius * 0.9f;
 
         float distance =
             capsule.height / 2f -
             capsule.radius +
             groundCheckDistance;
 
-        grounded = Physics.SphereCast(
-            origin,
-            radius,
-            Vector3.down,
-            out _,
-            distance,
-            groundLayer,
-            QueryTriggerInteraction.Ignore
-        );
+        grounded =
+            Physics.SphereCast(
+                origin,
+                radius,
+                Vector3.down,
+                out _,
+                distance,
+                groundLayer,
+                QueryTriggerInteraction.Ignore
+            );
     }
 
-    private void LimitHorizontalSpeed(float maxSpeed)
+    private void LimitHorizontalSpeed(
+        float maxSpeed)
     {
-        Vector3 velocity = rb.linearVelocity;
+        Vector3 velocity =
+            rb.linearVelocity;
 
-        Vector3 horizontal = new Vector3(
-            velocity.x,
-            0f,
-            velocity.z
-        );
+        Vector3 horizontal =
+            new Vector3(
+                velocity.x,
+                0f,
+                velocity.z
+            );
 
         if (horizontal.magnitude <= maxSpeed)
             return;
 
         horizontal =
-            horizontal.normalized * maxSpeed;
+            horizontal.normalized *
+            maxSpeed;
 
-        rb.linearVelocity = new Vector3(
-            horizontal.x,
-            velocity.y,
-            horizontal.z
-        );
+        rb.linearVelocity =
+            new Vector3(
+                horizontal.x,
+                velocity.y,
+                horizontal.z
+            );
     }
 
     private void UpdateVisualRotation()
@@ -418,17 +600,20 @@ public class PogoPlayer : MonoBehaviour
             }
         }
 
-        currentTilt = Mathf.Lerp(
-            currentTilt,
-            targetTilt,
-            diveTiltSpeed * Time.deltaTime
-        );
+        currentTilt =
+            Mathf.Lerp(
+                currentTilt,
+                targetTilt,
+                diveTiltSpeed *
+                Time.deltaTime
+            );
 
-        Vector3 horizontalVelocity = new Vector3(
-            rb.linearVelocity.x,
-            0f,
-            rb.linearVelocity.z
-        );
+        Vector3 horizontalVelocity =
+            new Vector3(
+                rb.linearVelocity.x,
+                0f,
+                rb.linearVelocity.z
+            );
 
         if (horizontalVelocity.sqrMagnitude > 0.1f)
         {
@@ -445,7 +630,8 @@ public class PogoPlayer : MonoBehaviour
                 );
 
             model.rotation =
-                movementRotation * tiltRotation;
+                movementRotation *
+                tiltRotation;
         }
         else
         {
@@ -456,11 +642,34 @@ public class PogoPlayer : MonoBehaviour
                     0f
                 );
 
-            model.rotation = Quaternion.Slerp(
-                model.rotation,
-                tiltRotation,
-                diveTiltSpeed * Time.deltaTime
-            );
+            model.rotation =
+                Quaternion.Slerp(
+                    model.rotation,
+                    tiltRotation,
+                    diveTiltSpeed *
+                    Time.deltaTime
+                );
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (capsule == null)
+            capsule =
+                GetComponent<CapsuleCollider>();
+
+        Vector3 position =
+            transform.position;
+
+        if (capsule != null)
+        {
+            position.y =
+                capsule.bounds.min.y + 0.05f;
+        }
+
+        Gizmos.DrawWireSphere(
+            position,
+            attackRadius
+        );
     }
 }

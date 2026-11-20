@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Camera))]
 public class PogoCamera : MonoBehaviour
 {
     [Header("References")]
@@ -42,71 +43,75 @@ public class PogoCamera : MonoBehaviour
     {
         if (target == null)
         {
-            Debug.LogError("PogoCamera: No target assigned.");
+            Debug.LogError(
+                "PogoCamera: No target assigned."
+            );
+
             enabled = false;
             return;
         }
 
         cam = GetComponent<Camera>();
 
-        if (cam == null)
-        {
-            Debug.LogError("PogoCamera: No Camera component found.");
-            enabled = false;
-            return;
-        }
-
         yaw = target.eulerAngles.y;
         pitch = 15f;
 
-        currentPosition = transform.position;
+        currentPosition =
+            transform.position;
 
-        cam.fieldOfView = normalFov;
+        cam.fieldOfView =
+            normalFov;
 
-        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.lockState =
+            CursorLockMode.Locked;
+
         Cursor.visible = false;
     }
 
     private void LateUpdate()
     {
         HandleMouse();
-
         FollowTarget();
-
         HandleFov();
     }
 
     private void HandleMouse()
     {
         float mouseX =
-            Input.GetAxis("Mouse X") * mouseSensitivity;
+            Input.GetAxis("Mouse X") *
+            mouseSensitivity;
 
         float mouseY =
-            Input.GetAxis("Mouse Y") * mouseSensitivity;
+            Input.GetAxis("Mouse Y") *
+            mouseSensitivity;
 
         yaw += mouseX;
 
         pitch -= mouseY;
 
-        pitch = Mathf.Clamp(
-            pitch,
-            minPitch,
-            maxPitch
-        );
+        pitch =
+            Mathf.Clamp(
+                pitch,
+                minPitch,
+                maxPitch
+            );
     }
 
     private void HandleFov()
     {
         float targetFov =
-            player != null && player.IsSliding
+            player != null &&
+            player.IsSliding
                 ? slideFov
                 : normalFov;
 
-        cam.fieldOfView = Mathf.Lerp(
-            cam.fieldOfView,
-            targetFov,
-            fovSpeed * Time.deltaTime
-        );
+        cam.fieldOfView =
+            Mathf.Lerp(
+                cam.fieldOfView,
+                targetFov,
+                fovSpeed *
+                Time.deltaTime
+            );
     }
 
     private void FollowTarget()
@@ -120,12 +125,16 @@ public class PogoCamera : MonoBehaviour
 
         Vector3 desiredPosition =
             target.position -
-            rotation * Vector3.forward * distance;
+            rotation *
+            Vector3.forward *
+            distance;
 
         Vector3 direction =
-            desiredPosition - target.position;
+            desiredPosition -
+            target.position;
 
-        float desiredDistance = direction.magnitude;
+        float desiredDistance =
+            direction.magnitude;
 
         if (desiredDistance > 0.01f)
         {
@@ -140,32 +149,50 @@ public class PogoCamera : MonoBehaviour
                 collisionLayer,
                 QueryTriggerInteraction.Ignore))
             {
-                desiredPosition =
-                    target.position +
-                    direction * Mathf.Max(
-                        hit.distance - collisionRadius,
+                float collisionDistance =
+                    Mathf.Max(
+                        hit.distance -
+                        collisionRadius,
                         minDistance
                     );
+
+                desiredPosition =
+                    target.position +
+                    direction *
+                    collisionDistance;
             }
         }
 
-        currentPosition = Vector3.Lerp(
-            currentPosition,
-            desiredPosition,
-            followSpeed * Time.deltaTime
-        );
-
-        transform.position = currentPosition;
-
-        Quaternion targetRotation =
-            Quaternion.LookRotation(
-                target.position - transform.position
+        currentPosition =
+            Vector3.Lerp(
+                currentPosition,
+                desiredPosition,
+                followSpeed *
+                Time.deltaTime
             );
 
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation,
-            targetRotation,
-            rotationSpeed * Time.deltaTime
-        );
+        transform.position =
+            currentPosition;
+
+        Vector3 lookDirection =
+            target.position -
+            transform.position;
+
+        if (lookDirection.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRotation =
+                Quaternion.LookRotation(
+                    lookDirection,
+                    Vector3.up
+                );
+
+            transform.rotation =
+                Quaternion.Slerp(
+                    transform.rotation,
+                    targetRotation,
+                    rotationSpeed *
+                    Time.deltaTime
+                );
+        }
     }
 }
