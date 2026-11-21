@@ -7,6 +7,11 @@ public class PlayerVitals : MonoBehaviour
 {
     public static PlayerVitals Instance { get; private set; }
 
+    // Sonidos del escudo (los pone RunSystems).
+    public static AudioClip ShieldHitClip;
+    public static AudioClip ShieldBreakClip;
+    private AudioSource audioSource;
+
     [Tooltip("Segundos sin recibir daño para que el escudo empiece a recargarse.")]
     [SerializeField] private float shieldRechargeDelay = 4f;
     [Tooltip("Escudo que se recupera por segundo.")]
@@ -26,6 +31,9 @@ public class PlayerVitals : MonoBehaviour
     {
         Instance = this;
         player = GetComponent<PogoPlayer>();
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f;
     }
 
     private void OnDestroy()
@@ -82,7 +90,16 @@ public class PlayerVitals : MonoBehaviour
             v.Shield -= absorbed;
             amount -= absorbed;
             if (absorbed > 0f)
+            {
                 DamageNumbers.Show(target.transform.position + Vector3.up * 1.6f, absorbed, DamageKind.Shield);
+                bool broke = v.Shield <= 0.01f;
+                AudioClip clip = broke ? ShieldBreakClip : ShieldHitClip;
+                if (clip != null)
+                {
+                    v.audioSource.pitch = broke ? 1f : Random.Range(0.95f, 1.1f);
+                    v.audioSource.PlayOneShot(clip, (broke ? 1f : 0.7f) * GameSettings.SfxVolume);
+                }
+            }
         }
 
         if (amount > 0f)

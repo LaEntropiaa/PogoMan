@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 // Parte nueva del HUD (se arma desde código):
 //  - Barra de experiencia arriba con el nivel.
-//  - Aviso de HORDA (cuenta regresiva y contador mientras dura).
+//  - Aviso de HORDA (sin temporizador en pantalla).
 //  - Escudo debajo de la barra de vida.
 //  - Recarga del dash y saltos en el aire disponibles.
 public class RunHUD : MonoBehaviour
@@ -18,8 +18,6 @@ public class RunHUD : MonoBehaviour
     private Text levelText;
     private Text hordeTitle;
     private Text hordeSub;
-    private Text nextHordeText;
-    private Image hordeTint;
     private RectTransform shieldRoot, shieldFill;
     private RectTransform dashRoot, dashFill;
     private Text dashText;
@@ -51,9 +49,6 @@ public class RunHUD : MonoBehaviour
         canvas.transform.SetParent(transform, false);
         Transform root = canvas.transform;
 
-        // Tinte rojo durante la horda.
-        hordeTint = UiKit.Image(UiKit.Stretch("TinteHorda", root), new Color(0.6f, 0f, 0.05f, 0f));
-
         // ---- Barra de experiencia (arriba de todo) ----
         RectTransform xpBar = UiKit.Rect("BarraXP", root, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1f),
             new Vector2(0, 0), new Vector2(0, 12));
@@ -68,8 +63,6 @@ public class RunHUD : MonoBehaviour
             new Vector2(0, -230), new Vector2(1400, 120)), font, 96, new Color(1f, 0.2f, 0.15f), TextAnchor.MiddleCenter);
         hordeSub = UiKit.Text(UiKit.Rect("HordaSub", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f),
             new Vector2(0, -310), new Vector2(1200, 50)), font, 36, new Color(1f, 0.75f, 0.6f), TextAnchor.MiddleCenter);
-        nextHordeText = UiKit.Text(UiKit.Rect("SiguienteHorda", root, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -58), new Vector2(400, 36)), font, 24, new Color(0.85f, 0.6f, 0.55f, 0.85f), TextAnchor.UpperCenter);
 
         // ---- Dash y saltos (abajo a la izquierda) ----
         dashRoot = UiKit.Rect("Dash", root, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(28, 120), new Vector2(170, 16));
@@ -147,31 +140,30 @@ public class RunHUD : MonoBehaviour
         EnemyDirector d = EnemyDirector.Instance;
         if (d == null)
         {
-            hordeTitle.text = hordeSub.text = nextHordeText.text = "";
+            hordeTitle.text = hordeSub.text = "";
             return;
         }
 
         hordePop = Mathf.MoveTowards(hordePop, 0f, dt * 1.5f);
-        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 10f);
+        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f);
 
+        // Sin temporizadores: la horda llega de sorpresa (solo un aviso y tambores antes).
         if (d.HordeActive)
         {
+            // Aparece grande y se va desvaneciendo; sin teñir la pantalla de rojo.
+            float show = Mathf.Clamp01(d.HordeTimeLeft > 17f ? 1f : 0.35f + hordePop);
             hordeTitle.text = "¡HORDA!";
-            hordeTitle.color = Color.Lerp(new Color(1f, 0.15f, 0.1f), new Color(1f, 0.6f, 0.2f), pulse);
-            hordeTitle.rectTransform.localScale = Vector3.one * (1f + hordePop * 0.8f + pulse * 0.04f);
-            hordeSub.text = Mathf.CeilToInt(d.HordeTimeLeft) + " s   ·   " + d.AliveCount + " demonios";
-            hordeTint.color = new Color(0.6f, 0f, 0.05f, 0.08f + pulse * 0.06f);
-            nextHordeText.text = "";
+            hordeTitle.color = new Color(1f, 0.45f + pulse * 0.2f, 0.2f, show);
+            hordeTitle.rectTransform.localScale = Vector3.one * (1f + hordePop * 0.6f);
+            hordeSub.text = "";
         }
         else if (d.HordeIncoming)
         {
             int s = Mathf.CeilToInt(d.NextHordeIn);
-            hordeTitle.text = "LA HORDA SE ACERCA";
-            hordeTitle.color = new Color(1f, 0.35f, 0.25f, 0.6f + pulse * 0.4f);
-            hordeTitle.rectTransform.localScale = Vector3.one * 0.7f;
-            hordeSub.text = s.ToString();
-            hordeTint.color = new Color(0.6f, 0f, 0.05f, pulse * 0.04f);
-            nextHordeText.text = "";
+            hordeTitle.text = "LA HORDA SE ACERCA...";
+            hordeTitle.color = new Color(1f, 0.6f, 0.4f, 0.5f + pulse * 0.4f);
+            hordeTitle.rectTransform.localScale = Vector3.one * 0.6f;
+            hordeSub.text = "";
 
             if (s != lastWarningSecond)
             {
@@ -183,9 +175,6 @@ public class RunHUD : MonoBehaviour
         else
         {
             hordeTitle.text = hordeSub.text = "";
-            hordeTint.color = Color.clear;
-            int s = Mathf.CeilToInt(d.NextHordeIn);
-            nextHordeText.text = "HORDA EN " + (s / 60) + ":" + (s % 60).ToString("00");
         }
     }
 

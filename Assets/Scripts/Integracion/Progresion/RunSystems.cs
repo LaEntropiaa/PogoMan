@@ -15,6 +15,10 @@ public class RunSystems : MonoBehaviour
     [SerializeField] private AudioClip airJumpClip;
     [SerializeField] private Material fxMaterial;
 
+    [Header("Escudo")]
+    [SerializeField] private AudioClip shieldHitClip;
+    [SerializeField] private AudioClip shieldBreakClip;
+
     [Header("Demonios")]
     [SerializeField] private Material dirtMaterial;
 
@@ -23,6 +27,9 @@ public class RunSystems : MonoBehaviour
         XpGem.Prefab = gemPrefab;
         XpGem.PickupClip = gemClip;
         ZombieMotor.SetDirtMaterial(dirtMaterial);
+        Chest.SparkleMaterial = fxMaterial;
+        PlayerVitals.ShieldHitClip = shieldHitClip;
+        PlayerVitals.ShieldBreakClip = shieldBreakClip;
 
         PogoPlayer player = FindAnyObjectByType<PogoPlayer>();
         if (player == null)

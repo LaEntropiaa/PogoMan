@@ -5,7 +5,7 @@ using UnityEngine;
 // Director de enemigos (reemplaza a los EnemySpawner fijos, sin borrarlos):
 //  - Los demonios salen del suelo alrededor de Pogoman.
 //  - Con el tiempo salen más, más rápido, con más vida y un poco más veloces (máximo 500).
-//  - Cada 3 minutos hay una HORDA de 20 s donde salen muchísimos.
+//  - Cada 4 minutos hay una HORDA de 20 s donde salen muchísimos.
 //  - Si un demonio queda muy lejos, se mete al suelo y vuelve a salir cerca de Pogoman.
 public class EnemyDirector : MonoBehaviour
 {
@@ -29,7 +29,7 @@ public class EnemyDirector : MonoBehaviour
     [SerializeField] private float maxSpeedMultiplier = 1.6f;
 
     [Header("Horda")]
-    [SerializeField] private float hordeInterval = 180f;
+    [SerializeField] private float hordeInterval = 240f;
     [SerializeField] private float hordeDuration = 20f;
     [SerializeField] private float hordeWarning = 5f;
     [SerializeField] private float hordeSpawnRate = 35f;
@@ -134,7 +134,7 @@ public class EnemyDirector : MonoBehaviour
     private void UpdateHorde()
     {
         float t = RunTime;
-        // La primera horda es al minuto 3, luego cada 3 minutos.
+        // La primera horda es al minuto 4, luego cada 4 minutos.
         int index = Mathf.FloorToInt(t / hordeInterval);
         float intoCycle = t - index * hordeInterval;
         bool active = index >= 1 && intoCycle < hordeDuration;
