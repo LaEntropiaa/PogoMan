@@ -149,7 +149,7 @@ public class DamageNumbers : MonoBehaviour
             }
 
             float up = 1f - (1f - t) * (1f - t);
-            Vector3 screen = cam.WorldToScreenPoint(item.world + Vector3.up * rise * up);
+            Vector3 screen = WorldToScreen(cam, item.world + Vector3.up * rise * up);
 
             if (screen.z < 0f)
             {
@@ -169,5 +169,13 @@ public class DamageNumbers : MonoBehaviour
             c.a = t < 0.6f ? 1f : 1f - (t - 0.6f) / 0.4f;
             item.text.color = c;
         }
+    }
+
+    // Usa coordenadas de viewport para que funcione aunque la cámara dibuje a una
+    // textura de menor resolución (filtro retro).
+    private static Vector3 WorldToScreen(Camera cam, Vector3 world)
+    {
+        Vector3 vp = cam.WorldToViewportPoint(world);
+        return new Vector3(vp.x * Screen.width, vp.y * Screen.height, vp.z);
     }
 }

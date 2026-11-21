@@ -42,6 +42,9 @@ public class PlayerStats : MonoBehaviour
     public int CritHits { get; private set; }
     public float BiggestHit { get; private set; }
     public int Shots { get; set; }
+    public int Coins { get; private set; }
+    public int CoinsCollected { get; private set; }
+    public event Action<int> CoinsChanged;
     public bool RunEnded { get; set; }
 
     private void Awake() => Instance = this;
@@ -107,4 +110,22 @@ public class PlayerStats : MonoBehaviour
     }
 
     public void RegisterKill() => Kills++;
+
+    public void AddCoins(int amount)
+    {
+        Coins += amount;
+        if (amount > 0)
+            CoinsCollected += amount;
+        CoinsChanged?.Invoke(Coins);
+    }
+
+    // Para la futura tienda: devuelve false si no alcanza.
+    public bool SpendCoins(int amount)
+    {
+        if (amount > Coins)
+            return false;
+        Coins -= amount;
+        CoinsChanged?.Invoke(Coins);
+        return true;
+    }
 }

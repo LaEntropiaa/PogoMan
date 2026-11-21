@@ -24,6 +24,8 @@ public class GameHUD : MonoBehaviour
     [Header("Partida")]
     [SerializeField] private Text timeText;
     [SerializeField] private Text killsText;
+    [SerializeField] private Text coinsText;
+    [SerializeField] private RectTransform coinIcon;
 
     [Header("Daño")]
     [SerializeField] private Image hurtVignette;
@@ -38,6 +40,8 @@ public class GameHUD : MonoBehaviour
     private int lastKeys;
     private float keyPop;
     private bool deathHandled;
+    private int lastCoins;
+    private float coinPop;
     private float deathTimer;
 
     private void Start()
@@ -111,6 +115,17 @@ public class GameHUD : MonoBehaviour
             }
             if (killsText != null)
                 killsText.text = "x " + stats.Kills;
+
+            if (stats.Coins != lastCoins)
+            {
+                coinPop = 1f;
+                lastCoins = stats.Coins;
+            }
+            coinPop = Mathf.MoveTowards(coinPop, 0f, dt * 5f);
+            if (coinsText != null)
+                coinsText.text = stats.Coins.ToString();
+            if (coinIcon != null)
+                coinIcon.localScale = Vector3.one * (1f + coinPop * 0.35f);
         }
 
         // ---- Muerte ----

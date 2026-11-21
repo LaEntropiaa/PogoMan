@@ -875,6 +875,9 @@ MonoBehaviour:
   displayName: DEMONIO
   figure: {fileID: 1204220826914643262}
   deathClip: {fileID: 8300000, guid: 1169ac0abc4a580a0978a128d9680f73, type: 3}
+  coinPrefab: {fileID: 7733439221184182898, guid: 700feaacb5b508f42a70eca99a4a3946, type: 3}
+  coinsMin: 1
+  coinsMax: 3
 --- !u!114 &2776903055821395347
 MonoBehaviour:
   m_ObjectHideFlags: 0

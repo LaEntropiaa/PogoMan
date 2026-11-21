@@ -703,6 +703,8 @@ MonoBehaviour:
   keyMissing: {r: 0.15, g: 0.08, b: 0.08, a: 0.8}
   timeText: {fileID: 131546188}
   killsText: {fileID: 1252296852}
+  coinsText: {fileID: 1734546203}
+  coinIcon: {fileID: 1051282169}
   hurtVignette: {fileID: 982337974}
   hurtClip: {fileID: 8300000, guid: f13963bfaa9328111828fae508e4b2fe, type: 3}
   keyClip: {fileID: 8300000, guid: c9aea3f9c43b8b455b52fd8662d9e8a5, type: 3}
@@ -3952,9 +3954,9 @@ GameObject:
   - component: {fileID: 508957734}
   - component: {fileID: 508957733}
   - component: {fileID: 508957737}
-  - component: {fileID: 508957740}
   - component: {fileID: 508957739}
   - component: {fileID: 508957738}
+  - component: {fileID: 508957740}
   m_Layer: 0
   m_Name: Pogoman
   m_TagString: Untagged
@@ -3975,7 +3977,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PogoCapsule
   cameraTransform: {fileID: 0}
-  model: {fileID: 2125989922}
+  model: {fileID: 0}
   animator: {fileID: 0}
   maxHealth: 100
   attackDamage: 50
@@ -3987,7 +3989,7 @@ MonoBehaviour:
   airAcceleration: 12
   airDeceleration: 12
   maxAirSpeed: 7
-  jumpForce: 9.8
+  jumpForce: 7.5
   diveAcceleration: 35
   diveTiltSpeed: 8
   slideAcceleration: 25
@@ -4080,7 +4082,7 @@ MonoBehaviour:
   geyserClip: {fileID: 8300000, guid: 317b2f6532104e9ad91da96b91146278, type: 3}
   slideLoopClip: {fileID: 8300000, guid: 5d82d818bbd848bd6a496cb2c9be1deb, type: 3}
   bounceMinVelocityJump: 4
-  geyserVelocity: 12
+  geyserVelocity: 14.5
   bounceVolume: 0.7
   geyserVolume: 0.9
   slideVolume: 0.4
@@ -4115,16 +4117,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf261ce9d09f2d29299a717a2906af7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PogoAnimator
+  facingRoot: {fileID: 2125989922}
   visualRoot: {fileID: 1922707594}
   body: {fileID: 1922707595}
+  dustMaterial: {fileID: 2100000, guid: 174d0787e78c2ba9ca6a854cea1d87b9, type: 2}
   squashOnBounce: 0.3
   stretchPerSpeed: 0.018
   maxStretch: 0.2
   springStiffness: 220
   springDamping: 14
   bodySink: 0.35
+  turnSpeed: 12
+  poseSpeed: 10
   leanPerSpeed: 1.3
   maxLean: 14
+  slideLean: -62
+  slideSquash: 0.85
+  diveLean: 18
   hurtShake: 0.07
   hurtDuration: 0.35
   hurtColor: {r: 1, g: 0.15, b: 0.1, a: 1}
@@ -4137,10 +4146,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 508957732}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fdadf32bd2965e0a5853d53ad7445841, type: 3}
+  m_Script: {fileID: 11500000, guid: e2b6cef77e6e4ebcdad72a086134e6de, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PogoGravity
+  m_EditorClassIdentifier: Assembly-CSharp::PogoJump
   extraGravity: 12
+  holdGravityFactor: 0.3
+  maxHoldTime: 0.35
+  spaceBoost: 3.5
+  jumpBuffer: 0.15
+  lateWindow: 0.1
+  speedBonusPerUnit: 0.09
+  maxSpeedBonus: 1.5
+  crouchChargeTime: 0.8
+  crouchMaxBonus: 2.5
+  maxJumpVelocity: 13.5
+  geyserVelocity: 12
+  slopeAcceleration: 16
+  maxExtraSlideSpeed: 12
+  extraSpeedDecay: 5
+  minSlopeAngle: 4
 --- !u!114 &516314391
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6190,7 +6214,6 @@ MonoBehaviour:
   rewardPrefab: {fileID: 9191176343717340085, guid: f85e5a5ce4235dc4d9b1a2ac19cbb1f6, type: 3}
   possiblePositions:
   - {fileID: 119210658}
-  - {fileID: 291686970}
   - {fileID: 340544958}
   - {fileID: 258650788}
   - {fileID: 730316034}
@@ -6252,7 +6275,6 @@ MonoBehaviour:
   rewardPrefab: {fileID: 9191176343717340085, guid: f85e5a5ce4235dc4d9b1a2ac19cbb1f6, type: 3}
   possiblePositions:
   - {fileID: 119210658}
-  - {fileID: 291686970}
   - {fileID: 340544958}
   - {fileID: 258650788}
   - {fileID: 730316034}
@@ -7351,12 +7373,14 @@ RectTransform:
   - {fileID: 131546185}
   - {fileID: 947345325}
   - {fileID: 1252296855}
+  - {fileID: 1051282169}
+  - {fileID: 1734546200}
   m_Father: {fileID: 105331486}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: -28, y: -28}
-  m_SizeDelta: {x: 300, y: 150}
+  m_SizeDelta: {x: 300, y: 210}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &961148831
 MonoBehaviour:
@@ -8383,6 +8407,81 @@ MonoBehaviour:
   launchForce: 15
   cooldown: 1
   detectionRadius: 2
+--- !u!1 &1051282168
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1051282169}
+  - component: {fileID: 1051282171}
+  - component: {fileID: 1051282170}
+  m_Layer: 5
+  m_Name: Moneda
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1051282169
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1051282168}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 961148830}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 52, y: -164}
+  m_SizeDelta: {x: 40, y: 40}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1051282170
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1051282168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 5488370903067918852, guid: e1be44fd2ef8a750bb1a12e843a41e6d, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1051282171
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1051282168}
+  m_CullTransparentMesh: 1
 --- !u!1 &1060797814
 GameObject:
   m_ObjectHideFlags: 0
@@ -11003,7 +11102,6 @@ MonoBehaviour:
   rewardPrefab: {fileID: 9191176343717340085, guid: f85e5a5ce4235dc4d9b1a2ac19cbb1f6, type: 3}
   possiblePositions:
   - {fileID: 119210658}
-  - {fileID: 291686970}
   - {fileID: 340544958}
   - {fileID: 258650788}
   - {fileID: 730316034}
@@ -11265,6 +11363,7 @@ GameObject:
   - component: {fileID: 1560638834}
   - component: {fileID: 1560638833}
   - component: {fileID: 1560638837}
+  - component: {fileID: 1560638838}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -11419,6 +11518,19 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &1560638838
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1560638832}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6830ad62a0e6cc7d9b74439e0af8cd98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PixelFilter
+  pixelSize: 2
 --- !u!1 &1562383870
 GameObject:
   m_ObjectHideFlags: 0
@@ -11520,7 +11632,6 @@ MonoBehaviour:
   rewardPrefab: {fileID: 9191176343717340085, guid: f85e5a5ce4235dc4d9b1a2ac19cbb1f6, type: 3}
   possiblePositions:
   - {fileID: 119210658}
-  - {fileID: 291686970}
   - {fileID: 340544958}
   - {fileID: 258650788}
   - {fileID: 730316034}
@@ -13349,6 +13460,101 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &1734546199
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1734546200}
+  - component: {fileID: 1734546202}
+  - component: {fileID: 1734546203}
+  - component: {fileID: 1734546201}
+  m_Layer: 5
+  m_Name: Monedas
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1734546200
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1734546199}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 961148830}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 96, y: -164}
+  m_SizeDelta: {x: 190, y: 50}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &1734546201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1734546199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Shadow
+  m_EffectColor: {r: 0.08, g: 0.01, b: 0.01, a: 1}
+  m_EffectDistance: {x: 3, y: -3}
+  m_UseGraphicAlpha: 1
+--- !u!222 &1734546202
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1734546199}
+  m_CullTransparentMesh: 1
+--- !u!114 &1734546203
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1734546199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0.82, b: 0.3, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
+    m_FontSize: 40
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 3
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: 0
 --- !u!1 &1746427701
 GameObject:
   m_ObjectHideFlags: 0

@@ -42,6 +42,7 @@ public class GameOverScreen : MonoBehaviour
             summary.text =
                 "SOBREVIVISTE  " + (t / 60).ToString("00") + ":" + (t % 60).ToString("00") + "\n" +
                 "ENEMIGOS DERROTADOS  " + s.Kills + "\n" +
+                "MONEDAS  " + s.CoinsCollected + "\n" +
                 "DAÑO TOTAL  " + Mathf.RoundToInt(s.DamageDealt) + "\n\n" +
                 "EL INFIERNO NO ACEPTA DEVOLUCIONES.";
         }

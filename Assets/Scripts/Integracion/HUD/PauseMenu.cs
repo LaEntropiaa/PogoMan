@@ -171,6 +171,7 @@ public class PauseMenu : MonoBehaviour
                 Pad("TIEMPO", 18) + (t / 60).ToString("00") + ":" + (t % 60).ToString("00") + "\n" +
                 Pad("LLAVES", 18) + keys + " / " + required + "\n" +
                 Pad("ENEMIGOS", 18) + s.Kills + "\n" +
+                Pad("MONEDAS", 18) + s.Coins + "\n" +
                 Pad("DAÑO TOTAL", 18) + Mathf.RoundToInt(s.DamageDealt) + "\n" +
                 Pad("CRÍTICOS", 18) + s.CritHits + "\n" +
                 Pad("GOLPE MÁS FUERTE", 18) + Mathf.RoundToInt(s.BiggestHit) + "\n" +

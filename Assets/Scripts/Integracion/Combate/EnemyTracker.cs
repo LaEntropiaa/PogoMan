@@ -17,6 +17,11 @@ public class EnemyTracker : MonoBehaviour
     [SerializeField] private Transform figure;
     [SerializeField] private AudioClip deathClip;
 
+    [Header("Monedas al morir")]
+    [SerializeField] private Coin coinPrefab;
+    [SerializeField] private int coinsMin = 1;
+    [SerializeField] private int coinsMax = 3;
+
     public bool IsBoss => isBoss;
     public string DisplayName => displayName;
     public Enemy Enemy { get; private set; }
@@ -103,12 +108,23 @@ public class EnemyTracker : MonoBehaviour
         {
             deathHandled = true;
             PlayerStats.Instance?.RegisterKill();
+            DropCoins();
             if (deathClip != null)
                 AudioSource.PlayClipAtPoint(deathClip, Center, 0.8f * GameSettings.SfxVolume);
         }
 
         AnimateFigure();
         ApplyFlash();
+    }
+
+    private void DropCoins()
+    {
+        if (coinPrefab == null)
+            return;
+
+        int count = Random.Range(coinsMin, coinsMax + 1);
+        for (int i = 0; i < count; i++)
+            Instantiate(coinPrefab, Center + Random.insideUnitSphere * 0.3f, Quaternion.Euler(90f, 0f, 0f));
     }
 
     private void AnimateFigure()

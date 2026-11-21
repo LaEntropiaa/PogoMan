@@ -4,7 +4,7 @@ using UnityEngine;
 // enemigo que toca y salpica.
 public class SpitProjectile : MonoBehaviour
 {
-    [SerializeField] private float radius = 0.2f;
+    [SerializeField] private float radius = 0.12f;
     [Tooltip("Qué tanto corrige su rumbo hacia el objetivo (radianes por segundo).")]
     [SerializeField] private float homing = 5f;
     [SerializeField] private float gravityFactor = 0.15f;
@@ -33,7 +33,7 @@ public class SpitProjectile : MonoBehaviour
         velocity = (target.Center - transform.position).normalized * speed;
 
         if (crit)
-            transform.localScale *= 1.4f;
+            transform.localScale *= 1.3f;
     }
 
     private void Update()
@@ -119,7 +119,7 @@ public class SpitProjectile : MonoBehaviour
             AudioSource.PlayClipAtPoint(hitClip, point, 0.35f * GameSettings.SfxVolume);
         }
 
-        SpawnSplat(point, enemy != null ? 18 : 10);
+        SpawnSplat(point, enemy != null ? 10 : 6);
         Destroy(gameObject);
     }
 
@@ -134,8 +134,8 @@ public class SpitProjectile : MonoBehaviour
         main.duration = 0.3f;
         main.loop = false;
         main.startLifetime = new ParticleSystem.MinMaxCurve(0.25f, 0.5f);
-        main.startSpeed = new ParticleSystem.MinMaxCurve(2f, 5f);
-        main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.16f);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(1.5f, 3.5f);
+        main.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.08f);
         main.startColor = crit ? new Color(1f, 0.9f, 0.3f) : splatColor;
         main.gravityModifier = 1.5f;
         main.maxParticles = count;

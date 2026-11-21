@@ -13,6 +13,14 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 31837378389525467, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
+      propertyPath: coinsMax
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 31837378389525467, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
+      propertyPath: coinsMin
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 31837378389525467, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
       propertyPath: displayName
       value: "GUARDI\xC1N DEL PILAR"
       objectReference: {fileID: 0}

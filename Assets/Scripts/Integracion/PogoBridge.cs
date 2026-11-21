@@ -56,8 +56,22 @@ public static class PogoBridge
         return f != null && f.FieldType == typeof(bool) ? (bool)f.GetValue(target) : fallback;
     }
 
+    public static void SetFloat(object target, string field, float value)
+    {
+        if (target == null || (target is UnityEngine.Object o && o == null))
+            return;
+
+        FieldInfo f = Field(target.GetType(), field);
+        if (f != null && f.FieldType == typeof(float))
+            f.SetValue(target, value);
+    }
+
     // ---- Atajos para personajes (PogoPlayer, Zombie y cualquier Enemy con los mismos campos) ----
     public static float Health(Component c) => GetFloat(c, "currentHealth");
     public static float MaxHealth(Component c) => Mathf.Max(1f, GetFloat(c, "maxHealth", 100f));
     public static bool IsDead(Component c) => GetBool(c, "isDead");
+
+    // ---- Estado de PogoPlayer ----
+    public static bool IsGrounded(Component player) => GetBool(player, "grounded");
+    public static bool IsCtrlHeld(Component player) => GetBool(player, "ctrlHeld");
 }

@@ -103,7 +103,7 @@ public class EnemyHealthBars : MonoBehaviour
             if (Time.time - e.LastDamageTime > visibleAfterHit || used >= bars.Count)
                 continue;
 
-            Vector3 screen = cam.WorldToScreenPoint(e.Top + Vector3.up * 0.35f);
+            Vector3 screen = WorldToScreen(cam, e.Top + Vector3.up * 0.35f);
             if (screen.z < 0f)
                 continue;
 
@@ -144,5 +144,13 @@ public class EnemyHealthBars : MonoBehaviour
         Vector2 max = fill.anchorMax;
         max.x = Mathf.Clamp01(percent);
         fill.anchorMax = max;
+    }
+
+    // Usa coordenadas de viewport para que funcione aunque la cámara dibuje a una
+    // textura de menor resolución (filtro retro).
+    private static Vector3 WorldToScreen(Camera cam, Vector3 world)
+    {
+        Vector3 vp = cam.WorldToViewportPoint(world);
+        return new Vector3(vp.x * Screen.width, vp.y * Screen.height, vp.z);
     }
 }
