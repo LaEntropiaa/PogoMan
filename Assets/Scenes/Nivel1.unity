@@ -2740,18 +2740,31 @@ MonoBehaviour:
   lateWindow: 0.1
   speedBonusPerUnit: 0.09
   maxSpeedBonus: 1.5
-  crouchChargeTime: 0.8
-  crouchMaxBonus: 2.5
   maxJumpVelocity: 13.5
   geyserVelocity: 12
+  airAcceleration: 45
+  airTurnRate: 540
+  minTurnRate: 170
+  airBrake: 20
+  idleDeceleration: 10
+  airDrag: 0.45
+  perfectHopGain: 1.1
+  missedHopKeep: 0.7
+  maxMomentumSpeed: 32
+  dashMomentumBonus: 4
+  flatSlideSpeed: 12
   slideStickForce: 30
   slideMaxUpSpeed: 0.5
-  slopeAcceleration: 16
-  maxExtraSlideSpeed: 12
+  slideJumpVelocity: 8.5
+  slideJumpBoost: 1.5
+  slopeAcceleration: 20
+  maxExtraSlideSpeed: 20
   extraSpeedDecay: 5
-  slideMomentumDecay: 1.2
+  slideMomentumDecay: 1.5
   uphillMomentumDecay: 8
   minSlopeAngle: 4
+  airJumpVelocity: 9.5
+  airJumpGroundClearance: 0.9
 --- !u!114 &516314391
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3786,13 +3799,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 740715286}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 4.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 985693010}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!64 &740715288
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -5018,6 +5031,20 @@ MonoBehaviour:
   critMultiplier: 2
   range: 14
   projectileSpeed: 22
+  spitArea: 1.2
+  spitSize: 1
+  projectiles: 1
+  moveSpeed: 1
+  airJumps: 0
+  dashDistance: 6
+  dashCooldown: 2.5
+  dashSpeed: 1
+  pickupRadius: 3
+  regeneration: 0
+  shield: 0
+  xpGain: 1
+  firstLevelXp: 6
+  levelGrowth: 1.35
   timeLimit: 900
 --- !u!4 &971777457
 Transform:
@@ -5046,6 +5073,154 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3afc06a955a74ecefb62850d259e7bc7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemInventory
+--- !u!1 &972643064
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 972643069}
+  - component: {fileID: 972643068}
+  - component: {fileID: 972643067}
+  - component: {fileID: 972643066}
+  - component: {fileID: 972643065}
+  - component: {fileID: 972643070}
+  m_Layer: 0
+  m_Name: Progresion
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &972643065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1008cc43169315b869cc7e2c53504d50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelUpUI
+  font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
+  cardSprite: {fileID: 21300000, guid: 4add0de6eb2dc9da1b5980a7215784ca, type: 3}
+  levelUpClip: {fileID: 8300000, guid: 148028ccb40506b7aad2305eed7598b5, type: 3}
+  selectClip: {fileID: 8300000, guid: 589e5a04843356360a22bc7f10dc2491, type: 3}
+  moveClip: {fileID: 8300000, guid: d66e4c67e84617c328f91029602642d9, type: 3}
+  inputDelay: 0.45
+--- !u!114 &972643066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba060a9187ca7a9ce88d47a12cce7bea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RunHUD
+  font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
+  barSprite: {fileID: 21300000, guid: 2c0ad944dc38fdf0a983641350b394ed, type: 3}
+  hordeClip: {fileID: 8300000, guid: 223cb347eb54388768034ccc34e88288, type: 3}
+  warningClip: {fileID: 8300000, guid: 7be60a228e17c6043af37cdaec6e1516, type: 3}
+--- !u!114 &972643067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fb046479269007a5aec757ca5599205, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDirector
+  enemyPrefab: {fileID: 8273496981544212081, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
+  otherPrefabs:
+  - {fileID: 2910461850877899014, guid: 9aa1b7b3716c41acf9e5a7235e7017bc, type: 3}
+  maxEnemies: 500
+  disableOldSpawners: 1
+  aliveAtStart: 6
+  aliveAtEnd: 240
+  spawnRateAtStart: 0.5
+  spawnRateAtEnd: 8
+  healthPerMinute: 0.12
+  speedPerMinute: 0.035
+  maxSpeedMultiplier: 1.6
+  hordeInterval: 240
+  hordeDuration: 20
+  hordeWarning: 5
+  hordeSpawnRate: 35
+  hordeExtraAlive: 220
+  minSpawnDistance: 14
+  maxSpawnDistance: 26
+  hordeMinSpawnDistance: 10
+  relocateDistance: 45
+  maxSpawnsPerFrame: 6
+--- !u!114 &972643068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7846804b21ad83043b8c63cfbcaf6fde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RunSystems
+  gemPrefab: {fileID: 2114993982868248374, guid: 3149e38b350e977a5a6d7464ad86750a, type: 3}
+  gemClip: {fileID: 8300000, guid: 103b36987240594a1a188f0729f9450e, type: 3}
+  dashClip: {fileID: 8300000, guid: c8605c0e775c0fbacb8cef220cc2a514, type: 3}
+  airJumpClip: {fileID: 8300000, guid: eec95978f566e0ef98e689203eefeb31, type: 3}
+  fxMaterial: {fileID: 2100000, guid: cb297985e50f45082b580c6a46fa44eb, type: 2}
+  shieldHitClip: {fileID: 8300000, guid: 7f8a3a96d5dfa862abe1b6a24f2174cc, type: 3}
+  shieldBreakClip: {fileID: 8300000, guid: b9ff7d8b9cd96c9c580de2bb625aa0f4, type: 3}
+  dirtMaterial: {fileID: 2100000, guid: 43e2544c92a77539787bac514c3bc9ef, type: 2}
+--- !u!4 &972643069
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &972643070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03cee1aff5d8675efb9c645cb18201bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LegibleLighting
+  sunColor: {r: 1, g: 0.95, b: 0.88, a: 1}
+  sunIntensity: 1.35
+  shadowStrength: 0.5
+  fillSaturation: 0.3
+  fillIntensity: 0.45
+  pointSaturation: 0.6
+  pointIntensityMultiplier: 0.7
+  ambientSky: {r: 0.66, g: 0.63, b: 0.7, a: 1}
+  ambientEquator: {r: 0.56, g: 0.52, b: 0.52, a: 1}
+  ambientGround: {r: 0.34, g: 0.3, b: 0.3, a: 1}
+  fogColor: {r: 0.22, g: 0.14, b: 0.16, a: 1}
+  fogDensity: 0.007
 --- !u!1 &982337973
 GameObject:
   m_ObjectHideFlags: 0
@@ -5306,13 +5481,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 999076560}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 4.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 799002253}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!64 &999076562
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -6585,13 +6760,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1336509043}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 4.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1482282279}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!64 &1336509045
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -7821,6 +7996,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PixelFilter
   pixelSize: 2
+  useMenuSetting: 1
 --- !u!114 &1638811135
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8444,13 +8620,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1755070132}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 4.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 333533022}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!64 &1755070134
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -10265,3 +10441,4 @@ SceneRoots:
   - {fileID: 1686394092}
   - {fileID: 375626268}
   - {fileID: 820021641}
+  - {fileID: 972643069}

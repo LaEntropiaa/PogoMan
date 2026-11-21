@@ -25,6 +25,19 @@ public class EnemyTracker : MonoBehaviour
     [SerializeField] private Coin coinPrefab;
     [SerializeField] private int coinsMin = 1;
     [SerializeField] private int coinsMax = 3;
+    [Tooltip("Probabilidad de soltar monedas (con cientos de enemigos, no todos sueltan).")]
+    [SerializeField, Range(0f, 1f)] private float coinChance = 0.4f;
+
+    [Header("Experiencia al morir")]
+    [SerializeField] private float xpValue = 1f;
+    [SerializeField] private float bossXpValue = 25f;
+    [Tooltip("Probabilidad de que suelte una gema verde (vale 5).")]
+    [SerializeField, Range(0f, 1f)] private float bigGemChance = 0.05f;
+
+    // Con cientos de demonios no pueden gruñir todos: solo los cercanos y unos cuantos por segundo.
+    private const float GroanDistance = 22f;
+    private const float GroanSpacing = 0.35f;
+    private static float nextGroanAllowed;
 
     public bool IsBoss => isBoss;
     public string DisplayName => displayName;
@@ -113,7 +126,13 @@ public class EnemyTracker : MonoBehaviour
             if (groanTimer <= 0f)
             {
                 groanTimer = Random.Range(groanInterval.x, groanInterval.y);
-                voice.PlayOneShot(groanClip, 0.7f * GameSettings.SfxVolume);
+                Camera cam = Camera.main;
+                bool near = cam == null || (cam.transform.position - transform.position).sqrMagnitude < GroanDistance * GroanDistance;
+                if (near && Time.time >= nextGroanAllowed)
+                {
+                    nextGroanAllowed = Time.time + GroanSpacing;
+                    voice.PlayOneShot(groanClip, 0.7f * GameSettings.SfxVolume);
+                }
             }
         }
 
@@ -146,6 +165,7 @@ public class EnemyTracker : MonoBehaviour
             deathHandled = true;
             PlayerStats.Instance?.RegisterKill();
             DropCoins();
+            DropXp();
             if (deathClip != null)
                 AudioSource.PlayClipAtPoint(deathClip, Center, 0.8f * GameSettings.SfxVolume);
         }
@@ -156,12 +176,22 @@ public class EnemyTracker : MonoBehaviour
 
     private void DropCoins()
     {
-        if (coinPrefab == null)
+        if (coinPrefab == null || (!isBoss && Random.value > coinChance))
             return;
 
         int count = Random.Range(coinsMin, coinsMax + 1);
         for (int i = 0; i < count; i++)
             Instantiate(coinPrefab, Center + Random.insideUnitSphere * 0.3f, Quaternion.Euler(90f, 0f, 0f));
+    }
+
+    private void DropXp()
+    {
+        if (isBoss)
+        {
+            XpGem.Drop(Center, bossXpValue);
+            return;
+        }
+        XpGem.Drop(Center, Random.value < bigGemChance ? 5f : xpValue);
     }
 
     private void AnimateFigure()
@@ -191,7 +221,7 @@ public class EnemyTracker : MonoBehaviour
             figure.rotation = Quaternion.Slerp(figure.rotation, look, 10f * Time.deltaTime);
         }
 
-        // Tambaleo de zombie al caminar.
+        // Tambaleo al caminar.
         walkPhase += speed * Time.deltaTime * 3f;
         float sway = Mathf.Sin(walkPhase) * Mathf.Clamp01(speed / 2f);
         figure.localPosition = figureBasePosition + new Vector3(0f, Mathf.Abs(sway) * 0.08f, 0f);

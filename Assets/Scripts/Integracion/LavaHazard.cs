@@ -52,7 +52,7 @@ public class LavaHazard : MonoBehaviour
                 return;
 
             playerTimer = playerCooldown;
-            player.TakeDamage(playerDamage);
+            PlayerVitals.Damage(player, playerDamage);
 
             Vector3 v = body.linearVelocity;
             v.y = launchSpeed;

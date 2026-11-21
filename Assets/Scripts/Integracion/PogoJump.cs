@@ -1,14 +1,18 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// Control del salto de Pogoman, encima del movimiento de PogoPlayer (sin modificarlo):
-//  - Rebote automático corto.
-//  - Espacio al caer (o justo después) = salto alto; mantenerlo mientras sube = más alto.
-//  - Entre más rápido vas, más alto saltas.
-//  - Agachado (Ctrl) + mantener espacio = carga; al soltar Ctrl sale el súper salto.
-//  - Deslizarte cuesta abajo te da velocidad extra.
-//  - Gravedad extra para que todo se sienta rápido.
-// Los géiseres siguen siendo lo más alto: ningún salto normal pasa de maxJumpVelocity.
+// Capa de movimiento de Pogoman encima de PogoPlayer (sin modificarlo).
+// El control en el aire lo hace este script (a PogoPlayer se le pone aceleración en el aire 0)
+// para que la velocidad se CONSERVE, estilo Megabonk:
+//  - Bunny hop: con Espacio apretado (o justo a tiempo) al caer conservas tu velocidad y ganas un poco.
+//    Si caes sin apretarlo pierdes parte del impulso.
+//  - Slide (Ctrl): entras con la velocidad que traes y en bajada aceleras.
+//    Espacio durante el slide = salto que conserva la velocidad (Ctrl + Espacio mantenidos = slide-hops).
+//  - El dash te deja con más velocidad de la que traías (PogoAbilities).
+//  - Yendo rápido, mover el stick GIRA tu dirección en vez de frenarte.
+//  - Espacio al caer = salto alto; mantenerlo mientras sube = más alto; entre más rápido, más alto.
+//  - Saltos extra en el aire (mejora), que también te redirigen.
+[DefaultExecutionOrder(-10)]   // antes que PogoPlayer: su límite de velocidad ya llega ajustado
 [RequireComponent(typeof(Rigidbody))]
 public class PogoJump : MonoBehaviour
 {
@@ -29,58 +33,99 @@ public class PogoJump : MonoBehaviour
     [SerializeField] private float speedBonusPerUnit = 0.09f;
     [SerializeField] private float maxSpeedBonus = 1.5f;
 
-    [Header("Salto agachado (cargado)")]
-    [SerializeField] private float crouchChargeTime = 0.8f;
-    [SerializeField] private float crouchMaxBonus = 2.5f;
-
     [Header("Límites")]
-    [Tooltip("Velocidad máxima de un salto normal (el géiser lanza a 15).")]
+    [Tooltip("Velocidad vertical máxima de un salto normal.")]
     [SerializeField] private float maxJumpVelocity = 12.5f;
     [Tooltip("Arriba de esta velocidad el impulso viene de un géiser.")]
     [SerializeField] private float geyserVelocity = 12f;
 
+    [Header("Control en el aire")]
+    [Tooltip("Aceleración hasta la velocidad base (m/s²).")]
+    [SerializeField] private float airAcceleration = 45f;
+    [Tooltip("Grados por segundo que gira tu dirección a velocidad base (más rápido = gira menos).")]
+    [SerializeField] private float airTurnRate = 540f;
+    [SerializeField] private float minTurnRate = 170f;
+    [Tooltip("Frenado al empujar en contra de tu dirección yendo rápido.")]
+    [SerializeField] private float airBrake = 20f;
+    [Tooltip("Frenado sin tocar nada (solo a velocidad base o menos).")]
+    [SerializeField] private float idleDeceleration = 10f;
+    [Tooltip("Velocidad extra que se pierde por segundo en el aire.")]
+    [SerializeField] private float airDrag = 0.45f;
+
+    [Header("Impulso (bunny hop)")]
+    [Tooltip("Velocidad que ganas en cada rebote con espacio apretado.")]
+    [SerializeField] private float perfectHopGain = 1.1f;
+    [Tooltip("Fracción del impulso extra que conservas al caer SIN apretar espacio.")]
+    [SerializeField, Range(0f, 1f)] private float missedHopKeep = 0.7f;
+    [SerializeField] private float maxMomentumSpeed = 32f;
+    [Tooltip("Velocidad extra que deja el dash al terminar.")]
+    [SerializeField] private float dashMomentumBonus = 4f;
+
     [Header("Deslizamiento")]
+    [Tooltip("Velocidad máxima del slide en plano si no traes impulso.")]
+    [SerializeField] private float flatSlideSpeed = 12f;
     [Tooltip("Fuerza que mantiene a Pogoman pegado al piso mientras se desliza.")]
     [SerializeField] private float slideStickForce = 30f;
     [Tooltip("Velocidad máxima hacia arriba permitida al deslizarse (evita brincos en desniveles).")]
     [SerializeField] private float slideMaxUpSpeed = 0.5f;
+    [SerializeField] private float slideJumpVelocity = 8.5f;
+    [Tooltip("Velocidad horizontal que suma el salto desde el slide.")]
+    [SerializeField] private float slideJumpBoost = 1.5f;
 
     [Header("Rampas")]
-    [SerializeField] private float slopeAcceleration = 16f;
-    [SerializeField] private float maxExtraSlideSpeed = 16f;
+    [SerializeField] private float slopeAcceleration = 20f;
+    [SerializeField] private float maxExtraSlideSpeed = 20f;
     [SerializeField] private float extraSpeedDecay = 5f;
-    [Tooltip("Qué tan rápido se pierde el impulso extra deslizándose en plano (más bajo = lo conservas más).")]
-    [SerializeField] private float slideMomentumDecay = 1.2f;
+    [Tooltip("Qué tan rápido se pierde el impulso deslizándote en plano (más bajo = lo conservas más).")]
+    [SerializeField] private float slideMomentumDecay = 1.5f;
     [SerializeField] private float uphillMomentumDecay = 8f;
     [SerializeField] private float minSlopeAngle = 4f;
 
+    [Header("Saltos en el aire (mejora)")]
+    [SerializeField] private float airJumpVelocity = 9.5f;
+    [Tooltip("Si hay piso más cerca que esto, el espacio cuenta como salto normal, no como salto en el aire.")]
+    [SerializeField] private float airJumpGroundClearance = 0.9f;
+
     public static PogoJump Instance { get; private set; }
-    public float CrouchCharge { get; private set; }
+    public float CrouchCharge => 0f;   // (lo lee PogoAnimator; la carga se cambió por el salto desde el slide)
     public bool LastJumpWasBoosted { get; private set; }
+    public int AirJumpsLeft { get; private set; }
+    public int AirJumpsMax => PlayerStats.Instance != null ? Mathf.RoundToInt(PlayerStats.Instance.Get(PogoStat.AirJumps)) : 0;
+    public event System.Action AirJumped;
+    public event System.Action SlideJumped;
+    // Velocidad mínima permitida mientras dura el dash (la pone PogoAbilities).
+    public float DashSpeedCap { get; set; }
+    public float HorizontalSpeed { get; private set; }
+    public float BaseSpeed => baseMaxAirSpeed * SpeedMultiplier;
+    public float CurrentMaxAirSpeed => Mathf.Max(BaseSpeed, HorizontalSpeed, DashSpeedCap);
 
     private Rigidbody rb;
     private PogoPlayer player;
+    private CapsuleCollider capsule;
+    private float baseMaxAirSpeed = 8.5f;
     private float lastVerticalSpeed;
     private float lastJumpPress = -10f;
     private float lastBounceTime = -10f;
+    private float lastSlideJump = -10f;
     private bool boostedThisBounce;
     private bool geyserAscent;
     private float holdTimer;
-    private float baseMaxSlideSpeed;
     private float extraSlideSpeed;
-    private float notSlidingTimer;
-
-    // Vuelo de géiser: se apaga la gravedad extra y el límite de velocidad en el aire
-    // de PogoPlayer para que Pogoman siga el arco hasta la isla.
     private bool wasCrouching;
+    private bool wasSliding;
+    private bool slideHop;
     private bool geyserFlight;
     private float geyserFlightTime;
-    private float savedMaxAirSpeed, savedAirDeceleration;
+    private bool airJumpRequested;
+    private bool slideJumpRequested;
+
+    private float SpeedMultiplier => PlayerStats.Instance != null ? PlayerStats.Instance.Get(PogoStat.MoveSpeed) : 1f;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         player = GetComponent<PogoPlayer>();
+        capsule = GetComponent<CapsuleCollider>();
         Instance = this;
     }
 
@@ -90,32 +135,62 @@ public class PogoJump : MonoBehaviour
             Instance = null;
     }
 
+    private void Start()
+    {
+        baseMaxAirSpeed = PogoBridge.GetFloat(player, "maxAirSpeed", 8.5f);
+        // El control en el aire es de este script: PogoPlayer ya no acelera ni frena en el aire.
+        PogoBridge.SetFloat(player, "airAcceleration", 0f);
+        PogoBridge.SetFloat(player, "airDeceleration", 0f);
+
+        // Sin fricción: así no se queda pegado a las paredes al empujar contra ellas.
+        if (capsule != null)
+            capsule.sharedMaterial = new PhysicsMaterial("PogomanSinFriccion")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+            };
+    }
+
+    // ---- Anti-atorones ----
+    // Si Pogoman queda apoyado en una orilla que el detector de piso de PogoPlayer no ve,
+    // nunca "aterriza" y se queda colgado. Aquí se detecta el apoyo con los contactos reales.
+    private float supportedTime;
+    private bool supportedThisStep;
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision.rigidbody != null && collision.rigidbody.GetComponent<Enemy>() != null)
+            return;
+        for (int i = 0; i < collision.contactCount; i++)
+            if (collision.GetContact(i).normal.y > 0.3f)
+            {
+                supportedThisStep = true;
+                return;
+            }
+    }
+
     // Lo llaman los géiseres del mapa al lanzar a Pogoman.
     public void OnExternalLaunch(Vector3 velocity)
     {
-        if (!geyserFlight)
-        {
-            savedMaxAirSpeed = PogoBridge.GetFloat(player, "maxAirSpeed", 8f);
-            savedAirDeceleration = PogoBridge.GetFloat(player, "airDeceleration", 12f);
-        }
         geyserFlight = true;
         geyserFlightTime = 0f;
-        float horizontal = new Vector2(velocity.x, velocity.z).magnitude;
-        PogoBridge.SetFloat(player, "maxAirSpeed", Mathf.Max(savedMaxAirSpeed, horizontal + 1f));
-        PogoBridge.SetFloat(player, "airDeceleration", 0f);
         lastVerticalSpeed = velocity.y;   // que no cuente como rebote
     }
 
-    private void EndGeyserFlight()
+    // Al terminar el dash: sales en esa dirección con más velocidad de la que traías.
+    public void ExitDash(Vector3 direction, float entrySpeed)
     {
-        geyserFlight = false;
-        PogoBridge.SetFloat(player, "maxAirSpeed", savedMaxAirSpeed);
-        PogoBridge.SetFloat(player, "airDeceleration", savedAirDeceleration);
-    }
-
-    private void Start()
-    {
-        baseMaxSlideSpeed = PogoBridge.GetFloat(player, "maxSlideSpeed", 18f);
+        float speed = Mathf.Min(Mathf.Max(entrySpeed, BaseSpeed) + dashMomentumBonus, maxMomentumSpeed);
+        Vector3 v = rb.linearVelocity;
+        Vector3 h = direction.normalized * speed;
+        rb.linearVelocity = new Vector3(h.x, v.y, h.z);
+        HorizontalSpeed = speed;
+        PogoBridge.SetFloat(player, "maxAirSpeed", speed + 0.5f);
+        // Si estás deslizándote, el slide también acepta esa velocidad.
+        extraSlideSpeed = Mathf.Max(extraSlideSpeed, speed - flatSlideSpeed * SpeedMultiplier);
     }
 
     private static bool JumpHeld() =>
@@ -128,56 +203,91 @@ public class PogoJump : MonoBehaviour
 
     private void Update()
     {
+        if (Time.timeScale <= 0f || player == null)
+            return;
+
         if (JumpPressed())
+        {
             lastJumpPress = Time.time;
-
-        bool sliding = player != null && player.IsSliding;
-
-        if (sliding && JumpHeld())
-            CrouchCharge = Mathf.Min(1f, CrouchCharge + Time.deltaTime / crouchChargeTime);
-
-        // Si dejas de deslizarte sin saltar, la carga se pierde poco a poco.
-        notSlidingTimer = sliding ? 0f : notSlidingTimer + Time.deltaTime;
-        if (notSlidingTimer > 0.3f)
-            CrouchCharge = 0f;
+            if (player.IsSliding)
+                slideJumpRequested = true;
+            else if (CanAirJump())
+                airJumpRequested = true;
+        }
     }
 
     private void FixedUpdate()
     {
-        if (player != null && PogoBridge.IsDead(player))
+        if (player == null || PogoBridge.IsDead(player))
             return;
 
         float dt = Time.fixedDeltaTime;
         Vector3 v = rb.linearVelocity;
-
         bool crouching = PogoBridge.IsCtrlHeld(player);
+        bool grounded = PogoBridge.IsGrounded(player);
+        bool sliding = crouching && grounded;
+        float baseSpeed = BaseSpeed;
 
+        if (grounded && Time.time - lastBounceTime > 0.05f)
+            AirJumpsLeft = AirJumpsMax;
+
+        // Apoyado en algo, sin "piso" según PogoPlayer y casi sin moverse: rebota igual.
+        bool stuck = supportedThisStep && !grounded && v.y < 0.5f && v.y > -1f;
+        supportedThisStep = false;
+        supportedTime = stuck ? supportedTime + dt : 0f;
+        if (supportedTime > 0.08f && !geyserFlight)
+        {
+            supportedTime = 0f;
+            v.y = crouching ? 2f : PogoBridge.GetFloat(player, "jumpForce", 7.5f);
+            lastVerticalSpeed = 0f;   // que cuente como rebote
+        }
+
+        // ---- Vuelo de géiser: casi balístico hasta tocar piso ----
         if (geyserFlight)
         {
             geyserFlightTime += dt;
-            if ((geyserFlightTime > 0.3f && PogoBridge.IsGrounded(player)) || geyserFlightTime > 6f)
-                EndGeyserFlight();
+            if ((geyserFlightTime > 0.3f && grounded) || geyserFlightTime > 6f)
+            {
+                geyserFlight = false;
+            }
             else
             {
-                HandleSlopes(ref v, dt);
-                rb.linearVelocity = v;
-                lastVerticalSpeed = v.y;
-                return;   // sin gravedad extra ni rebotes durante el vuelo
+                Vector3 wish = WishDirection();
+                Vector3 h = Flat(v);
+                h = Vector3.ClampMagnitude(h + wish * 6f * dt, Mathf.Max(h.magnitude, baseSpeed));
+                v = new Vector3(h.x, v.y, h.z);
+                Finish(v, h.magnitude);
+                return;
             }
         }
 
         // ---- ¿Acaba de rebotar? (la velocidad vertical saltó hacia arriba) ----
         // Agachado no hay rebotes: si sube es porque el terreno lo empujó.
-        if (!crouching && v.y - lastVerticalSpeed > 4f && v.y > 2f)
+        if (!crouching && v.y - lastVerticalSpeed > 4f && v.y > 2f && Time.time - lastSlideJump > 0.25f)
             OnBounce(ref v);
 
+        // ---- Salto desde el slide (Espacio, o mantenerlo al volver a caer agachado) ----
+        bool justLanded = sliding && !wasSliding;
+        if (sliding && Time.time - lastSlideJump > 0.3f && (slideJumpRequested || (justLanded && JumpHeld())))
+            SlideJump(ref v);
+        slideJumpRequested = false;
+        wasSliding = sliding;
+
+        if ((grounded && Time.time - lastSlideJump > 0.2f) || v.y <= 0f)
+            slideHop = false;
+
         // ---- Deslizándose: pegado al piso, sin brincos (los géiseres sí lanzan) ----
-        if (crouching && PogoBridge.IsGrounded(player) && v.y < geyserVelocity)
+        bool justSlideJumped = Time.time - lastSlideJump < 0.2f;
+        if (sliding && !justSlideJumped && v.y < geyserVelocity)
         {
             if (v.y > slideMaxUpSpeed)
                 v.y = slideMaxUpSpeed;
             v += Vector3.down * slideStickForce * dt;
         }
+
+        // Saltando desde el slide con Ctrl apretado: se anula la caída en picada mientras subes.
+        if (slideHop && crouching && v.y > 0f)
+            v += Vector3.up * PogoBridge.GetFloat(player, "diveAcceleration", 35f) * dt;
 
         // ---- Espacio apretado justo después del rebote ----
         if (!boostedThisBounce && !geyserAscent && v.y > 0f &&
@@ -186,6 +296,29 @@ public class PogoJump : MonoBehaviour
             v.y = Mathf.Min(v.y + spaceBoost, maxJumpVelocity);
             boostedThisBounce = true;
             LastJumpWasBoosted = true;
+            GainHop(ref v);
+        }
+
+        // ---- Salto en el aire ----
+        if (airJumpRequested)
+        {
+            airJumpRequested = false;
+            if (AirJumpsLeft > 0 && !grounded)
+            {
+                AirJumpsLeft--;
+                v.y = Mathf.Max(v.y, airJumpVelocity);
+                holdTimer = 0f;
+                LastJumpWasBoosted = true;
+
+                // Te redirige hacia donde apuntas sin perder velocidad.
+                Vector3 wish = WishDirection();
+                if (wish.sqrMagnitude > 0.01f)
+                {
+                    Vector3 h = wish.normalized * Mathf.Max(Flat(v).magnitude, baseSpeed);
+                    v = new Vector3(h.x, v.y, h.z);
+                }
+                AirJumped?.Invoke();
+            }
         }
 
         // ---- Gravedad (más suave mientras subes con el salto apretado) ----
@@ -199,14 +332,98 @@ public class PogoJump : MonoBehaviour
         {
             holdTimer = maxHoldTime;   // ya no se puede "estirar" este salto
         }
-
         v += Vector3.down * gravity * dt;
 
-        // ---- Rampas: deslizarte cuesta abajo acelera ----
-        HandleSlopes(ref v, dt);
+        // ---- Control en el aire (conserva la velocidad) ----
+        if (!grounded)
+            AirControl(ref v, dt, baseSpeed);
 
+        // ---- Slide y rampas ----
+        HandleSlopes(ref v, dt, crouching, sliding, grounded);
+
+        Vector3 flat = Flat(v);
+        if (flat.magnitude > maxMomentumSpeed && DashSpeedCap <= 0f)
+        {
+            flat = flat.normalized * maxMomentumSpeed;
+            v = new Vector3(flat.x, v.y, flat.z);
+        }
+
+        Finish(v, flat.magnitude);
+    }
+
+    private void Finish(Vector3 v, float horizontal)
+    {
+        HorizontalSpeed = horizontal;
+        // El límite de PogoPlayer en el aire nunca debe cortar la velocidad que traes.
+        PogoBridge.SetFloat(player, "maxAirSpeed", Mathf.Max(BaseSpeed, horizontal, DashSpeedCap) + 0.5f);
         rb.linearVelocity = v;
         lastVerticalSpeed = v.y;
+    }
+
+    private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
+
+    // Dirección que pide el jugador, relativa a la cámara (la misma entrada que lee PogoPlayer).
+    private Vector3 WishDirection()
+    {
+        Vector2 input = PogoBridge.Get<Vector2>(player, "input");
+        Transform cam = PogoBridge.Get<Transform>(player, "cameraTransform");
+        if (cam == null || input.sqrMagnitude < 0.0001f)
+            return Vector3.zero;
+
+        Vector3 forward = cam.forward; forward.y = 0f; forward.Normalize();
+        Vector3 right = cam.right; right.y = 0f; right.Normalize();
+        return Vector3.ClampMagnitude(right * input.x + forward * input.y, 1f);
+    }
+
+    private void AirControl(ref Vector3 v, float dt, float baseSpeed)
+    {
+        Vector3 h = Flat(v);
+        float speed = h.magnitude;
+        Vector3 wish = WishDirection();
+
+        if (wish.sqrMagnitude > 0.01f)
+        {
+            Vector3 dir = wish.normalized;
+            if (speed <= baseSpeed + 0.05f)
+            {
+                // A velocidad normal: control directo y rápido.
+                h = Vector3.MoveTowards(h, dir * baseSpeed * wish.magnitude, airAcceleration * dt);
+            }
+            else
+            {
+                // Yendo rápido: la dirección gira, la velocidad se queda.
+                float angle = Vector3.Angle(h, dir);
+                float turn = Mathf.Clamp(airTurnRate * baseSpeed / speed, minTurnRate, airTurnRate);
+                Vector3 newDir = Vector3.RotateTowards(h / speed, dir, turn * Mathf.Deg2Rad * dt, 0f);
+                if (angle > 120f)
+                    speed = Mathf.MoveTowards(speed, baseSpeed, airBrake * dt);   // jalar para atrás frena
+                h = newDir * speed;
+            }
+        }
+        else if (speed <= baseSpeed)
+        {
+            h = Vector3.MoveTowards(h, Vector3.zero, idleDeceleration * dt);
+        }
+
+        // El impulso extra se va perdiendo poco a poco.
+        speed = h.magnitude;
+        if (speed > baseSpeed)
+            h = h / speed * Mathf.Max(baseSpeed, speed - airDrag * dt);
+
+        v = new Vector3(h.x, v.y, h.z);
+    }
+
+    // Espacio en el aire: solo cuenta como salto extra si no estás a punto de tocar el piso
+    // (si no, es el salto alto normal que se guarda para el rebote).
+    private bool CanAirJump()
+    {
+        if (geyserFlight || AirJumpsLeft <= 0 || PogoBridge.IsDead(player) || player.IsSliding)
+            return false;
+        if (PogoBridge.IsGrounded(player) || Time.time - lastBounceTime < lateWindow + 0.05f)
+            return false;
+
+        float half = capsule != null ? capsule.height * 0.5f : 1f;
+        return !Physics.Raycast(transform.position, Vector3.down, half + airJumpGroundClearance, ~0, QueryTriggerInteraction.Ignore);
     }
 
     private void OnBounce(ref Vector3 v)
@@ -218,40 +435,77 @@ public class PogoJump : MonoBehaviour
         geyserAscent = v.y >= geyserVelocity;
 
         if (geyserAscent)
-        {
-            CrouchCharge = 0f;
             return;
-        }
 
-        float horizontal = new Vector2(v.x, v.z).magnitude;
+        float horizontal = Flat(v).magnitude;
         float bonus = Mathf.Min(horizontal * speedBonusPerUnit, maxSpeedBonus);
 
         bool space = JumpHeld() || Time.time - lastJumpPress < jumpBuffer;
         if (space)
         {
-            bonus += spaceBoost + CrouchCharge * crouchMaxBonus;
+            bonus += spaceBoost;
             boostedThisBounce = true;
             LastJumpWasBoosted = true;
+            GainHop(ref v);
+        }
+        else
+        {
+            // Rebote sin espacio: se pierde parte del impulso extra.
+            Vector3 h = Flat(v);
+            float speed = h.magnitude;
+            float b = BaseSpeed;
+            if (speed > b)
+            {
+                h = h / speed * (b + (speed - b) * missedHopKeep);
+                v = new Vector3(h.x, v.y, h.z);
+            }
         }
 
-        CrouchCharge = 0f;
         v.y = Mathf.Min(v.y + bonus, maxJumpVelocity);
     }
 
-    private void HandleSlopes(ref Vector3 v, float dt)
+    // Bunny hop bien hecho: conservas la velocidad y ganas un poco.
+    private void GainHop(ref Vector3 v)
     {
-        bool sliding = player != null && player.IsSliding;
-        bool crouching = PogoBridge.IsCtrlHeld(player);
+        Vector3 h = Flat(v);
+        float speed = h.magnitude;
+        if (speed < BaseSpeed * 0.85f)
+            return;   // parado o casi parado no se acumula nada
+        h = h / speed * Mathf.Min(speed + perfectHopGain, maxMomentumSpeed);
+        v = new Vector3(h.x, v.y, h.z);
+    }
 
-        // Al agacharte (o mientras caes agachado) se conserva la velocidad que traes:
-        // el límite del deslizamiento sube hasta tu velocidad actual y luego baja despacio.
-        bool pinMomentum = crouching && (!wasCrouching || !PogoBridge.IsGrounded(player));
+    private void SlideJump(ref Vector3 v)
+    {
+        Vector3 h = Flat(v);
+        float speed = h.magnitude;
+        Vector3 dir = speed > 0.5f ? h / speed : WishDirection().normalized;
+        if (dir.sqrMagnitude < 0.01f)
+            dir = transform.forward;
+
+        speed = Mathf.Min(Mathf.Max(speed, BaseSpeed) + slideJumpBoost, maxMomentumSpeed);
+        h = dir * speed;
+        float up = slideJumpVelocity + Mathf.Min(speed * speedBonusPerUnit, maxSpeedBonus);
+        v = new Vector3(h.x, Mathf.Max(v.y, up), h.z);
+
+        lastSlideJump = Time.time;
+        slideHop = true;
+        holdTimer = 0f;
+        LastJumpWasBoosted = true;
+        SlideJumped?.Invoke();
+    }
+
+    private void HandleSlopes(ref Vector3 v, float dt, bool crouching, bool sliding, bool grounded)
+    {
+        float flatMax = flatSlideSpeed * SpeedMultiplier;
+        float current = Flat(v).magnitude;
+
+        // Al agacharte (o mientras caes agachado) se conserva toda la velocidad que traes.
+        bool pinMomentum = crouching && (!wasCrouching || !grounded);
         wasCrouching = crouching;
         if (pinMomentum)
-        {
-            float current = new Vector2(v.x, v.z).magnitude;
-            extraSlideSpeed = Mathf.Clamp(Mathf.Max(extraSlideSpeed, current - baseMaxSlideSpeed), 0f, maxExtraSlideSpeed);
-        }
+            extraSlideSpeed = Mathf.Clamp(Mathf.Max(extraSlideSpeed, current - flatMax), 0f, maxMomentumSpeed - flatMax);
+
         float slopeSin = 0f;
         Vector3 downhill = Vector3.zero;
 
@@ -270,9 +524,12 @@ public class PogoJump : MonoBehaviour
         {
             v += downhill * slopeAcceleration * slopeSin * dt;
 
-            // Si vas cuesta abajo, se te permite ir más rápido que el límite normal.
+            // Cuesta abajo se permite ir más rápido que el límite normal.
             if (Vector3.Dot(v, downhill) > 0f)
-                extraSlideSpeed = Mathf.Min(maxExtraSlideSpeed, extraSlideSpeed + slopeAcceleration * slopeSin * dt);
+                extraSlideSpeed = Mathf.Min(Mathf.Max(maxExtraSlideSpeed, extraSlideSpeed),
+                    extraSlideSpeed + slopeAcceleration * slopeSin * dt);
+            else
+                extraSlideSpeed = Mathf.MoveTowards(extraSlideSpeed, 0f, uphillMomentumDecay * dt);
         }
         else
         {
@@ -281,9 +538,6 @@ public class PogoJump : MonoBehaviour
             extraSlideSpeed = Mathf.MoveTowards(extraSlideSpeed, 0f, decay * dt);
         }
 
-        if (slopeSin > 0f && Vector3.Dot(v, downhill) < 0f)
-            extraSlideSpeed = Mathf.MoveTowards(extraSlideSpeed, 0f, uphillMomentumDecay * dt);
-
-        PogoBridge.SetFloat(player, "maxSlideSpeed", baseMaxSlideSpeed + extraSlideSpeed);
+        PogoBridge.SetFloat(player, "maxSlideSpeed", Mathf.Max(flatMax + extraSlideSpeed, DashSpeedCap));
     }
 }

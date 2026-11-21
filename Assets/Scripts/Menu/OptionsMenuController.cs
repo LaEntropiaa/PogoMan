@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Submenú de opciones: volúmenes, modo de pantalla y resolución.
+// Submenú de opciones: volúmenes, modo de pantalla, resolución y filtro pixel.
 // Todo se guarda en GameSettings (PlayerPrefs).
 public class OptionsMenuController : MonoBehaviour
 {
@@ -18,6 +18,7 @@ public class OptionsMenuController : MonoBehaviour
     [Header("Pantalla")]
     [SerializeField] private OptionCycler displayModeOption;
     [SerializeField] private OptionCycler resolutionOption;
+    [SerializeField] private OptionCycler pixelOption;
 
     private readonly List<Vector2Int> resolutions = new List<Vector2Int>();
     private int resolutionIndex;
@@ -43,6 +44,14 @@ public class OptionsMenuController : MonoBehaviour
             {
                 resolutionIndex = (resolutionIndex + dir + resolutions.Count) % resolutions.Count;
                 ApplyDisplay();
+            };
+
+        if (pixelOption != null)
+            pixelOption.Changed += dir =>
+            {
+                int count = GameSettings.PixelLevelNames.Length;
+                GameSettings.PixelSize = (GameSettings.PixelSize - 1 + dir + count) % count + 1;
+                RefreshDisplayTexts();
             };
 
         RefreshDisplayTexts();
@@ -111,6 +120,9 @@ public class OptionsMenuController : MonoBehaviour
     {
         if (displayModeOption != null)
             displayModeOption.SetText(fullscreen ? "PANTALLA COMPLETA" : "VENTANA");
+
+        if (pixelOption != null)
+            pixelOption.SetText(GameSettings.PixelLevelNames[GameSettings.PixelSize - 1]);
 
         if (resolutionOption != null && resolutions.Count > 0)
         {
