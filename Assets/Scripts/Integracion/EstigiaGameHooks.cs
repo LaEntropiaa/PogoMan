@@ -7,7 +7,7 @@ using UnityEngine;
 //  - el río y las lagunas del Estigia hacen daño,
 //  - los géiseres lanzan más alto y avisan a PogoJump,
 //  - se ocultan los pilares de muestra (los pilares reales los pone el juego),
-//  - los puntos de los pilares se enderezan (venían acostados de Blender).
+//  - los pilares se enderezan al colocarse (los puntos del mapa vienen acostados de Blender).
 public class EstigiaGameHooks : MonoBehaviour
 {
     [Header("Cofres")]
@@ -36,8 +36,6 @@ public class EstigiaGameHooks : MonoBehaviour
                 MakeHazard(t.gameObject);
             else if (n.StartsWith("Pilar_Preview"))
                 t.gameObject.SetActive(false);
-            else if (n.StartsWith("ZonaPilar_"))
-                StandUp(t);
         }
 
         foreach (EstigiaGeyser geyser in GetComponentsInChildren<EstigiaGeyser>(true))
@@ -47,8 +45,16 @@ public class EstigiaGameHooks : MonoBehaviour
         }
     }
 
-    // Los puntos de los pilares vienen de Blender acostados (-90° en X): BossPillar copia esa
-    // rotación y el pilar salía tirado. Se dejan derechos conservando hacia dónde miran.
+    // Los puntos de los pilares (los pentagramas ZonaPilar) vienen de Blender con -90° en X y
+    // BossPillar copia esa rotación, así que el pilar salía tirado. Los pentagramas se dejan como
+    // están y solo se endereza el pilar, un frame después de que BossPillar lo coloca.
+    private System.Collections.IEnumerator Start()
+    {
+        yield return null;
+        foreach (BossPillar pillar in FindObjectsByType<BossPillar>())
+            StandUp(pillar.transform);
+    }
+
     private static void StandUp(Transform t)
     {
         Vector3 facing = t.rotation * Vector3.up;   // el "frente" del empty de Blender
