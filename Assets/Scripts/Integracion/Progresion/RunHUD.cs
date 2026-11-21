@@ -27,6 +27,7 @@ public class RunHUD : MonoBehaviour
     private int lastLevel = 1;
     private int lastWarningSecond = -1;
     private float hordePop;
+    private KeyManager keys;
 
     private void Start()
     {
@@ -138,7 +139,7 @@ public class RunHUD : MonoBehaviour
     private void UpdateHorde(float dt)
     {
         EnemyDirector d = EnemyDirector.Instance;
-        if (d == null)
+        if (d == null || d.ArenaMode)
         {
             hordeTitle.text = hordeSub.text = "";
             return;
@@ -147,8 +148,22 @@ public class RunHUD : MonoBehaviour
         hordePop = Mathf.MoveTowards(hordePop, 0f, dt * 1.5f);
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f);
 
+        // Después de los 15 minutos: horda infinita (el título se queda chiquito arriba).
+        if (d.InfiniteHorde && d.HordeActive)
+        {
+            float intro = Mathf.Clamp01(hordePop);
+            hordeTitle.text = "¡HORDA INFINITA!";
+            hordeTitle.color = new Color(1f, 0.3f + pulse * 0.2f, 0.15f, 0.55f + intro * 0.45f);
+            hordeTitle.rectTransform.localScale = Vector3.one * (0.55f + intro * 0.6f);
+            if (keys == null)
+                keys = FindAnyObjectByType<KeyManager>();
+            bool ready = keys != null && keys.AllKeysCollected;
+            hordeSub.text = ready ? "LA PUERTA DEL INFIERNO TE ESPERA" : "SOBREVIVE Y JUNTA KILLS... O CONSIGUE LAS 4 LLAVES";
+            hordeSub.color = new Color(1f, 0.75f, 0.6f, 0.45f + intro * 0.5f);
+            hordeSub.rectTransform.localScale = Vector3.one * (0.7f + intro * 0.3f);
+        }
         // Sin temporizadores: la horda llega de sorpresa (solo un aviso y tambores antes).
-        if (d.HordeActive)
+        else if (d.HordeActive)
         {
             // Aparece grande y se va desvaneciendo; sin teñir la pantalla de rojo.
             float show = Mathf.Clamp01(d.HordeTimeLeft > 17f ? 1f : 0.35f + hordePop);

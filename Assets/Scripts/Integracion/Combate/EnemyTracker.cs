@@ -48,6 +48,10 @@ public class EnemyTracker : MonoBehaviour
     private static float nextGroanAllowed;
 
     public bool IsBoss => isBoss;
+    // false = el escupitajo y los objetos no lo apuntan (p. ej. el Diablo mientras es invulnerable).
+    public bool Targetable { get; set; } = true;
+    // Tiene su propia barra de vida (el Diablo): EnemyHealthBars no le dibuja nada.
+    public bool CustomUi { get; set; }
     public string DisplayName => displayName;
     public Enemy Enemy { get; private set; }
     public float Health => PogoBridge.Health(Enemy);

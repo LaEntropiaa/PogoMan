@@ -76,6 +76,16 @@ public static class PogoBridge
             f.SetValue(target, value);
     }
 
+    public static void Set<T>(object target, string field, T value)
+    {
+        if (target == null || (target is UnityEngine.Object o && o == null))
+            return;
+
+        FieldInfo f = Field(target.GetType(), field);
+        if (f != null && f.FieldType.IsAssignableFrom(typeof(T)))
+            f.SetValue(target, value);
+    }
+
     // ---- Atajos para personajes (PogoPlayer, Zombie y cualquier Enemy con los mismos campos) ----
     public static float Health(Component c) => GetFloat(c, "currentHealth");
     public static float MaxHealth(Component c) => Mathf.Max(1f, GetFloat(c, "maxHealth", 100f));

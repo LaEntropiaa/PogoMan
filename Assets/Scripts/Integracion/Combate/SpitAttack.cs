@@ -72,7 +72,7 @@ public class SpitAttack : MonoBehaviour
 
         foreach (EnemyTracker e in EnemyTracker.All)
         {
-            if (e == null || e.IsDead)
+            if (e == null || e.IsDead || !e.Targetable)
                 continue;
 
             float d = (e.Center - from).sqrMagnitude;

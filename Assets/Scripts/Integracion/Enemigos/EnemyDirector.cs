@@ -55,6 +55,29 @@ public class EnemyDirector : MonoBehaviour
     public float PlayerHeightAboveGround { get; private set; }
     public event Action<bool> HordeChanged;   // true = empezó, false = terminó
 
+    // Al acabarse los 15 minutos la horda ya no se detiene y cada minuto es más fuerte.
+    public bool InfiniteHorde { get; private set; }
+    public event Action InfiniteHordeStarted;
+    [Header("Horda infinita (después del contrarreloj)")]
+    [Tooltip("Cada cuántos segundos la horda infinita sube de fuerza.")]
+    [SerializeField] private float infiniteStepSeconds = 60f;
+
+    // En la arena del Diablo no salen demonios solos: los invoca el jefe con SpawnEnemy.
+    private bool arenaMode;
+    public bool ArenaMode
+    {
+        get => arenaMode;
+        set
+        {
+            arenaMode = value;
+            if (value && HordeActive)
+            {
+                HordeActive = false;
+                HordeChanged?.Invoke(false);
+            }
+        }
+    }
+
     private Transform player;
     private float spawnBudget;
     private float checkTimer;
@@ -88,6 +111,12 @@ public class EnemyDirector : MonoBehaviour
 
         if (PlayerStats.Instance != null && PlayerStats.Instance.RunEnded)
             return;
+
+        if (arenaMode)
+        {
+            AliveCount = EnemyTracker.All.Count;
+            return;
+        }
 
         UpdateHorde();
         referenceY = GroundUnderPlayer();
@@ -134,6 +163,26 @@ public class EnemyDirector : MonoBehaviour
     private void UpdateHorde()
     {
         float t = RunTime;
+
+        float limit = PlayerStats.Instance != null ? PlayerStats.Instance.TimeLimit : 900f;
+        if (t >= limit)
+        {
+            int step = 1 + Mathf.FloorToInt((t - limit) / infiniteStepSeconds);
+            int number = Mathf.FloorToInt(limit / hordeInterval) + step;
+            HordeTimeLeft = hordeDuration;
+            NextHordeIn = 0f;
+            if (!InfiniteHorde)
+            {
+                InfiniteHorde = true;
+                HordeActive = true;
+                HordeNumber = number;
+                InfiniteHordeStarted?.Invoke();
+                HordeChanged?.Invoke(true);
+            }
+            HordeNumber = number;
+            return;
+        }
+
         // La primera horda es al minuto 4, luego cada 4 minutos.
         int index = Mathf.FloorToInt(t / hordeInterval);
         float intoCycle = t - index * hordeInterval;
@@ -156,11 +205,21 @@ public class EnemyDirector : MonoBehaviour
         if (!FindSpawnPoint(HordeActive ? hordeMinSpawnDistance : minSpawnDistance, maxSpawnDistance, out Vector3 ground))
             return false;
 
-        Vector3 look = player.position - ground;
+        SpawnEnemy(PickPrefab(), ground);
+        return true;
+    }
+
+    // Saca un demonio del suelo en ese punto con la vida y velocidad que tocan por el tiempo de partida
+    // (lo usa también el Diablo en la arena para invocar).
+    public Enemy SpawnEnemy(Enemy prefab, Vector3 ground)
+    {
+        if (prefab == null)
+            prefab = PickPrefab();
+        Vector3 look = player != null ? player.position - ground : Vector3.forward;
         look.y = 0f;
         Quaternion rotation = look.sqrMagnitude > 0.01f ? Quaternion.LookRotation(look) : Quaternion.identity;
 
-        Enemy enemy = Instantiate(PickPrefab(), ground + Vector3.up * 1f, rotation);
+        Enemy enemy = Instantiate(prefab, ground + Vector3.up * 1f, rotation);
         enemy.SetTarget(player);
 
         // Más vida y velocidad con el tiempo.
@@ -174,8 +233,10 @@ public class EnemyDirector : MonoBehaviour
 
         ZombieMotor motor = ZombieMotor.Ensure(enemy);
         motor.Emerge(ground);
-        return true;
+        return enemy;
     }
+
+    public Enemy RandomDemonPrefab() => PickPrefab();
 
     private Enemy PickPrefab()
     {

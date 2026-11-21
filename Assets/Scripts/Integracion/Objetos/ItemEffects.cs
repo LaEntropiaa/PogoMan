@@ -331,7 +331,7 @@ public class ItemEffects : MonoBehaviour
         float bestSqr = range * range;
         foreach (EnemyTracker e in EnemyTracker.All)
         {
-            if (e == null || e.IsDead || (skip != null && skip.Contains(e)))
+            if (e == null || e.IsDead || !e.Targetable || (skip != null && skip.Contains(e)))
                 continue;
             float d = (e.Center - from).sqrMagnitude;
             if (d < bestSqr)

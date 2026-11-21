@@ -95,10 +95,20 @@ public class MainMenuController : MonoBehaviour
         return visible;
     }
 
+    // Al ganar la partida el juego regresa al menú directo a los créditos.
+    public static bool OpenCreditsOnLoad;
+
     private void OnIntroFinished()
     {
         if (openPanel != null)
             return;
+
+        if (OpenCreditsOnLoad)
+        {
+            OpenCreditsOnLoad = false;
+            OpenPanel(creditsPanel);
+            return;
+        }
 
         SetMainInteractable(true);
         SelectSilently(startButton.gameObject);

@@ -86,7 +86,7 @@ public class EnemyHealthBars : MonoBehaviour
 
         foreach (EnemyTracker e in EnemyTracker.All)
         {
-            if (e == null || e.IsDead)
+            if (e == null || e.IsDead || e.CustomUi)
                 continue;
 
             if (e.IsBoss)

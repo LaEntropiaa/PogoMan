@@ -93,7 +93,9 @@ public class ChestUI : MonoBehaviour
             return;
 
         if (promptText != null)
-            promptText.text = coins >= chest.Price
+            promptText.text = chest.Price <= 0
+                ? "E  ABRIR COFRE  GRATIS"
+                : coins >= chest.Price
                 ? "E  ABRIR COFRE  " + chest.Price + " MONEDAS"
                 : "TE FALTAN " + (chest.Price - coins) + " MONEDAS";
 
@@ -206,7 +208,7 @@ public class ChestUI : MonoBehaviour
 
     private IEnumerator PriceFx(int price)
     {
-        if (priceFx == null) yield break;
+        if (priceFx == null || price <= 0) yield break;
         priceFx.text = "-" + price;
         var rect = priceFx.rectTransform;
         for (float t = 0f; t < 1f; t += Time.unscaledDeltaTime)
