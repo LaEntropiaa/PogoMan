@@ -159,7 +159,7 @@ public class RunHUD : MonoBehaviour
             hordeTitle.text = "¡HORDA!";
             hordeTitle.color = Color.Lerp(new Color(1f, 0.15f, 0.1f), new Color(1f, 0.6f, 0.2f), pulse);
             hordeTitle.rectTransform.localScale = Vector3.one * (1f + hordePop * 0.8f + pulse * 0.04f);
-            hordeSub.text = Mathf.CeilToInt(d.HordeTimeLeft) + " s   ·   " + d.AliveCount + " zombies";
+            hordeSub.text = Mathf.CeilToInt(d.HordeTimeLeft) + " s   ·   " + d.AliveCount + " demonios";
             hordeTint.color = new Color(0.6f, 0f, 0.05f, 0.08f + pulse * 0.06f);
             nextHordeText.text = "";
         }

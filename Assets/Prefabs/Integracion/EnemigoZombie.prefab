@@ -117,7 +117,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyTracker
   isBoss: 0
-  displayName: ZOMBIE
+  displayName: DEMONIO
   figure: {fileID: 4437628061022383608}
   deathClip: {fileID: 8300000, guid: 96599021d935b38fbb8fd1418d83e387, type: 3}
   hitClip: {fileID: 8300000, guid: 19e062c47d6e8e840b9c0de92bf02837, type: 3}
@@ -126,6 +126,10 @@ MonoBehaviour:
   coinPrefab: {fileID: 7733439221184182898, guid: 700feaacb5b508f42a70eca99a4a3946, type: 3}
   coinsMin: 1
   coinsMax: 3
+  coinChance: 0.4
+  xpValue: 1
+  bossXpValue: 25
+  bigGemChance: 0.05
 --- !u!114 &2776903055821395347
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Director de enemigos (reemplaza a los EnemySpawner fijos, sin borrarlos):
-//  - Los zombies salen del suelo alrededor de Pogoman.
+//  - Los demonios salen del suelo alrededor de Pogoman.
 //  - Con el tiempo salen más, más rápido, con más vida y un poco más veloces (máximo 500).
 //  - Cada 3 minutos hay una HORDA de 20 s donde salen muchísimos.
-//  - Si un zombie queda muy lejos, se mete al suelo y vuelve a salir cerca de Pogoman.
+//  - Si un demonio queda muy lejos, se mete al suelo y vuelve a salir cerca de Pogoman.
 public class EnemyDirector : MonoBehaviour
 {
     public static EnemyDirector Instance { get; private set; }
 
     [SerializeField] private Enemy enemyPrefab;
+    [Tooltip("Otros modelos de demonio: cada aparición elige uno al azar (mismas stats).")]
+    [SerializeField] private Enemy[] otherPrefabs;
     [SerializeField] private int maxEnemies = 500;
     [Tooltip("Apaga los EnemySpawner viejos de la escena.")]
     [SerializeField] private bool disableOldSpawners = true;
@@ -31,14 +33,14 @@ public class EnemyDirector : MonoBehaviour
     [SerializeField] private float hordeDuration = 20f;
     [SerializeField] private float hordeWarning = 5f;
     [SerializeField] private float hordeSpawnRate = 35f;
-    [Tooltip("Zombies extra durante la horda (crece con cada horda).")]
+    [Tooltip("Demonios extra durante la horda (crece con cada horda).")]
     [SerializeField] private float hordeExtraAlive = 220f;
 
     [Header("Aparición")]
     [SerializeField] private float minSpawnDistance = 14f;
     [SerializeField] private float maxSpawnDistance = 26f;
     [SerializeField] private float hordeMinSpawnDistance = 10f;
-    [Tooltip("Más lejos que esto el zombie se mete al suelo y reaparece cerca.")]
+    [Tooltip("Más lejos que esto el demonio se mete al suelo y reaparece cerca.")]
     [SerializeField] private float relocateDistance = 45f;
     [SerializeField] private int maxSpawnsPerFrame = 6;
 
@@ -49,7 +51,7 @@ public class EnemyDirector : MonoBehaviour
     public float NextHordeIn { get; private set; }
     public bool HordeIncoming => !HordeActive && NextHordeIn <= hordeWarning;
     public int AliveCount { get; private set; }
-    // Qué tan arriba del suelo real está Pogoman (encima de zombies, volando...).
+    // Qué tan arriba del suelo real está Pogoman (encima de demonios, volando...).
     public float PlayerHeightAboveGround { get; private set; }
     public event Action<bool> HordeChanged;   // true = empezó, false = terminó
 
@@ -93,7 +95,7 @@ public class EnemyDirector : MonoBehaviour
 
         AliveCount = EnemyTracker.All.Count;
 
-        // ---- Cuántos zombies queremos vivos y qué tan rápido salen ----
+        // ---- Cuántos demonios queremos vivos y qué tan rápido salen ----
         float progress = Mathf.Clamp(RunTime / 900f, 0f, 1.3f);
         float targetAlive = Mathf.Lerp(aliveAtStart, aliveAtEnd, Mathf.Pow(progress, 1.5f));
         float rate = Mathf.Lerp(spawnRateAtStart, spawnRateAtEnd, Mathf.Pow(progress, 1.3f));
@@ -158,7 +160,7 @@ public class EnemyDirector : MonoBehaviour
         look.y = 0f;
         Quaternion rotation = look.sqrMagnitude > 0.01f ? Quaternion.LookRotation(look) : Quaternion.identity;
 
-        Enemy enemy = Instantiate(enemyPrefab, ground + Vector3.up * 1f, rotation);
+        Enemy enemy = Instantiate(PickPrefab(), ground + Vector3.up * 1f, rotation);
         enemy.SetTarget(player);
 
         // Más vida y velocidad con el tiempo.
@@ -173,6 +175,14 @@ public class EnemyDirector : MonoBehaviour
         ZombieMotor motor = ZombieMotor.Ensure(enemy);
         motor.Emerge(ground);
         return true;
+    }
+
+    private Enemy PickPrefab()
+    {
+        int count = 1 + (otherPrefabs != null ? otherPrefabs.Length : 0);
+        int i = UnityEngine.Random.Range(0, count);
+        Enemy chosen = i == 0 ? enemyPrefab : otherPrefabs[i - 1];
+        return chosen != null ? chosen : enemyPrefab;
     }
 
     // Busca un punto de suelo alrededor de Pogoman (no lava, no muy empinado).
@@ -204,8 +214,8 @@ public class EnemyDirector : MonoBehaviour
     private readonly RaycastHit[] hits = new RaycastHit[16];
     private float referenceY;
 
-    // Altura del suelo debajo de Pogoman (si va volando o encima de una pila de zombies,
-    // los zombies salen a nivel del suelo, no a su altura).
+    // Altura del suelo debajo de Pogoman (si va volando o encima de una pila de demonios,
+    // los demonios salen a nivel del suelo, no a su altura).
     private float GroundUnderPlayer()
     {
         int count = Physics.RaycastNonAlloc(player.position + Vector3.up * 0.5f, Vector3.down, hits, 80f, ~0, QueryTriggerInteraction.Ignore);
@@ -231,7 +241,7 @@ public class EnemyDirector : MonoBehaviour
         Vector3 origin = new Vector3(candidate.x, referenceY + height, candidate.z);
         int count = Physics.RaycastNonAlloc(origin, Vector3.down, hits, height + 30f, ~0, QueryTriggerInteraction.Ignore);
 
-        // El suelo más alto que no sea un zombie ni Pogoman (en la horda hay zombies por todos lados).
+        // El suelo más alto que no sea un demonio ni Pogoman (en la horda hay demonios por todos lados).
         int best = -1;
         for (int i = 0; i < count; i++)
         {

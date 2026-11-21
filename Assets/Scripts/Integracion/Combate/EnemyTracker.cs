@@ -34,7 +34,7 @@ public class EnemyTracker : MonoBehaviour
     [Tooltip("Probabilidad de que suelte una gema verde (vale 5).")]
     [SerializeField, Range(0f, 1f)] private float bigGemChance = 0.05f;
 
-    // Con cientos de zombies no pueden gruñir todos: solo los cercanos y unos cuantos por segundo.
+    // Con cientos de demonios no pueden gruñir todos: solo los cercanos y unos cuantos por segundo.
     private const float GroanDistance = 22f;
     private const float GroanSpacing = 0.35f;
     private static float nextGroanAllowed;
@@ -221,7 +221,7 @@ public class EnemyTracker : MonoBehaviour
             figure.rotation = Quaternion.Slerp(figure.rotation, look, 10f * Time.deltaTime);
         }
 
-        // Tambaleo de zombie al caminar.
+        // Tambaleo al caminar.
         walkPhase += speed * Time.deltaTime * 3f;
         float sway = Mathf.Sin(walkPhase) * Mathf.Clamp01(speed / 2f);
         figure.localPosition = figureBasePosition + new Vector3(0f, Mathf.Abs(sway) * 0.08f, 0f);

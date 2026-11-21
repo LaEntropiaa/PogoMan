@@ -4,7 +4,7 @@ using UnityEngine;
 // Cada frame el esqueleto vuelve a su pose de reposo y luego se rota hueso por hueso
 // de padre a hijo, así el antebrazo sigue al brazo, la espinilla al muslo, etc.
 // Va en la raíz del modelo (la "Figura" del enemigo).
-public class ZombieRigAnimator : MonoBehaviour
+public class ZombieRigAnimator : MonoBehaviour, IDemonRig
 {
     [Header("Huesos (se buscan por nombre si están vacíos)")]
     [SerializeField] private Transform spine;       // Bone
@@ -22,7 +22,7 @@ public class ZombieRigAnimator : MonoBehaviour
     [SerializeField] private float stepsPerMeter = 0.9f;
     [SerializeField] private float legSwing = 22f;
     [SerializeField] private float kneeBend = 25f;
-    [Tooltip("Brazos al frente estilo zombie (negativo = hacia adelante).")]
+    [Tooltip("Brazos al frente (negativo = hacia adelante).")]
     [SerializeField] private float armsForward = -70f;
     [SerializeField] private float armSwing = 8f;
     [SerializeField] private float elbowBend = -15f;

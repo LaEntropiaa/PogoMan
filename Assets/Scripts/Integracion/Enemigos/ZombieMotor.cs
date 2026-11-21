@@ -1,8 +1,8 @@
 using UnityEngine;
 
 // Va en cada zombie (el EnemyDirector lo agrega solo). Sin tocar Enemy/Zombie:
-//  - Trepa: si hay una pared, una montaña u OTRO ZOMBIE enfrente, sube caminando.
-//    Así se forman pilas y "mares" de zombies durante las hordas.
+//  - Trepa: si hay una pared, una montaña u OTRO DEMONIO enfrente, sube caminando.
+//    Así se forman pilas y "mares" de demonios durante las hordas.
 //  - Sale del suelo al aparecer y se mete al suelo para reaparecer cerca de Pogoman.
 //  - Usa el modelo ligero (Zombie_Lejos) cuando está lejos de la cámara.
 [DefaultExecutionOrder(60)]
@@ -14,7 +14,7 @@ public class ZombieMotor : MonoBehaviour
     [Tooltip("Qué tan lejos enfrente revisa si hay algo que trepar.")]
     [SerializeField] private float probeDistance = 0.4f;
     [SerializeField] private float maxClimbTime = 7f;
-    [Tooltip("Altura máxima de las pilas de zombies (sobre el suelo real).")]
+    [Tooltip("Altura máxima de las pilas de demonios (sobre el suelo real).")]
     [SerializeField] private float maxPileHeight = 5f;
 
     [Header("Salir / meterse al suelo")]
@@ -85,7 +85,8 @@ public class ZombieMotor : MonoBehaviour
     // ---- Modelo ligero de lejos ----
     // De lejos el zombie es una malla fija (ya posada caminando) compartida por todos:
     // se dibuja muchísimo más barato que cientos de esqueletos animados.
-    private static Mesh farPoseMesh;
+    // Una malla fija por tipo de demonio (zombie, hongo...).
+    private static readonly System.Collections.Generic.Dictionary<Mesh, Mesh> farPoseMeshes = new System.Collections.Generic.Dictionary<Mesh, Mesh>();
     private LODGroup lodGroup;
     private Renderer farRenderer;
     private bool heavyLod;
@@ -99,23 +100,24 @@ public class ZombieMotor : MonoBehaviour
         SkinnedMeshRenderer farSkin = null;
         foreach (Renderer r in GetComponentsInChildren<Renderer>(true))
         {
-            if (r.name == "Zombie_Lejos") farSkin = r as SkinnedMeshRenderer;
+            if (!r.gameObject.activeInHierarchy) continue;
+            if (r.name.EndsWith("_Lejos")) farSkin = r as SkinnedMeshRenderer;
             else if (r is SkinnedMeshRenderer && near == null) near = r;
         }
         if (near == null || farSkin == null)
             return;
 
-        if (farPoseMesh == null)
+        if (!farPoseMeshes.TryGetValue(farSkin.sharedMesh, out Mesh farPoseMesh) || farPoseMesh == null)
         {
-            ZombieRigAnimator rig = GetComponentInChildren<ZombieRigAnimator>();
-            if (rig != null)
-                rig.ApplyPose(Mathf.PI * 0.5f, 1f, 0f, 0f);
-            farPoseMesh = new Mesh { name = "ZombieLejosPose" };
+            IDemonRig rig = GetComponentInChildren<IDemonRig>();
+            rig?.ApplyPose(Mathf.PI * 0.5f, 1f, 0f, 0f);
+            farPoseMesh = new Mesh { name = farSkin.name + "Pose" };
             farSkin.BakeMesh(farPoseMesh, false);
             farPoseMesh.RecalculateBounds();
+            farPoseMeshes[farSkin.sharedMesh] = farPoseMesh;
         }
 
-        var go = new GameObject("Zombie_LejosFijo");
+        var go = new GameObject("LejosFijo");
         go.layer = farSkin.gameObject.layer;
         go.transform.SetParent(farSkin.transform, false);
         go.AddComponent<MeshFilter>().sharedMesh = farPoseMesh;
