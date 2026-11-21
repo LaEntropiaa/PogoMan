@@ -13,8 +13,6 @@ public class Coin : MonoBehaviour
     [SerializeField] private int value = 1;
 
     private static Transform player;
-    private static float lastCollectTime;
-    private static int combo;
 
     private Vector3 velocity;
     private float age;
@@ -65,16 +63,13 @@ public class Coin : MonoBehaviour
     {
         PlayerStats.Instance?.AddCoins(value);
 
-        // Monedas seguidas suenan cada vez más agudo.
-        combo = Time.time - lastCollectTime < 0.4f ? combo + 1 : 0;
-        lastCollectTime = Time.time;
 
         if (collectClip != null)
         {
             var go = new GameObject("SonidoMoneda");
             var src = go.AddComponent<AudioSource>();
             src.clip = collectClip;
-            src.pitch = 1f + Mathf.Min(combo, 12) * 0.06f;
+            src.pitch = Random.Range(0.94f, 1.08f);
             src.volume = 0.55f * GameSettings.SfxVolume;
             src.spatialBlend = 0f;
             src.Play();
