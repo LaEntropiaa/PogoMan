@@ -6,7 +6,8 @@ using UnityEngine;
 //  - los cofres de muestra se pueden comprar,
 //  - el río y las lagunas del Estigia hacen daño,
 //  - los géiseres lanzan más alto y avisan a PogoJump,
-//  - se ocultan los pilares de muestra (los pilares reales los pone el juego).
+//  - se ocultan los pilares de muestra (los pilares reales los pone el juego),
+//  - los puntos de los pilares se enderezan (venían acostados de Blender).
 public class EstigiaGameHooks : MonoBehaviour
 {
     [Header("Cofres")]
@@ -35,6 +36,8 @@ public class EstigiaGameHooks : MonoBehaviour
                 MakeHazard(t.gameObject);
             else if (n.StartsWith("Pilar_Preview"))
                 t.gameObject.SetActive(false);
+            else if (n.StartsWith("ZonaPilar_"))
+                StandUp(t);
         }
 
         foreach (EstigiaGeyser geyser in GetComponentsInChildren<EstigiaGeyser>(true))
@@ -42,6 +45,17 @@ public class EstigiaGameHooks : MonoBehaviour
             geyser.clearance = geyserClearance;
             geyser.onLaunch.AddListener(v => PogoJump.Instance?.OnExternalLaunch(v));
         }
+    }
+
+    // Los puntos de los pilares vienen de Blender acostados (-90° en X): BossPillar copia esa
+    // rotación y el pilar salía tirado. Se dejan derechos conservando hacia dónde miran.
+    private static void StandUp(Transform t)
+    {
+        Vector3 facing = t.rotation * Vector3.up;   // el "frente" del empty de Blender
+        facing.y = 0f;
+        if (facing.sqrMagnitude < 0.001f)
+            facing = Vector3.forward;
+        t.rotation = Quaternion.LookRotation(facing.normalized, Vector3.up);
     }
 
     private void MakeHazard(GameObject go)

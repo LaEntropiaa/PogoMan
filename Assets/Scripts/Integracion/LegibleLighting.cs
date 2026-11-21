@@ -8,6 +8,8 @@ public class LegibleLighting : MonoBehaviour
     [Header("Sol (la luz direccional con sombras)")]
     [SerializeField] private Color sunColor = new Color(1f, 0.95f, 0.88f);
     [SerializeField] private float sunIntensity = 1.35f;
+    [Tooltip("Qué tan oscuras son las sombras (1 = negras, 0 = sin sombra).")]
+    [SerializeField, Range(0f, 1f)] private float shadowStrength = 0.5f;
 
     [Header("Otras luces direccionales (relleno)")]
     [Tooltip("0 = gris, 1 = color original.")]
@@ -19,9 +21,9 @@ public class LegibleLighting : MonoBehaviour
     [SerializeField] private float pointIntensityMultiplier = 0.7f;
 
     [Header("Ambiente")]
-    [SerializeField] private Color ambientSky = new Color(0.52f, 0.5f, 0.58f);
-    [SerializeField] private Color ambientEquator = new Color(0.42f, 0.38f, 0.38f);
-    [SerializeField] private Color ambientGround = new Color(0.2f, 0.17f, 0.17f);
+    [SerializeField] private Color ambientSky = new Color(0.66f, 0.63f, 0.7f);
+    [SerializeField] private Color ambientEquator = new Color(0.56f, 0.52f, 0.52f);
+    [SerializeField] private Color ambientGround = new Color(0.34f, 0.3f, 0.3f);
 
     [Header("Niebla")]
     [SerializeField] private Color fogColor = new Color(0.22f, 0.14f, 0.16f);
@@ -44,6 +46,7 @@ public class LegibleLighting : MonoBehaviour
             {
                 l.color = sunColor;
                 l.intensity = sunIntensity;
+                l.shadowStrength = shadowStrength;
             }
             else if (l.type == LightType.Directional)
             {

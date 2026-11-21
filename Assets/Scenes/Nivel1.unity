@@ -3799,13 +3799,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 740715286}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 4.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 985693010}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!64 &740715288
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -5152,7 +5152,7 @@ MonoBehaviour:
   healthPerMinute: 0.12
   speedPerMinute: 0.035
   maxSpeedMultiplier: 1.6
-  hordeInterval: 180
+  hordeInterval: 240
   hordeDuration: 20
   hordeWarning: 5
   hordeSpawnRate: 35
@@ -5179,6 +5179,8 @@ MonoBehaviour:
   dashClip: {fileID: 8300000, guid: c8605c0e775c0fbacb8cef220cc2a514, type: 3}
   airJumpClip: {fileID: 8300000, guid: eec95978f566e0ef98e689203eefeb31, type: 3}
   fxMaterial: {fileID: 2100000, guid: cb297985e50f45082b580c6a46fa44eb, type: 2}
+  shieldHitClip: {fileID: 8300000, guid: 7f8a3a96d5dfa862abe1b6a24f2174cc, type: 3}
+  shieldBreakClip: {fileID: 8300000, guid: b9ff7d8b9cd96c9c580de2bb625aa0f4, type: 3}
   dirtMaterial: {fileID: 2100000, guid: 43e2544c92a77539787bac514c3bc9ef, type: 2}
 --- !u!4 &972643069
 Transform:
@@ -5209,13 +5211,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LegibleLighting
   sunColor: {r: 1, g: 0.95, b: 0.88, a: 1}
   sunIntensity: 1.35
+  shadowStrength: 0.5
   fillSaturation: 0.3
   fillIntensity: 0.45
   pointSaturation: 0.6
   pointIntensityMultiplier: 0.7
-  ambientSky: {r: 0.52, g: 0.5, b: 0.58, a: 1}
-  ambientEquator: {r: 0.42, g: 0.38, b: 0.38, a: 1}
-  ambientGround: {r: 0.2, g: 0.17, b: 0.17, a: 1}
+  ambientSky: {r: 0.66, g: 0.63, b: 0.7, a: 1}
+  ambientEquator: {r: 0.56, g: 0.52, b: 0.52, a: 1}
+  ambientGround: {r: 0.34, g: 0.3, b: 0.3, a: 1}
   fogColor: {r: 0.22, g: 0.14, b: 0.16, a: 1}
   fogDensity: 0.007
 --- !u!1 &982337973
@@ -5478,13 +5481,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 999076560}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 4.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 799002253}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!64 &999076562
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -6757,13 +6760,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1336509043}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 4.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1482282279}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!64 &1336509045
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -7993,6 +7996,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PixelFilter
   pixelSize: 2
+  useMenuSetting: 1
 --- !u!114 &1638811135
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8616,13 +8620,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1755070132}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 4.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 333533022}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!64 &1755070134
 MeshCollider:
   m_ObjectHideFlags: 0
