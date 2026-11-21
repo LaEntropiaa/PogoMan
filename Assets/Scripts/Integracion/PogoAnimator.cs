@@ -39,6 +39,10 @@ public class PogoAnimator : MonoBehaviour
     [SerializeField] private float slideSquash = 0.85f;
     [Tooltip("Inclinación hacia adelante en la picada.")]
     [SerializeField] private float diveLean = 18f;
+    [Tooltip("Vaivén lateral mientras se desliza (grados).")]
+    [SerializeField] private float slideSway = 4f;
+    [Tooltip("Se encoge un poco justo antes de tocar el piso.")]
+    [SerializeField] private float landingAnticipation = 0.1f;
 
     [Header("Daño y muerte")]
     [SerializeField] private float hurtShake = 0.07f;
@@ -58,6 +62,8 @@ public class PogoAnimator : MonoBehaviour
     private float yaw;
     private float deathTimer = -1f;
     private ParticleSystem dust;
+    private bool wasSliding;
+    private float roll;
 
     private Renderer[] renderers;
     private readonly List<Color[]> baseColors = new List<Color[]>();
@@ -138,13 +144,28 @@ public class PogoAnimator : MonoBehaviour
                           : Mathf.Min(speed * leanPerSpeed, maxLean);
         pitch = Mathf.Lerp(pitch, targetPitch, 1f - Mathf.Exp(-poseSpeed * dt));
 
+        // Al empezar a deslizarse: aplastón y nube de polvo.
+        if (sliding && !wasSliding)
+        {
+            scaleY = Mathf.Min(scaleY, 0.72f);
+            scaleVelocity = 0f;
+            if (dust != null && speed > 1f)
+                dust.Emit(20);
+        }
+        wasSliding = sliding;
+
+        // Vaivén suave mientras se desliza.
+        float targetRoll = sliding ? Mathf.Sin(Time.time * 7f) * slideSway * Mathf.Clamp01(speed / 6f) : 0f;
+        roll = Mathf.Lerp(roll, targetRoll, 1f - Mathf.Exp(-12f * dt));
+
         if (facingRoot != null)
-            facingRoot.rotation = Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(pitch, 0f, 0f);
+            facingRoot.rotation = Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(pitch, 0f, roll);
 
         // ---- Resorte de aplastar/estirar ----
         float target;
         if (sliding) target = slideSquash;
         else if (diving) target = 1f + maxStretch;          // estirado como flecha hacia abajo
+        else if (v.y < -3f && NearGround(0.7f)) target = 1f - landingAnticipation;   // anticipación del aterrizaje
         else target = 1f + Mathf.Clamp(Mathf.Abs(v.y) * stretchPerSpeed, 0f, maxStretch);
 
         float accel = (target - scaleY) * springStiffness - scaleVelocity * springDamping;
@@ -175,6 +196,12 @@ public class PogoAnimator : MonoBehaviour
 
         Tint(hurt);
         UpdateDust(sliding, speed);
+    }
+
+    private bool NearGround(float distance)
+    {
+        // El centro de Pogoman está ~1 m sobre sus pies.
+        return Physics.Raycast(transform.position, Vector3.down, 1f + distance, ~0, QueryTriggerInteraction.Ignore);
     }
 
     private void CreateDust()

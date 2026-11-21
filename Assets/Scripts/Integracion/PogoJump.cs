@@ -39,6 +39,12 @@ public class PogoJump : MonoBehaviour
     [Tooltip("Arriba de esta velocidad el impulso viene de un géiser.")]
     [SerializeField] private float geyserVelocity = 12f;
 
+    [Header("Deslizamiento")]
+    [Tooltip("Fuerza que mantiene a Pogoman pegado al piso mientras se desliza.")]
+    [SerializeField] private float slideStickForce = 30f;
+    [Tooltip("Velocidad máxima hacia arriba permitida al deslizarse (evita brincos en desniveles).")]
+    [SerializeField] private float slideMaxUpSpeed = 0.5f;
+
     [Header("Rampas")]
     [SerializeField] private float slopeAcceleration = 16f;
     [SerializeField] private float maxExtraSlideSpeed = 12f;
@@ -103,9 +109,20 @@ public class PogoJump : MonoBehaviour
         float dt = Time.fixedDeltaTime;
         Vector3 v = rb.linearVelocity;
 
+        bool crouching = PogoBridge.IsCtrlHeld(player);
+
         // ---- ¿Acaba de rebotar? (la velocidad vertical saltó hacia arriba) ----
-        if (v.y - lastVerticalSpeed > 4f && v.y > 2f)
+        // Agachado no hay rebotes: si sube es porque el terreno lo empujó.
+        if (!crouching && v.y - lastVerticalSpeed > 4f && v.y > 2f)
             OnBounce(ref v);
+
+        // ---- Deslizándose: pegado al piso, sin brincos (los géiseres sí lanzan) ----
+        if (crouching && PogoBridge.IsGrounded(player) && v.y < geyserVelocity)
+        {
+            if (v.y > slideMaxUpSpeed)
+                v.y = slideMaxUpSpeed;
+            v += Vector3.down * slideStickForce * dt;
+        }
 
         // ---- Espacio apretado justo después del rebote ----
         if (!boostedThisBounce && !geyserAscent && v.y > 0f &&
