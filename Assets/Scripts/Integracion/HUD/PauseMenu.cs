@@ -88,7 +88,8 @@ public class PauseMenu : MonoBehaviour
     public void Resume()
     {
         paused = false;
-        Time.timeScale = 1f;
+        // Si pausaste con un cofre o la pantalla de mejoras abiertos, el juego sigue detenido detrás.
+        Time.timeScale = ChestUI.IsOpen || LevelUpUI.IsOpen ? 0f : 1f;
         SetVisible(false);
         SceneNav.SetGameplayCursor(true);
     }

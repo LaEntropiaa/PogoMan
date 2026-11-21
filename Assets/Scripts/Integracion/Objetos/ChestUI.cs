@@ -180,8 +180,24 @@ public class ChestUI : MonoBehaviour
             yield return null;
         }
 
-        ItemInventory.Instance?.Add(item);
-        chest.MarkOpened();
+        // Pase lo que pase al entregar el objeto, la ventana se cierra (si no, ya no se podrían abrir más cofres).
+        try
+        {
+            ItemInventory.Instance?.Add(item);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogException(e);
+        }
+        try
+        {
+            if (chest != null)
+                chest.MarkOpened();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogException(e);
+        }
 
         for (float t = 0f; t < 0.2f; t += Time.unscaledDeltaTime)
         {

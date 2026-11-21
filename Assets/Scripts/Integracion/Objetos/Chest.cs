@@ -153,6 +153,8 @@ public class Chest : MonoBehaviour
         var block = new MaterialPropertyBlock();
         foreach (Renderer r in renderers)
         {
+            if (r == null)
+                continue;   // p. ej. chispas que ya se borraron
             r.GetPropertyBlock(block);
             block.SetColor("_BaseColor", new Color(0.45f, 0.4f, 0.4f));
             r.SetPropertyBlock(block);
