@@ -42,6 +42,10 @@ public class RunSystems : MonoBehaviour
         PlayerVitals.ShieldHitClip = shieldHitClip;
         PlayerVitals.ShieldBreakClip = shieldBreakClip;
 
+        PogoCamera cam = FindAnyObjectByType<PogoCamera>();
+        if (cam != null && cam.GetComponent<CameraSensitivity>() == null)
+            cam.gameObject.AddComponent<CameraSensitivity>();
+
         PogoPlayer player = FindAnyObjectByType<PogoPlayer>();
         if (player == null)
             return;
