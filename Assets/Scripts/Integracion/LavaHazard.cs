@@ -20,6 +20,12 @@ public class LavaHazard : MonoBehaviour
     [SerializeField] private Material sparkMaterial;
 
     private float playerTimer;
+
+    public void Configure(AudioClip sizzle, Material sparks)
+    {
+        sizzleClip = sizzle;
+        sparkMaterial = sparks;
+    }
     private float enemyTimer;
 
     private void Update()
