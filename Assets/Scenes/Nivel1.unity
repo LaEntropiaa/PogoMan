@@ -3915,6 +3915,7 @@ GameObject:
   - component: {fileID: 711870300}
   - component: {fileID: 711870299}
   - component: {fileID: 711870298}
+  - component: {fileID: 711870303}
   m_Layer: 0
   m_Name: Mundo
   m_TagString: Untagged
@@ -4010,6 +4011,43 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &711870303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 711870297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 357a209eae4458f3db380f23236bd267, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GuardianKit
+  telegraphMaterial: {fileID: 2100000, guid: 99953dc0be809587cb3c37b922b2b5be, type: 2}
+  fxMaterial: {fileID: 2100000, guid: cb297985e50f45082b580c6a46fa44eb, type: 2}
+  soulMaterial: {fileID: 2100000, guid: da7799c4cab44d24bbe034fa991f0be5, type: 2}
+  emergeClip: {fileID: 8300000, guid: 7e90739671403a354b658e33b88978b6, type: 3}
+  defeatClip: {fileID: 8300000, guid: d2cde2ab3c4f6e1fdb74cc08f24d8d7d, type: 3}
+  windupClip: {fileID: 8300000, guid: d45bbdb191a1d5dd0a9584f3a0b802e2, type: 3}
+  attackClips:
+  - {fileID: 8300000, guid: 74c9947cdeb8afdde99841791f631535, type: 3}
+  - {fileID: 8300000, guid: 8733178d87e6dd1d4a350b2ed771c883, type: 3}
+  - {fileID: 8300000, guid: 2e2f6adfc088793919563a15363fea28, type: 3}
+  - {fileID: 8300000, guid: e41cf33a06a3c8f06a93d3b24026ec0a, type: 3}
+  - {fileID: 8300000, guid: e522798e7806f2ddb91a1d0a0d6138a8, type: 3}
+  - {fileID: 8300000, guid: c00575bd9b83add70a79e20532e3982c, type: 3}
+  - {fileID: 8300000, guid: 9c3176a25ee8edee1b53903016422a5d, type: 3}
+  - {fileID: 8300000, guid: 5d22a01758dc11a43940a1d3dd48b5a0, type: 3}
+  soulHitClip: {fileID: 8300000, guid: ff1b9ebd0b14d2158acff988c911af7e, type: 3}
+  musicFundidor: {fileID: 8300000, guid: fc24a433ea82f086b92002a5a548335a, type: 3}
+  musicViuda: {fileID: 8300000, guid: 98e4a150854f6df73900ef8084962240, type: 3}
+  musicRecaudador: {fileID: 8300000, guid: 906fe04ce7cf555d59c0f3f8cf85716b, type: 3}
+  musicBarquero: {fileID: 8300000, guid: 758f9993a72ad063e8a4948746147e5c, type: 3}
+  guardianPrefabs:
+  - {fileID: 947900319930878741, guid: 8728793580a91796785ec6730e3139a5, type: 3}
+  - {fileID: 6809997828398397026, guid: 23141dacd6e445a6b8a1e6aadd73a0f3, type: 3}
+  - {fileID: 276737850836462217, guid: 99d1873e9c9721c71a524282a23c9165, type: 3}
+  - {fileID: 7308910017271154913, guid: 3126fa1aaf2141fdebf713a8879d2daa, type: 3}
 --- !u!1 &719302179
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,0 +1,126 @@
+{
+  "Fundidor": {
+    "vida": 1600,
+    "velocidad_m_s": 1.8,
+    "fps": 24,
+    "clips": [
+      "Fundidor_Reposo",
+      "Fundidor_Avance",
+      "Fundidor_Martillazo",
+      "Fundidor_Purga",
+      "Fundidor_Impacto",
+      "Fundidor_Derrota"
+    ],
+    "ataques": [
+      {
+        "clip": "Fundidor_Martillazo",
+        "frameActivoBlender": 32,
+        "segundosDesdeInicio": 1.2917,
+        "duracion_s": 2.0417,
+        "dano": 24,
+        "cooldown_s": 3.0
+      },
+      {
+        "clip": "Fundidor_Purga",
+        "frameActivoBlender": 43,
+        "segundosDesdeInicio": 1.75,
+        "duracion_s": 2.5833,
+        "dano": 18,
+        "cooldown_s": 6.0
+      }
+    ]
+  },
+  "Viuda": {
+    "vida": 1050,
+    "velocidad_m_s": 2.7,
+    "fps": 24,
+    "clips": [
+      "Viuda_Reposo",
+      "Viuda_Avance",
+      "Viuda_Pendulo",
+      "Viuda_Doblar",
+      "Viuda_Impacto",
+      "Viuda_Derrota"
+    ],
+    "ataques": [
+      {
+        "clip": "Viuda_Pendulo",
+        "frameActivoBlender": 27,
+        "segundosDesdeInicio": 1.0833,
+        "duracion_s": 1.8333,
+        "dano": 17,
+        "cooldown_s": 3.2
+      },
+      {
+        "clip": "Viuda_Doblar",
+        "frameActivoBlender": 40,
+        "segundosDesdeInicio": 1.625,
+        "duracion_s": 2.4583,
+        "dano": 22,
+        "cooldown_s": 6.8
+      }
+    ]
+  },
+  "Recaudador": {
+    "vida": 850,
+    "velocidad_m_s": 3.5,
+    "fps": 24,
+    "clips": [
+      "Recaudador_Reposo",
+      "Recaudador_Avance",
+      "Recaudador_Embargo",
+      "Recaudador_Timbrado",
+      "Recaudador_Impacto",
+      "Recaudador_Derrota"
+    ],
+    "ataques": [
+      {
+        "clip": "Recaudador_Embargo",
+        "frameActivoBlender": 21,
+        "segundosDesdeInicio": 0.8333,
+        "duracion_s": 1.5833,
+        "dano": 14,
+        "cooldown_s": 2.6
+      },
+      {
+        "clip": "Recaudador_Timbrado",
+        "frameActivoBlender": 33,
+        "segundosDesdeInicio": 1.3333,
+        "duracion_s": 2.1667,
+        "dano": 19,
+        "cooldown_s": 5.3
+      }
+    ]
+  },
+  "Barquero": {
+    "vida": 1250,
+    "velocidad_m_s": 2.3,
+    "fps": 24,
+    "clips": [
+      "Barquero_Reposo",
+      "Barquero_Avance",
+      "Barquero_Remada",
+      "Barquero_Cortejo",
+      "Barquero_Impacto",
+      "Barquero_Derrota"
+    ],
+    "ataques": [
+      {
+        "clip": "Barquero_Remada",
+        "frameActivoBlender": 28,
+        "segundosDesdeInicio": 1.125,
+        "duracion_s": 1.875,
+        "dano": 20,
+        "cooldown_s": 3.7
+      },
+      {
+        "clip": "Barquero_Cortejo",
+        "frameActivoBlender": 38,
+        "segundosDesdeInicio": 1.5417,
+        "duracion_s": 2.375,
+        "dano": 15,
+        "cooldown_s": 6.5
+      }
+    ]
+  }
+}

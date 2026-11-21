@@ -33,6 +33,7 @@ public class PillarAltar : MonoBehaviour
             pillars.Add(p);
             glows[p] = MakeGlow(p.transform);
         }
+        AssignGuardians();
 
         Canvas canvas = UiKit.MakeCanvas("HUDPilar", 6);
         canvas.transform.SetParent(transform, false);
@@ -70,6 +71,26 @@ public class PillarAltar : MonoBehaviour
 
     private static bool Awakened(BossPillar p) => PogoBridge.GetBool(p, "bossSpawned");
 
+    // Cada pilar activo recibe un guardián distinto, al azar en cada partida.
+    private void AssignGuardians()
+    {
+        GuardianKit kit = GuardianKit.Instance;
+        if (kit == null || kit.GuardianPrefabs == null)
+            return;
+        var bag = new List<Enemy>();
+        foreach (Enemy e in kit.GuardianPrefabs)
+            if (e != null) bag.Add(e);
+        if (bag.Count == 0)
+            return;
+        for (int i = bag.Count - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            (bag[i], bag[j]) = (bag[j], bag[i]);
+        }
+        for (int i = 0; i < pillars.Count; i++)
+            PogoBridge.Set(pillars[i], "bossPrefab", bag[i % bag.Count]);
+    }
+
     private void Update()
     {
         if (player == null)
@@ -90,8 +111,15 @@ public class PillarAltar : MonoBehaviour
             }
         }
 
-        prompt.text = near != null && Time.timeScale > 0f && !ChestUI.IsOpen ? "E  DESPERTAR AL GUARDIÁN DEL PILAR" : "";
-        if (near == null || Time.timeScale <= 0f || ChestUI.IsOpen)
+        // Solo un guardián a la vez: hasta vencerlo no se despierta otro pilar.
+        bool busy = false;
+        foreach (Guardian g in Guardian.Alive)
+            if (g != null && !g.IsDead) busy = true;
+
+        prompt.text = near == null || Time.timeScale <= 0f || ChestUI.IsOpen ? ""
+            : busy ? "DERROTA PRIMERO AL GUARDIÁN QUE DESPERTASTE"
+            : "E  DESPERTAR AL GUARDIÁN DEL PILAR";
+        if (near == null || busy || Time.timeScale <= 0f || ChestUI.IsOpen)
             return;
 
         bool pressed = (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) ||

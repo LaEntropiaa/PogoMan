@@ -24,6 +24,8 @@ public class GameMusic : MonoBehaviour
             source.Play();
     }
 
+    public AudioClip CurrentClip => source != null ? source.clip : null;
+
     // Cambia de canción con fundido (p. ej. al entrar a la arena).
     public void SwitchTo(AudioClip clip, float fadeSeconds = 1.2f)
     {
