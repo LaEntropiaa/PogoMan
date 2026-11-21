@@ -77,7 +77,7 @@ public class EnemyContactDamage : MonoBehaviour
                 if (gap <= hitReach && Time.time >= lastPlayerHit + PlayerInvulnerability)
                 {
                     lastPlayerHit = Time.time;
-                    player.TakeDamage(damage);
+                    PlayerVitals.Damage(player, damage);
                 }
             }
             return;
