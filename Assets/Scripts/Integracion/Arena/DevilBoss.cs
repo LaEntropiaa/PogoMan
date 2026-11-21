@@ -10,9 +10,9 @@ public class DevilBoss : Enemy
     public enum Phase { Intro, Rising, Flying, Descending, Vulnerable, Dying }
 
     [Header("Vida")]
-    [SerializeField] private float maxHealth = 1800f;
+    [SerializeField] private float maxHealth = 2600f;
     [Tooltip("Vida extra por cada nivel de Pogoman (si llegas muy cheto, aguanta más).")]
-    [SerializeField] private float healthPerLevel = 100f;
+    [SerializeField] private float healthPerLevel = 140f;
 
     [Header("Fases")]
     [SerializeField] private float introTime = 4.5f;
@@ -29,12 +29,23 @@ public class DevilBoss : Enemy
     [SerializeField] private int maxHorde = 30;
     [SerializeField] private float spawnInterval = 0.22f;
     [Tooltip("Demonios que acompañan a los jefes de pilar.")]
-    [SerializeField] private int escortCount = 4;
+    [SerializeField] private int escortCount = 6;
+    [Tooltip("Mini jefes en cada horda (además de los demonios), +1 cada dos oleadas.")]
+    [SerializeField] private int miniBossesPerHorde = 1;
 
     [Header("Bolas de fuego")]
-    [SerializeField] private float fireballInterval = 3.6f;
-    [SerializeField] private float enragedFireballInterval = 2.2f;
-    [SerializeField] private float fireballDamage = 18f;
+    [SerializeField] private float fireballInterval = 2.8f;
+    [SerializeField] private float enragedFireballInterval = 1.7f;
+    [SerializeField] private float fireballDamage = 20f;
+
+    [Header("Lluvia de magia (cada pocas bolas)")]
+    [SerializeField] private int rainEvery = 3;
+    [SerializeField] private int rainOrbs = 7;
+    [SerializeField] private float rainDamage = 12f;
+
+    [Header("Golpe al aterrizar")]
+    [SerializeField] private float slamRadius = 6f;
+    [SerializeField] private float slamDamage = 22f;
     [SerializeField] private float fireballRadius = 2.4f;
     [SerializeField] private float fireballFlight = 1.3f;
 
@@ -75,6 +86,8 @@ public class DevilBoss : Enemy
     private bool wasGrounded;
     private Transform model;
     private EnemyTracker tracker;
+    private int castCount;
+    public DevilRig Rig { get; set; }
 
     public void Setup(ArenaFight owner, Transform modelRoot, Vector3 arenaCenter, Vector3 ground, PogoPlayer target)
     {
@@ -114,6 +127,11 @@ public class DevilBoss : Enemy
         stateTimer = 0f;
         if (tracker != null)
             tracker.Targetable = p == Phase.Vulnerable;
+        if (Rig != null)
+            Rig.State = p == Phase.Intro ? DevilRig.Pose.Intro
+                : p == Phase.Vulnerable ? DevilRig.Pose.Stunned
+                : p == Phase.Dying ? DevilRig.Pose.Dying
+                : DevilRig.Pose.Fly;
         PhaseChanged?.Invoke(p);
     }
 
@@ -154,6 +172,7 @@ public class DevilBoss : Enemy
                 MoveArc(stateTimer / descendTime, false);
                 if (stateTimer >= descendTime)
                 {
+                    Slam();
                     vulnerableTimer = vulnerableTime;
                     SetState(Phase.Vulnerable);
                     fight.OnVulnerable();
@@ -163,7 +182,7 @@ public class DevilBoss : Enemy
             case Phase.Vulnerable:
                 vulnerableTimer -= dt;
                 // Mareado: se tambalea en su lugar.
-                model.localRotation = Quaternion.Euler(Mathf.Sin(stateTimer * 7f) * 6f, 0f, Mathf.Sin(stateTimer * 5f) * 8f);
+                model.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(stateTimer * 5f) * 4f);
                 CheckStomp();
                 if (vulnerableTimer <= 0f)
                 {
@@ -186,6 +205,7 @@ public class DevilBoss : Enemy
         fromPoint = transform.position;
         toPoint = SkyPoint(orbitAngle);
         SetState(Phase.Rising);
+        Rig?.Laugh();
         fight.OnRise();
     }
 
@@ -238,18 +258,23 @@ public class DevilBoss : Enemy
         spawnTimer = 0.6f;
         if (PillarWave)
         {
-            // Jefes de pilar (más mientras avanzas) con unos demonios de escolta.
-            int bosses = 1 + Wave / 4;
+            // Varios jefes de pilar (con sus habilidades) y demonios de escolta.
+            int bosses = 2 + Wave / 3;
             for (int i = 0; i < bosses; i++)
                 fight.Summon(fight.PillarBossPrefab, waveEnemies, true);
             pendingPrefab = null;
-            pendingSpawns = escortCount + Wave / 2;
+            pendingSpawns = escortCount + Wave;
         }
         else
         {
+            // Horda con mini jefes metidos.
+            int minis = miniBossesPerHorde + Wave / 2;
+            for (int i = 0; i < minis; i++)
+                fight.Summon(fight.PillarBossPrefab, waveEnemies, true);
             pendingPrefab = null;
             pendingSpawns = Mathf.Min(maxHorde, hordeBase + hordePerWave * (Wave / 2));
         }
+        Rig?.Summon();
         fight.OnWaveStarted(Wave, PillarWave);
         fireTimer = 1.5f;
     }
@@ -307,6 +332,38 @@ public class DevilBoss : Enemy
             Fireball.Launch(hand, t, fireballFlight, fireballDamage, fireballRadius, fight.FireballMaterial, fight.FxMaterial, fight.ExplodeClip);
         }
         fight.OnFireball(hand);
+        Rig?.Cast();
+
+        // Cada pocas bolas, además, una lluvia de orbes morados alrededor de Pogoman.
+        castCount++;
+        if (rainEvery > 0 && castCount % rainEvery == 0)
+            MagicRain();
+    }
+
+    private void MagicRain()
+    {
+        for (int i = 0; i < rainOrbs; i++)
+        {
+            Vector2 c = Random.insideUnitCircle * 7f;
+            Vector3 from = player.position + new Vector3(c.x, 14f + Random.value * 4f, c.y);
+            Vector3 v = Vector3.down * Random.Range(6f, 9f) + new Vector3(-c.x, 0f, -c.y) * 0.15f;
+            MagicOrb.Launch(from, v, i % 3 == 0 ? player : null, rainDamage, BossCaster.OrbMaterial, fight.FxMaterial, BossCaster.ImpactClip);
+        }
+    }
+
+    // Al bajar golpea el suelo: onda que daña y empuja si estás cerca.
+    private void Slam()
+    {
+        fight.OnSlam(transform.position);
+        Vector3 d = player.position - transform.position;
+        float flat = new Vector2(d.x, d.z).magnitude;
+        if (flat <= slamRadius && d.y < 3f)
+        {
+            PlayerVitals.Damage(pogo, slamDamage * (1f - flat / slamRadius * 0.5f));
+            var body = pogo.GetComponent<Rigidbody>();
+            Vector3 push = new Vector3(d.x, 0f, d.z).normalized * 10f + Vector3.up * 7f;
+            body.linearVelocity = push;
+        }
     }
 
     // ---- Daño ----
@@ -331,6 +388,7 @@ public class DevilBoss : Enemy
             return;
 
         currentHealth -= damage;
+        Rig?.Hit();
         fight.OnBossHit(damage);
         if (currentHealth <= 0f)
         {

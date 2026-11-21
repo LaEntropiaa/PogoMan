@@ -39,6 +39,7 @@ public class ArenaFight : MonoBehaviour
     [SerializeField] private AudioClip hurtClip;
     [SerializeField] private AudioClip deathClip;
     [SerializeField] private AudioClip victoryClip;
+    [SerializeField] private AudioClip slamClip;
 
     public Enemy PillarBossPrefab => pillarBossPrefab;
     public Material FireballMaterial => fireballMaterial;
@@ -92,7 +93,7 @@ public class ArenaFight : MonoBehaviour
         InArena = true;
         BuildHud();
         SpawnDevil();
-        ShowBanner("EL DIABLO TENDERO", "\"Siempre cobro lo que vendo.\"", 4f);
+        ShowBanner("EL DIABLO TENDERO", "", 3.5f);
         Play(laughClip, 1f, 1f);
     }
 
@@ -141,13 +142,13 @@ public class ArenaFight : MonoBehaviour
         var main = aura.main;
         main.startLifetime = 1.2f;
         main.startSpeed = 0.5f;
-        main.startSize = new ParticleSystem.MinMaxCurve(0.4f, 0.9f);
-        main.startColor = new Color(0.55f, 0.15f, 0.9f, 0.7f);
+        main.startSize = new ParticleSystem.MinMaxCurve(0.25f, 0.55f);
+        main.startColor = new Color(0.55f, 0.15f, 0.9f, 0.55f);
         main.simulationSpace = ParticleSystemSimulationSpace.World;
         main.gravityModifier = -0.15f;
         main.maxParticles = 300;
         var em = aura.emission;
-        em.rateOverTime = 70f;
+        em.rateOverTime = 30f;
         var shape = aura.shape;
         shape.shapeType = ParticleSystemShapeType.Box;
         shape.scale = new Vector3(1.6f, 2.6f, 1.2f) * devilScale;
@@ -161,8 +162,19 @@ public class ArenaFight : MonoBehaviour
             var e = aura.emission;
             var mm = aura.main;
             bool vulnerable = p == DevilBoss.Phase.Vulnerable;
-            e.rateOverTime = vulnerable ? 25f : 70f;
+            e.rateOverTime = vulnerable ? 15f : 30f;
             mm.startColor = vulnerable ? new Color(1f, 0.9f, 0.3f, 0.8f) : new Color(0.55f, 0.15f, 0.9f, 0.7f);
+        };
+
+        var rig = go.AddComponent<DevilRig>();
+        rig.Setup(go.transform, model);
+        rig.LookTarget = Player.transform;
+        devil.Rig = rig;
+        devil.PhaseChanged += p =>
+        {
+            // Termina la reverencia: desde aquí lo anima DevilRig.
+            if (p != DevilBoss.Phase.Intro && graph.IsValid())
+                graph.Destroy();
         };
 
         devil.Setup(this, model, arenaCenter.position, bossStart.position, Player);
@@ -225,12 +237,17 @@ public class ArenaFight : MonoBehaviour
     }
 
     // ---- Avisos del Diablo ----
-    public void OnWaveStarted(int wave, bool pillar)
+    // Sin indicaciones: solo la barra y cuántos quedan.
+    public void OnWaveStarted(int wave, bool pillar) { }
+
+    public void OnSlam(Vector3 at)
     {
-        if (pillar)
-            ShowBanner("¡JEFES DEL PILAR!", "Derrótalos para que baje el Diablo", 2.5f);
-        else
-            ShowBanner("OLEADA " + (wave + 1), "Acaba con todos para que baje el Diablo", 2.5f);
+        Play(slamClip, 1f, 1f);
+        for (int i = 0; i < 16; i++)
+        {
+            float a = i / 16f * Mathf.PI * 2f;
+            ItemFx.Burst(at + new Vector3(Mathf.Cos(a), 0.3f, Mathf.Sin(a)) * 3f, 10, 0.4f, new Color(0.45f, 0.25f, 0.2f), fxMaterial, 8f, 0.7f, 0.7f);
+        }
     }
 
     public void OnRise() => Play(laughClip, Random.Range(0.95f, 1.05f), 0.8f);
@@ -238,7 +255,6 @@ public class ArenaFight : MonoBehaviour
 
     public void OnVulnerable()
     {
-        ShowBanner("¡GOLPÉALO!", "Rebota encima de él", 1.6f);
         Play(vulnerableClip, 1f, 1f);
     }
 
@@ -262,7 +278,7 @@ public class ArenaFight : MonoBehaviour
     private IEnumerator Victory(DevilBoss boss)
     {
         Play(deathClip, 1f, 1f);
-        ShowBanner("¡EL TRATO SE CANCELA!", "", 3f);
+
 
         // Todos los demonios que quedan se mueren con él.
         foreach (EnemyTracker e in new List<EnemyTracker>(EnemyTracker.All))
@@ -366,23 +382,14 @@ public class ArenaFight : MonoBehaviour
         UiKit.SetFill(bossFill, health);
         UiKit.SetFill(bossFillLag, lagHealth);
 
-        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f);
         switch (devil.State)
         {
-            case DevilBoss.Phase.Vulnerable:
-                bossState.text = "¡VULNERABLE!  " + devil.VulnerableLeft.ToString("0.0") + " s";
-                bossState.color = Color.Lerp(new Color(1f, 0.9f, 0.3f), Color.white, pulse);
-                break;
             case DevilBoss.Phase.Flying:
-                bossState.text = "INVULNERABLE  ·  " + (devil.PillarWave ? "JEFES" : "OLEADA") + ": QUEDAN " + devil.WaveRemaining;
-                bossState.color = new Color(0.75f, 0.6f, 1f);
-                break;
-            case DevilBoss.Phase.Dying:
-                bossState.text = "";
+                bossState.text = "QUEDAN " + devil.WaveRemaining;
+                bossState.color = new Color(0.85f, 0.7f, 1f);
                 break;
             default:
-                bossState.text = "INVULNERABLE";
-                bossState.color = new Color(0.75f, 0.6f, 1f);
+                bossState.text = "";
                 break;
         }
     }

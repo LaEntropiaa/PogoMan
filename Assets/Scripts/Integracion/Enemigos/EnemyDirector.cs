@@ -26,6 +26,8 @@ public class EnemyDirector : MonoBehaviour
     [Tooltip("Vida extra por minuto (0.12 = +12 % por minuto).")]
     [SerializeField] private float healthPerMinute = 0.12f;
     [SerializeField] private float speedPerMinute = 0.035f;
+    [Tooltip("Daño extra por minuto (0.07 = +7 % por minuto; a los 15 min pegan casi el doble).")]
+    [SerializeField] private float damagePerMinute = 0.07f;
     [SerializeField] private float maxSpeedMultiplier = 1.6f;
 
     [Header("Horda")]
@@ -126,7 +128,7 @@ public class EnemyDirector : MonoBehaviour
 
         // ---- Cuántos demonios queremos vivos y qué tan rápido salen ----
         float progress = Mathf.Clamp(RunTime / 900f, 0f, 1.3f);
-        float targetAlive = Mathf.Lerp(aliveAtStart, aliveAtEnd, Mathf.Pow(progress, 1.5f));
+        float targetAlive = Mathf.Lerp(aliveAtStart, aliveAtEnd, Mathf.Pow(progress, 1.25f));
         float rate = Mathf.Lerp(spawnRateAtStart, spawnRateAtEnd, Mathf.Pow(progress, 1.3f));
 
         if (HordeActive)
@@ -230,6 +232,10 @@ public class EnemyDirector : MonoBehaviour
 
         float speed = Mathf.Min(maxSpeedMultiplier, 1f + speedPerMinute * minutes) * UnityEngine.Random.Range(0.88f, 1.12f);
         PogoBridge.SetFloat(enemy, "moveSpeed", PogoBridge.GetFloat(enemy, "moveSpeed", 3f) * speed);
+
+        float damageMult = 1f + damagePerMinute * minutes;
+        foreach (EnemyContactDamage hit in enemy.GetComponentsInChildren<EnemyContactDamage>())
+            PogoBridge.SetFloat(hit, "damage", PogoBridge.GetFloat(hit, "damage", 10f) * damageMult);
 
         ZombieMotor motor = ZombieMotor.Ensure(enemy);
         motor.Emerge(ground);

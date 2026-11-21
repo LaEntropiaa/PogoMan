@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 0817eabc96dc9120db4f55546fe735d0, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -3902,6 +3902,114 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 703754856}
   m_CullTransparentMesh: 1
+--- !u!1 &711870297
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 711870302}
+  - component: {fileID: 711870301}
+  - component: {fileID: 711870300}
+  - component: {fileID: 711870299}
+  - component: {fileID: 711870298}
+  m_Layer: 0
+  m_Name: Mundo
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &711870298
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 711870297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddcd31c1b13184cdebea8cff825fb266, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MapScreen
+  font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
+  keyIcon: {fileID: 21300000, guid: 964a19e5cb644d2e3825a5a5c0d7b0ec, type: 3}
+  openClip: {fileID: 8300000, guid: 278c3c91af37ea799823aa98ba214f9d, type: 3}
+  revealRadius: 24
+  fogResolution: 128
+  mapPixels: 320
+--- !u!114 &711870299
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 711870297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4083c54ef5f30187db3d712c26cfcabf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PillarAltar
+  interactDistance: 5
+  font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
+  fxMaterial: {fileID: 2100000, guid: cb297985e50f45082b580c6a46fa44eb, type: 2}
+  awakenClip: {fileID: 8300000, guid: fb1d37ed82856aa3f8f1442e6a82c5b9, type: 3}
+--- !u!114 &711870300
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 711870297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e83055fe1325f2873b5f52e74775d754, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkyDrift
+  skybox: {fileID: 2100000, guid: 0817eabc96dc9120db4f55546fe735d0, type: 2}
+  domeMaterialName: Cielo
+  speed: 0.004
+--- !u!114 &711870301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 711870297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7166b52b4f102e783acbfeb7d86a7568, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AmbientDirector
+  mapLoop: {fileID: 8300000, guid: ecd03520068155adab573a1e0fbc5fe6, type: 3}
+  arenaLoop: {fileID: 8300000, guid: 81b396eef23b745eba3e0dcb5835545a, type: 3}
+  loopVolume: 0.35
+  distantSounds:
+  - {fileID: 8300000, guid: a0e401867c629ff54a26aa90f4749ac4, type: 3}
+  - {fileID: 8300000, guid: 625637203810fc00486e41155addd7ef, type: 3}
+  - {fileID: 8300000, guid: ec03326a3d5fa703aba0b9a699bae0c6, type: 3}
+  - {fileID: 8300000, guid: 91dceb7647b150f169af7d9ec328759f, type: 3}
+  - {fileID: 8300000, guid: 6934413da40e7243ea2fb568f93d01f9, type: 3}
+  interval: {x: 5, y: 12}
+  distance: {x: 14, y: 30}
+  distantVolume: 0.7
+--- !u!4 &711870302
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 711870297}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &719302179
 GameObject:
   m_ObjectHideFlags: 0
@@ -5355,6 +5463,7 @@ MonoBehaviour:
   barSprite: {fileID: 21300000, guid: 2c0ad944dc38fdf0a983641350b394ed, type: 3}
   hordeClip: {fileID: 8300000, guid: 223cb347eb54388768034ccc34e88288, type: 3}
   warningClip: {fileID: 8300000, guid: 7be60a228e17c6043af37cdaec6e1516, type: 3}
+  announceClip: {fileID: 8300000, guid: b1ae2f3f29abf80d3ac969e87a060b95, type: 3}
 --- !u!114 &972643067
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5373,11 +5482,12 @@ MonoBehaviour:
   maxEnemies: 500
   disableOldSpawners: 1
   aliveAtStart: 6
-  aliveAtEnd: 240
+  aliveAtEnd: 300
   spawnRateAtStart: 0.5
-  spawnRateAtEnd: 8
+  spawnRateAtEnd: 10
   healthPerMinute: 0.12
   speedPerMinute: 0.035
+  damagePerMinute: 0.07
   maxSpeedMultiplier: 1.6
   hordeInterval: 240
   hordeDuration: 20
@@ -5410,6 +5520,10 @@ MonoBehaviour:
   shieldHitClip: {fileID: 8300000, guid: 7f8a3a96d5dfa862abe1b6a24f2174cc, type: 3}
   shieldBreakClip: {fileID: 8300000, guid: b9ff7d8b9cd96c9c580de2bb625aa0f4, type: 3}
   dirtMaterial: {fileID: 2100000, guid: 43e2544c92a77539787bac514c3bc9ef, type: 2}
+  orbMaterial: {fileID: 2100000, guid: 4557044641270388e8e4efcde2528ff2, type: 2}
+  magicCastClip: {fileID: 8300000, guid: 8ec058afbe30cfe6f81309f98af73fbc, type: 3}
+  magicImpactClip: {fileID: 8300000, guid: 8bbf67d3ead8080999a6bcaaf7294a07, type: 3}
+  fireRingClip: {fileID: 8300000, guid: d968254ff6616b686a9a64c75174c2cb, type: 3}
 --- !u!4 &972643069
 Transform:
   m_ObjectHideFlags: 0
@@ -6961,6 +7075,7 @@ MonoBehaviour:
   hurtClip: {fileID: 8300000, guid: f92c642accb538aabbc2f4249bd249cc, type: 3}
   deathClip: {fileID: 8300000, guid: 72b74447578e1656a936af1d1851908a, type: 3}
   victoryClip: {fileID: 8300000, guid: 744e47c62b3d48ef1bf747ab567369d7, type: 3}
+  slamClip: {fileID: 8300000, guid: 3685a2cd7e8291aeb93af53aa8c459d7, type: 3}
 --- !u!4 &1299344571
 Transform:
   m_ObjectHideFlags: 0
@@ -12581,3 +12696,4 @@ SceneRoots:
   - {fileID: 972643069}
   - {fileID: 1830346624}
   - {fileID: 1299344571}
+  - {fileID: 711870302}

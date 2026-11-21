@@ -13,6 +13,9 @@ public class RunHUD : MonoBehaviour
     [SerializeField] private Sprite barSprite;
     [SerializeField] private AudioClip hordeClip;
     [SerializeField] private AudioClip warningClip;
+    [Tooltip("Suena una vez cuando se anuncia la horda (dura lo que el aviso y remata al empezar).")]
+    [SerializeField] private AudioClip announceClip;
+    private float lastAnnounce = -100f;
 
     private RectTransform xpFill;
     private Text levelText;
@@ -107,7 +110,15 @@ public class RunHUD : MonoBehaviour
         if (started)
         {
             hordePop = 1f;
-            if (hordeClip != null)
+            EnemyDirector d = EnemyDirector.Instance;
+            bool announced = Time.unscaledTime - lastAnnounce < 7f;
+            if (!announced && d != null && d.InfiniteHorde && announceClip != null)
+            {
+                // La horda infinita no tiene aviso: el anuncio suena al empezar.
+                lastAnnounce = Time.unscaledTime;
+                audioSource.PlayOneShot(announceClip, GameSettings.SfxVolume);
+            }
+            else if (!announced && hordeClip != null)
                 audioSource.PlayOneShot(hordeClip, 0.9f * GameSettings.SfxVolume);
         }
     }
@@ -182,8 +193,14 @@ public class RunHUD : MonoBehaviour
 
             if (s != lastWarningSecond)
             {
+                bool first = lastWarningSecond < 0 || s > lastWarningSecond;
                 lastWarningSecond = s;
-                if (warningClip != null)
+                if (first && announceClip != null && Time.unscaledTime - lastAnnounce > 10f)
+                {
+                    lastAnnounce = Time.unscaledTime;
+                    audioSource.PlayOneShot(announceClip, GameSettings.SfxVolume);
+                }
+                else if (announceClip == null && warningClip != null)
                     audioSource.PlayOneShot(warningClip, 0.6f * GameSettings.SfxVolume);
             }
         }

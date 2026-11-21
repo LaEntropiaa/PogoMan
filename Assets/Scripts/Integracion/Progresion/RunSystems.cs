@@ -22,11 +22,22 @@ public class RunSystems : MonoBehaviour
     [Header("Demonios")]
     [SerializeField] private Material dirtMaterial;
 
+    [Header("Habilidades de los jefes (BossCaster)")]
+    [SerializeField] private Material orbMaterial;
+    [SerializeField] private AudioClip magicCastClip;
+    [SerializeField] private AudioClip magicImpactClip;
+    [SerializeField] private AudioClip fireRingClip;
+
     private void Awake()
     {
         XpGem.Prefab = gemPrefab;
         XpGem.PickupClip = gemClip;
         ZombieMotor.SetDirtMaterial(dirtMaterial);
+        BossCaster.OrbMaterial = orbMaterial;
+        BossCaster.FxMaterial = fxMaterial;
+        BossCaster.CastClip = magicCastClip;
+        BossCaster.ImpactClip = magicImpactClip;
+        BossCaster.RingClip = fireRingClip;
         Chest.SparkleMaterial = fxMaterial;
         PlayerVitals.ShieldHitClip = shieldHitClip;
         PlayerVitals.ShieldBreakClip = shieldBreakClip;
