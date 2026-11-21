@@ -2752,6 +2752,8 @@ MonoBehaviour:
   slideMomentumDecay: 1.2
   uphillMomentumDecay: 8
   minSlopeAngle: 4
+  airJumpVelocity: 9.5
+  airJumpGroundClearance: 0.9
 --- !u!114 &516314391
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5018,6 +5020,20 @@ MonoBehaviour:
   critMultiplier: 2
   range: 14
   projectileSpeed: 22
+  spitArea: 1.2
+  spitSize: 1
+  projectiles: 1
+  moveSpeed: 1
+  airJumps: 0
+  dashDistance: 6
+  dashCooldown: 2.5
+  dashSpeed: 1
+  pickupRadius: 3
+  regeneration: 0
+  shield: 0
+  xpGain: 1
+  firstLevelXp: 6
+  levelGrowth: 1.35
   timeLimit: 900
 --- !u!4 &971777457
 Transform:
@@ -5046,6 +5062,125 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3afc06a955a74ecefb62850d259e7bc7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemInventory
+--- !u!1 &972643064
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 972643069}
+  - component: {fileID: 972643068}
+  - component: {fileID: 972643067}
+  - component: {fileID: 972643066}
+  - component: {fileID: 972643065}
+  m_Layer: 0
+  m_Name: Progresion
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &972643065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1008cc43169315b869cc7e2c53504d50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelUpUI
+  font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
+  cardSprite: {fileID: 21300000, guid: 4add0de6eb2dc9da1b5980a7215784ca, type: 3}
+  levelUpClip: {fileID: 8300000, guid: 148028ccb40506b7aad2305eed7598b5, type: 3}
+  selectClip: {fileID: 8300000, guid: 589e5a04843356360a22bc7f10dc2491, type: 3}
+  moveClip: {fileID: 8300000, guid: d66e4c67e84617c328f91029602642d9, type: 3}
+  inputDelay: 0.45
+--- !u!114 &972643066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba060a9187ca7a9ce88d47a12cce7bea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RunHUD
+  font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
+  barSprite: {fileID: 21300000, guid: 2c0ad944dc38fdf0a983641350b394ed, type: 3}
+  hordeClip: {fileID: 8300000, guid: 223cb347eb54388768034ccc34e88288, type: 3}
+  warningClip: {fileID: 8300000, guid: 7be60a228e17c6043af37cdaec6e1516, type: 3}
+--- !u!114 &972643067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fb046479269007a5aec757ca5599205, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDirector
+  enemyPrefab: {fileID: 8273496981544212081, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
+  maxEnemies: 500
+  disableOldSpawners: 1
+  aliveAtStart: 6
+  aliveAtEnd: 240
+  spawnRateAtStart: 0.5
+  spawnRateAtEnd: 8
+  healthPerMinute: 0.12
+  speedPerMinute: 0.035
+  maxSpeedMultiplier: 1.6
+  hordeInterval: 180
+  hordeDuration: 20
+  hordeWarning: 5
+  hordeSpawnRate: 35
+  hordeExtraAlive: 220
+  minSpawnDistance: 14
+  maxSpawnDistance: 26
+  hordeMinSpawnDistance: 10
+  relocateDistance: 45
+  maxSpawnsPerFrame: 6
+--- !u!114 &972643068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7846804b21ad83043b8c63cfbcaf6fde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RunSystems
+  gemPrefab: {fileID: 2114993982868248374, guid: 3149e38b350e977a5a6d7464ad86750a, type: 3}
+  gemClip: {fileID: 8300000, guid: 103b36987240594a1a188f0729f9450e, type: 3}
+  dashClip: {fileID: 8300000, guid: c8605c0e775c0fbacb8cef220cc2a514, type: 3}
+  airJumpClip: {fileID: 8300000, guid: eec95978f566e0ef98e689203eefeb31, type: 3}
+  fxMaterial: {fileID: 2100000, guid: cb297985e50f45082b580c6a46fa44eb, type: 2}
+  dirtMaterial: {fileID: 2100000, guid: 43e2544c92a77539787bac514c3bc9ef, type: 2}
+--- !u!4 &972643069
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &982337973
 GameObject:
   m_ObjectHideFlags: 0
@@ -10265,3 +10400,4 @@ SceneRoots:
   - {fileID: 1686394092}
   - {fileID: 375626268}
   - {fileID: 820021641}
+  - {fileID: 972643069}
