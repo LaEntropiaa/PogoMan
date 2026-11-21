@@ -110,8 +110,11 @@ public class GameHUD : MonoBehaviour
         {
             if (timeText != null)
             {
-                int seconds = Mathf.FloorToInt(stats.RunTime);
+                // Contrarreloj: en el último minuto se pone rojo y palpita.
+                int seconds = Mathf.CeilToInt(stats.TimeLeft);
                 timeText.text = (seconds / 60).ToString("00") + ":" + (seconds % 60).ToString("00");
+                bool urgent = seconds <= 60;
+                timeText.color = urgent ? Color.Lerp(new Color(1f, 0.3f, 0.2f), Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f)) : new Color(0.86f, 0.76f, 0.66f);
             }
             if (killsText != null)
                 killsText.text = "x " + stats.Kills;
