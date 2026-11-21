@@ -24,10 +24,6 @@ PrefabInstance:
       propertyPath: displayName
       value: "GUARDI\xC1N DEL PILAR"
       objectReference: {fileID: 0}
-    - target: {fileID: 722388591933535976, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 68338b7a20762ea31aade1c1f59ae208, type: 2}
     - target: {fileID: 2776903055821395347, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
       propertyPath: range
       value: 2.6
@@ -36,10 +32,10 @@ PrefabInstance:
       propertyPath: damage
       value: 25
       objectReference: {fileID: 0}
-    - target: {fileID: 4576610911461611215, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
+    - target: {fileID: 5570643343752532707, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 68338b7a20762ea31aade1c1f59ae208, type: 2}
+      objectReference: {fileID: 2100000, guid: 5935cc355e8254966a016d5173241400, type: 2}
     - target: {fileID: 5798901282213986935, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.2
@@ -92,10 +88,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5970624650986735812, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 68338b7a20762ea31aade1c1f59ae208, type: 2}
     - target: {fileID: 8273496981544212081, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
       propertyPath: maxHealth
       value: 800
@@ -104,13 +96,9 @@ PrefabInstance:
       propertyPath: moveSpeed
       value: 2.4
       objectReference: {fileID: 0}
-    - target: {fileID: 8510363226688264149, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 68338b7a20762ea31aade1c1f59ae208, type: 2}
     - target: {fileID: 9008332844738630368, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
       propertyPath: m_Name
-      value: JefeProvisional
+      value: JefeZombie
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
