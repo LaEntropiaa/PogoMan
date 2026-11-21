@@ -83,8 +83,17 @@ public class PlayerVitals : MonoBehaviour
         PlayerVitals v = Instance;
         if (v != null && target == v.player)
         {
-            if (Time.time < v.InvulnerableUntil)
+            if (Time.time < v.InvulnerableUntil || TimeStop.Active)
                 return;
+
+            // Escapulario: bloquea el golpe completo.
+            ItemEffects fx = ItemEffects.Instance;
+            if (fx != null && fx.TryBlockHit(target.transform.position))
+            {
+                v.InvulnerableUntil = Time.time + 0.4f;
+                return;
+            }
+
             v.lastHit = Time.time;
             float absorbed = Mathf.Min(v.Shield, amount);
             v.Shield -= absorbed;
@@ -102,7 +111,14 @@ public class PlayerVitals : MonoBehaviour
             }
         }
 
-        if (amount > 0f)
-            target.TakeDamage(amount);
+        if (amount <= 0f)
+            return;
+
+        // Estampita de San Pogo: un golpe que te mataría detiene el tiempo en lugar de matarte.
+        if (v != null && target == v.player && amount >= PogoBridge.Health(target) &&
+            ItemEffects.Instance != null && ItemEffects.Instance.TryCheatDeath())
+            return;
+
+        target.TakeDamage(amount);
     }
 }

@@ -66,7 +66,11 @@ public class LavaHazard : MonoBehaviour
         if (enemy != null && enemyTimer <= 0f && !PogoBridge.IsDead(enemy))
         {
             enemyTimer = enemyCooldown;
-            enemy.SendMessage("TakeDamage", enemyDamage, SendMessageOptions.DontRequireReceiver);
+            EnemyTracker tracker = enemy.GetComponent<EnemyTracker>();
+            if (tracker != null)
+                tracker.Hit(enemyDamage, HitSource.Other);
+            else
+                enemy.SendMessage("TakeDamage", enemyDamage, SendMessageOptions.DontRequireReceiver);
             Effects(point);
         }
     }

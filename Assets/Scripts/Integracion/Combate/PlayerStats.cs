@@ -67,6 +67,12 @@ public class PlayerStats : MonoBehaviour
 
     private readonly Dictionary<PogoStat, float> flatBonus = new Dictionary<PogoStat, float>();
     private readonly Dictionary<PogoStat, float> percentBonus = new Dictionary<PogoStat, float>();
+    // Multiplicadores de objetos (se multiplican entre sí: 0.8 × 0.8...).
+    private readonly Dictionary<PogoStat, float> multiplier = new Dictionary<PogoStat, float>();
+
+    [Tooltip("Recarga mínima del dash (s).")]
+    [SerializeField] private float minDashCooldown = 0.5f;
+    public float MinDashCooldown => minDashCooldown;
 
     public event Action Changed;
 
@@ -88,6 +94,8 @@ public class PlayerStats : MonoBehaviour
     public int CoinsCollected { get; private set; }
     public event Action<int> CoinsChanged;
     public bool RunEnded { get; set; }
+    // Con el tiempo detenido (Estampita de San Pogo) el reloj de la partida no avanza.
+    public bool ClockStopped { get; set; }
 
     // ---- Contrarreloj ----
     [Header("Contrarreloj")]
@@ -109,7 +117,7 @@ public class PlayerStats : MonoBehaviour
 
     private void Update()
     {
-        if (!RunEnded)
+        if (!RunEnded && !ClockStopped)
             RunTime += Time.deltaTime;
 
         if (!timeUpFired && RunTime >= timeLimit)
@@ -153,13 +161,15 @@ public class PlayerStats : MonoBehaviour
         flatBonus.TryGetValue(stat, out float flat);
         percentBonus.TryGetValue(stat, out float percent);
         float value = (GetBase(stat) + flat + extraFlat) * (1f + percent + extraPercent);
+        if (multiplier.TryGetValue(stat, out float m))
+            value *= m;
 
         switch (stat)
         {
             case PogoStat.CritChance: return Mathf.Clamp01(value);
             case PogoStat.AirJumps: return Mathf.Clamp(Mathf.Round(value), 0f, 10f);
             case PogoStat.Projectiles: return Mathf.Clamp(Mathf.Round(value), 1f, 12f);
-            case PogoStat.DashCooldown: return Mathf.Max(0.4f, value);
+            case PogoStat.DashCooldown: return Mathf.Max(minDashCooldown, value);
             default: return Mathf.Max(0f, value);
         }
     }
@@ -168,6 +178,13 @@ public class PlayerStats : MonoBehaviour
     {
         flatBonus.TryGetValue(stat, out float current);
         flatBonus[stat] = current + amount;
+        Changed?.Invoke();
+    }
+
+    public void Multiply(PogoStat stat, float factor)
+    {
+        multiplier.TryGetValue(stat, out float current);
+        multiplier[stat] = (current == 0f ? 1f : current) * factor;
         Changed?.Invoke();
     }
 

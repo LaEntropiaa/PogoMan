@@ -119,10 +119,9 @@ public class SpitProjectile : MonoBehaviour
         {
             EnemyTracker tracker = enemy.GetComponent<EnemyTracker>();
             if (tracker != null)
-                tracker.MarkIncomingSpit(crit);
-
-            // Cualquier enemigo con un método TakeDamage(float) recibe el daño.
-            enemy.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
+                tracker.Hit(damage, HitSource.Spit, crit);
+            else   // Cualquier enemigo con un método TakeDamage(float) recibe el daño.
+                enemy.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
 
             AudioClip clip = crit ? critClip : hitClip;
             if (clip != null)
@@ -154,8 +153,7 @@ public class SpitProjectile : MonoBehaviour
         float splash = damage * splashDamageFraction;
         foreach (EnemyTracker e in nearby)
         {
-            e.MarkIncomingSpit(false);
-            e.Enemy.SendMessage("TakeDamage", splash, SendMessageOptions.DontRequireReceiver);
+            e.Hit(splash, HitSource.Spit);
         }
     }
 

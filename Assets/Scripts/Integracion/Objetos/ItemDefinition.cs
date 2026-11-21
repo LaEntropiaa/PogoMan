@@ -1,7 +1,6 @@
 using UnityEngine;
 
-// Un objeto del juego (sale de los cofres). Por ahora solo datos: el efecto lo
-// programará Alonso escuchando ItemInventory.ItemAdded y revisando el "id".
+// Un objeto del juego (sale de los cofres). El efecto lo aplica ItemEffects según el "id".
 [CreateAssetMenu(menuName = "Pogo Man/Objeto", fileName = "Objeto")]
 public class ItemDefinition : ScriptableObject
 {

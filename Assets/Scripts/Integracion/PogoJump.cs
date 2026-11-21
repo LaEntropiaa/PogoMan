@@ -98,6 +98,17 @@ public class PogoJump : MonoBehaviour
     public float HorizontalSpeed { get; private set; }
     public float BaseSpeed => baseMaxAirSpeed * SpeedMultiplier;
     public float CurrentMaxAirSpeed => Mathf.Max(BaseSpeed, HorizontalSpeed, DashSpeedCap);
+    // Objetos: Manubrio Manijuela (control en el aire) y Compresor de los Lamentos (altura del salto con espacio).
+    public float AirControlMultiplier { get; set; } = 1f;
+    public float ChargedJumpHeightMultiplier { get; set; } = 1f;
+    // El impulso de este rebote vino de un géiser (no de un salto con espacio).
+    public bool GeyserAscent => geyserAscent;
+    // Con la gravedad suave mientras sostienes espacio la altura no crece con v², por eso 0.63 y no 0.5
+    // (medido: ×1.5 de velocidad² daba solo ×1.38 de altura).
+    private float ChargedVelocityFactor => Mathf.Pow(Mathf.Max(1f, ChargedJumpHeightMultiplier), 0.63f);
+
+    // Resorte Sónico: rebotar sobre un enemigo recupera los saltos en el aire.
+    public void RefillAirJumps() => AirJumpsLeft = AirJumpsMax;
 
     private Rigidbody rb;
     private PogoPlayer player;
@@ -293,7 +304,7 @@ public class PogoJump : MonoBehaviour
         if (!boostedThisBounce && !geyserAscent && v.y > 0f &&
             Time.time - lastBounceTime < lateWindow && lastJumpPress > lastBounceTime)
         {
-            v.y = Mathf.Min(v.y + spaceBoost, maxJumpVelocity);
+            v.y = Mathf.Min(v.y + spaceBoost, maxJumpVelocity) * ChargedVelocityFactor;
             boostedThisBounce = true;
             LastJumpWasBoosted = true;
             GainHop(ref v);
@@ -380,6 +391,7 @@ public class PogoJump : MonoBehaviour
         Vector3 h = Flat(v);
         float speed = h.magnitude;
         Vector3 wish = WishDirection();
+        float control = Mathf.Max(0.1f, AirControlMultiplier);
 
         if (wish.sqrMagnitude > 0.01f)
         {
@@ -387,16 +399,16 @@ public class PogoJump : MonoBehaviour
             if (speed <= baseSpeed + 0.05f)
             {
                 // A velocidad normal: control directo y rápido.
-                h = Vector3.MoveTowards(h, dir * baseSpeed * wish.magnitude, airAcceleration * dt);
+                h = Vector3.MoveTowards(h, dir * baseSpeed * wish.magnitude, airAcceleration * control * dt);
             }
             else
             {
                 // Yendo rápido: la dirección gira, la velocidad se queda.
                 float angle = Vector3.Angle(h, dir);
-                float turn = Mathf.Clamp(airTurnRate * baseSpeed / speed, minTurnRate, airTurnRate);
+                float turn = Mathf.Clamp(airTurnRate * baseSpeed / speed, minTurnRate, airTurnRate) * control;
                 Vector3 newDir = Vector3.RotateTowards(h / speed, dir, turn * Mathf.Deg2Rad * dt, 0f);
                 if (angle > 120f)
-                    speed = Mathf.MoveTowards(speed, baseSpeed, airBrake * dt);   // jalar para atrás frena
+                    speed = Mathf.MoveTowards(speed, baseSpeed, airBrake * control * dt);   // jalar para atrás frena
                 h = newDir * speed;
             }
         }
@@ -462,6 +474,8 @@ public class PogoJump : MonoBehaviour
         }
 
         v.y = Mathf.Min(v.y + bonus, maxJumpVelocity);
+        if (space)
+            v.y *= ChargedVelocityFactor;
     }
 
     // Bunny hop bien hecho: conservas la velocidad y ganas un poco.

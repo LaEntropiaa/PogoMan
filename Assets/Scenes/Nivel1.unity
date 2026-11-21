@@ -5045,6 +5045,7 @@ MonoBehaviour:
   xpGain: 1
   firstLevelXp: 6
   levelGrowth: 1.35
+  minDashCooldown: 0.5
   timeLimit: 900
 --- !u!4 &971777457
 Transform:
@@ -5087,6 +5088,7 @@ GameObject:
   - component: {fileID: 972643066}
   - component: {fileID: 972643065}
   - component: {fileID: 972643070}
+  - component: {fileID: 972643071}
   m_Layer: 0
   m_Name: Progresion
   m_TagString: Untagged
@@ -5221,6 +5223,51 @@ MonoBehaviour:
   ambientGround: {r: 0.34, g: 0.3, b: 0.3, a: 1}
   fogColor: {r: 0.22, g: 0.14, b: 0.16, a: 1}
   fogDensity: 0.007
+--- !u!114 &972643071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9949f1238d1a105d9b4cf4fe533359cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemEffects
+  chargedJumpHeightPerItem: 0.25
+  diminishingFactor: 0.6
+  airControlPerItem: 0.25
+  pogoDamagePerItem: 0.15
+  timeStopDuration: 8
+  healEverySeconds: 3
+  spitDamagePercent: 0.2
+  spitAreaBonus: 0.4
+  blockRecharge: 40
+  fireChancePerItem: 0.1
+  maxFireChance: 0.6
+  fireDuration: 3
+  fireRadius: 1.4
+  fireTickDamage: 0.15
+  maxFires: 24
+  fairyInterval: 2
+  fairyDamage: 0.25
+  fairyRange: 18
+  fairyMaterial: {fileID: 2100000, guid: 746ecd0ff3bacc0a3a486129a6e10808, type: 2}
+  coinsPerItem: 3
+  coinDamage: 0.2
+  coinMaterial: {fileID: 2100000, guid: 72a72a34505217f6195588a0b93a9d9f, type: 2}
+  dashCooldownFactor: 0.8
+  fxMaterial: {fileID: 2100000, guid: cb297985e50f45082b580c6a46fa44eb, type: 2}
+  font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
+  blockClip: {fileID: 8300000, guid: 3c16e9e1dae94366883d6f1bee9c4154, type: 3}
+  blockReadyClip: {fileID: 8300000, guid: 6f82968a0aa0a6a66baf30d61851bbe8, type: 3}
+  fireClip: {fileID: 8300000, guid: 63f89c03af6b842099d6374beda6b8fc, type: 3}
+  fairyShotClip: {fileID: 8300000, guid: 832b47f6c7a81755eaa13d7288412917, type: 3}
+  coinThrowClip: {fileID: 8300000, guid: 0fd8dbbb192d6426d90bdfdde39ca2c3, type: 3}
+  timeStopClip: {fileID: 8300000, guid: 6411fab68f4992f3894b66f03ffef656, type: 3}
+  timeTickClip: {fileID: 8300000, guid: 55aab8c99544198bcb6be334b5a41d1f, type: 3}
+  timeResumeClip: {fileID: 8300000, guid: 937e9567e5334a50681885f39e1e2552, type: 3}
 --- !u!1 &982337973
 GameObject:
   m_ObjectHideFlags: 0
