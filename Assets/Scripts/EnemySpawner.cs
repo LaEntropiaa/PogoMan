@@ -14,16 +14,24 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private int maxEnemies = 10;
     [SerializeField] private float spawnInterval = 3f;
     [SerializeField] private float spawnRadius = 8f;
+    [Tooltip("Altura del centro del enemigo sobre el suelo.")]
+    [SerializeField] private float spawnHeightOffset = 1f;
 
     private readonly List<Enemy> spawnedEnemies = new();
 
     private float spawnTimer;
+    private bool warnedMissingReferences;
 
     private void Update()
     {
         if (player == null || enemyPrefab == null)
         {
-            Debug.LogWarning("Spawner: falta Player o Enemy Prefab.");
+            // Avisamos una sola vez para no llenar la consola.
+            if (!warnedMissingReferences)
+            {
+                Debug.LogWarning($"{name}: falta Player o Enemy Prefab.");
+                warnedMissingReferences = true;
+            }
             return;
         }
 
@@ -34,12 +42,6 @@ public class EnemySpawner : MonoBehaviour
                 transform.position,
                 player.position
             );
-
-        Debug.Log(
-            $"Spawner | Distancia: {distance:F1} | " +
-            $"Enemigos: {spawnedEnemies.Count}/{maxEnemies} | " +
-            $"Timer: {spawnTimer:F1}"
-        );
 
         if (distance > activationDistance)
         {
@@ -86,16 +88,39 @@ public class EnemySpawner : MonoBehaviour
 
     private Vector3 GetRandomSpawnPosition()
     {
-        Vector2 randomCircle =
-            Random.insideUnitCircle *
-            spawnRadius;
+        // Probamos algunos puntos al azar y pegamos el enemigo al suelo,
+        // porque el mapa tiene escalones y si no salen enterrados o flotando.
+        for (int attempt = 0; attempt < 6; attempt++)
+        {
+            Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
 
-        return transform.position +
-            new Vector3(
-                randomCircle.x,
-                0f,
-                randomCircle.y
-            );
+            Vector3 candidate = transform.position +
+                new Vector3(randomCircle.x, 0f, randomCircle.y);
+
+            if (TryGetGround(candidate, out Vector3 ground))
+                return ground + Vector3.up * spawnHeightOffset;
+        }
+
+        return transform.position + Vector3.up * spawnHeightOffset;
+    }
+
+    private static bool TryGetGround(Vector3 point, out Vector3 ground)
+    {
+        // Rayo desde un poco arriba hacia abajo (no desde muy alto, para
+        // no caer encima de las islas flotantes).
+        Vector3 origin = point + Vector3.up * 4f;
+
+        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 30f,
+                ~0, QueryTriggerInteraction.Ignore) &&
+            hit.collider.GetComponentInParent<Enemy>() == null &&
+            hit.collider.GetComponentInParent<PogoPlayer>() == null)
+        {
+            ground = hit.point;
+            return true;
+        }
+
+        ground = point;
+        return false;
     }
 
     private void CleanupDestroyedEnemies()
