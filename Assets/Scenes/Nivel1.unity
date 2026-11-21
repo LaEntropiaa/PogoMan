@@ -4134,6 +4134,8 @@ MonoBehaviour:
   slideLean: -62
   slideSquash: 0.85
   diveLean: 18
+  slideSway: 4
+  landingAnticipation: 0.1
   hurtShake: 0.07
   hurtDuration: 0.35
   hurtColor: {r: 1, g: 0.15, b: 0.1, a: 1}
@@ -4161,6 +4163,8 @@ MonoBehaviour:
   crouchMaxBonus: 2.5
   maxJumpVelocity: 13.5
   geyserVelocity: 12
+  slideStickForce: 30
+  slideMaxUpSpeed: 0.5
   slopeAcceleration: 16
   maxExtraSlideSpeed: 12
   extraSpeedDecay: 5
@@ -11880,6 +11884,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4514200820076054894, guid: f68753ca98d704654a1c67e3ebeb7abc, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1671991454}
+    - targetCorrespondingSourceObject: {fileID: 4514200820076054894, guid: f68753ca98d704654a1c67e3ebeb7abc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1671991455}
   m_SourcePrefab: {fileID: 100100000, guid: f68753ca98d704654a1c67e3ebeb7abc, type: 3}
 --- !u!4 &1574023858 stripped
 Transform:
@@ -12522,6 +12529,25 @@ MonoBehaviour:
   scrollSpeed: {x: 0.01, y: 0.006}
   pulseAmount: 0.15
   pulseSpeed: 0.8
+--- !u!114 &1671991455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1671991453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cd2e6ae7d70c06dca2560f9c892074a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LavaHazard
+  playerDamage: 15
+  playerCooldown: 0.6
+  launchSpeed: 11
+  enemyDamage: 25
+  enemyCooldown: 0.5
+  sizzleClip: {fileID: 8300000, guid: fe01bef3a7a9f69898e2554260f5c410, type: 3}
+  sparkMaterial: {fileID: 2100000, guid: c8891dfe18ec5b2d9b0c30da80df9425, type: 2}
 --- !u!1 &1672713128
 GameObject:
   m_ObjectHideFlags: 0
