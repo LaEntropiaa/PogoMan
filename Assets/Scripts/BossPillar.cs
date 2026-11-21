@@ -21,6 +21,7 @@ public class BossPillar : MonoBehaviour
 
     private bool bossSpawned;
     private bool rewardSpawned;
+    private bool placed;
 
     private void Start()
     {
@@ -55,8 +56,23 @@ public class BossPillar : MonoBehaviour
             return;
         }
 
-        Transform selectedPosition = possiblePositions[
-            Random.Range(0, possiblePositions.Length)
+        // Elegimos una posición que no esté usando otro pilar.
+        var freePositions = new System.Collections.Generic.List<Transform>();
+
+        foreach (Transform candidate in possiblePositions)
+        {
+            if (candidate != null && !IsTakenByOtherPillar(candidate.position))
+                freePositions.Add(candidate);
+        }
+
+        if (freePositions.Count == 0)
+        {
+            Debug.LogWarning($"{name}: todas las posiciones están ocupadas.");
+            return;
+        }
+
+        Transform selectedPosition = freePositions[
+            Random.Range(0, freePositions.Count)
         ];
 
         if (selectedPosition == null)
@@ -64,10 +80,23 @@ public class BossPillar : MonoBehaviour
 
         transform.position = selectedPosition.position;
         transform.rotation = selectedPosition.rotation;
+        placed = true;
 
         Debug.Log(
             $"{name}: pilar colocado en {selectedPosition.name}."
         );
+    }
+
+    private bool IsTakenByOtherPillar(Vector3 position)
+    {
+        foreach (BossPillar other in FindObjectsByType<BossPillar>())
+        {
+            if (other != this && other.placed &&
+                Vector3.Distance(other.transform.position, position) < 1f)
+                return true;
+        }
+
+        return false;
     }
 
     private void CheckPlayerDistance()
@@ -90,15 +119,24 @@ public class BossPillar : MonoBehaviour
         if (bossSpawned)
             return;
 
+        // Antes usaba activationRadius (15 m); el radio correcto es bossSpawnRadius.
         Vector2 randomOffset =
-            Random.insideUnitCircle * activationRadius;
+            Random.insideUnitCircle * bossSpawnRadius;
 
         Vector3 spawnPosition = transform.position +
             new Vector3(
                 randomOffset.x,
-                spawnHeightOffset,
+                0f,
                 randomOffset.y
             );
+
+        // Pegamos al jefe al suelo (el mapa tiene escalones).
+        if (Physics.Raycast(spawnPosition + Vector3.up * 4f, Vector3.down,
+                out RaycastHit hit, 30f, ~0, QueryTriggerInteraction.Ignore) &&
+            !hit.collider.transform.IsChildOf(transform))
+            spawnPosition = hit.point;
+
+        spawnPosition += Vector3.up * spawnHeightOffset;
 
         spawnedBoss = Instantiate(
             bossPrefab,
