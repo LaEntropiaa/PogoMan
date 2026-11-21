@@ -170,3 +170,6 @@ Packages/packages-lock.json linguist-generated
 
 # Exceptions for .asset files such as lightning pre-baking
 LightingData.asset     binary
+
+# Prefab generado por la herramienta del mapa (enorme y no se edita a mano)
+Assets/PogoManInfierno/Generado/*.prefab lfs

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 742f2819ee425dfd7b97b4760b616fc1, type: 3}
+  m_Name: estampita_de_san_pogo
+  m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
+  id: estampita_de_san_pogo
+  displayName: Estampita de San Pogo
+  description: "Al recibir un golpe que te matar\xEDa, detiene el tiempo durante 8 segundos. Se consume al activarse."
+  quote: "Se rumora que perteneci\xF3 a un vampiro hermoso de hace m\xE1s de 100 a\xF1os."
+  icon: {fileID: 21300000, guid: 75c6a65aa8ece64baa663baa76333627, type: 3}
+  weight: 1

@@ -9,7 +9,7 @@ public class SpitProjectile : MonoBehaviour
     [SerializeField] private float homing = 5f;
     [SerializeField] private float gravityFactor = 0.15f;
     [SerializeField] private Material splatMaterial;
-    [SerializeField] private Color splatColor = new Color(0.55f, 1f, 0.2f);
+    [SerializeField] private Color splatColor = new Color(0.3f, 0.7f, 1f);
 
     private EnemyTracker target;
     private float damage;

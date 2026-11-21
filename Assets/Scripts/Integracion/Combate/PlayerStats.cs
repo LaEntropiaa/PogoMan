@@ -47,6 +47,17 @@ public class PlayerStats : MonoBehaviour
     public event Action<int> CoinsChanged;
     public bool RunEnded { get; set; }
 
+    // ---- Contrarreloj ----
+    [Header("Contrarreloj")]
+    [Tooltip("Segundos para terminar la partida (15 min).")]
+    [SerializeField] private float timeLimit = 900f;
+    public float TimeLimit => timeLimit;
+    public float TimeLeft => Mathf.Max(0f, timeLimit - RunTime);
+    // Se dispara una vez cuando el tiempo llega a 0. Por ahora no hace nada:
+    // aquí se conectará la oleada final de enemigos.
+    public event Action TimeUp;
+    private bool timeUpFired;
+
     private void Awake() => Instance = this;
 
     private void OnDestroy()
@@ -59,6 +70,12 @@ public class PlayerStats : MonoBehaviour
     {
         if (!RunEnded)
             RunTime += Time.deltaTime;
+
+        if (!timeUpFired && RunTime >= timeLimit)
+        {
+            timeUpFired = true;
+            TimeUp?.Invoke();
+        }
     }
 
     public float GetBase(PogoStat stat)
