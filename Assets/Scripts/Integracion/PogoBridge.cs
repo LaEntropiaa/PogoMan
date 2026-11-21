@@ -56,6 +56,16 @@ public static class PogoBridge
         return f != null && f.FieldType == typeof(bool) ? (bool)f.GetValue(target) : fallback;
     }
 
+    // Cualquier otro tipo de campo (Vector2, Transform...).
+    public static T Get<T>(object target, string field, T fallback = default)
+    {
+        if (target == null || (target is UnityEngine.Object o && o == null))
+            return fallback;
+
+        FieldInfo f = Field(target.GetType(), field);
+        return f != null && typeof(T).IsAssignableFrom(f.FieldType) ? (T)f.GetValue(target) : fallback;
+    }
+
     public static void SetFloat(object target, string field, float value)
     {
         if (target == null || (target is UnityEngine.Object o && o == null))

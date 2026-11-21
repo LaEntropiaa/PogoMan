@@ -22,6 +22,7 @@ public class PogoAbilities : MonoBehaviour
     private Vector3 dashDirection;
     private float dashSpeed;
     private float dashTime;
+    private float entrySpeed;
     private bool dashRequested;
     private TrailRenderer trail;
     private AudioSource audioSource;
@@ -83,6 +84,11 @@ public class PogoAbilities : MonoBehaviour
 
         DashCooldownLeft = Mathf.Max(0f, DashCooldownLeft - Time.deltaTime);
 
+        // Estela cuando traes mucho impulso (bunny hops, slide, dash).
+        PogoJump jump = PogoJump.Instance;
+        bool fast = jump != null && jump.HorizontalSpeed > jump.BaseSpeed * 1.6f;
+        trail.emitting = Dashing || fast;
+
         if (DashPressed() && DashCooldownLeft <= 0f && !Dashing)
             dashRequested = true;
     }
@@ -116,6 +122,8 @@ public class PogoAbilities : MonoBehaviour
         float duration = baseDashDuration / speedMult;
 
         dashDirection = InputDirection();
+        Vector3 hv = rb.linearVelocity; hv.y = 0f;
+        entrySpeed = hv.magnitude;
         dashSpeed = distance / duration;
         dashTime = duration;
         DashCooldownTotal = stats != null ? stats.Get(PogoStat.DashCooldown) : 2.5f;
@@ -134,18 +142,13 @@ public class PogoAbilities : MonoBehaviour
     private void EndDash()
     {
         dashTime = 0f;
-        trail.emitting = false;
 
-        // Sales del dash con la velocidad máxima normal (sin frenón de golpe).
-        float keep = dashSpeed;
+        // Sales del dash con más velocidad de la que traías (y se conserva con bunny hops / slide).
         if (PogoJump.Instance != null)
         {
             PogoJump.Instance.DashSpeedCap = 0f;
-            keep = Mathf.Min(dashSpeed, PogoJump.Instance.CurrentMaxAirSpeed);
+            PogoJump.Instance.ExitDash(dashDirection, entrySpeed);
         }
-        Vector3 v = rb.linearVelocity;
-        Vector3 h = dashDirection * keep;
-        rb.linearVelocity = new Vector3(h.x, v.y, h.z);
     }
 
     private Vector3 InputDirection()
