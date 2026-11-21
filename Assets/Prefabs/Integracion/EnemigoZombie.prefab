@@ -236,16 +236,16 @@ MonoBehaviour:
   shinLeft: {fileID: 0}
   shinRight: {fileID: 0}
   stepsPerMeter: 1.1
-  legSwing: 28
-  kneeBend: 30
-  armsForward: -75
-  armSwing: 12
+  legSwing: 20
+  kneeBend: 18
+  armsForward: -55
+  armSwing: 8
   elbowBend: -15
-  spineLean: 12
-  spineSway: 5
-  headWobble: 10
-  attackRaise: -60
-  attackSlam: 40
+  spineLean: 4
+  spineSway: 2
+  headWobble: 3
+  attackRaise: -50
+  attackSlam: 30
 --- !u!4 &4437628061022383608 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a7d0b1e32a5145f4db712cd6a8a4871f, type: 3}
