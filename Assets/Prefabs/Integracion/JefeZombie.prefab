@@ -29,8 +29,20 @@ PrefabInstance:
       value: 2.6
       objectReference: {fileID: 0}
     - target: {fileID: 2776903055821395347, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
+      propertyPath: reach
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 2776903055821395347, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
       propertyPath: damage
       value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 2776903055821395347, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
+      propertyPath: windup
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 2776903055821395347, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
+      propertyPath: hitReach
+      value: 0.9
       objectReference: {fileID: 0}
     - target: {fileID: 5570643343752532707, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -95,6 +107,10 @@ PrefabInstance:
     - target: {fileID: 8273496981544212081, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
       propertyPath: moveSpeed
       value: 2.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8273496981544212081, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
+      propertyPath: attackRange
+      value: 1.6
       objectReference: {fileID: 0}
     - target: {fileID: 9008332844738630368, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
       propertyPath: m_Name

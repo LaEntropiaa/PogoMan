@@ -18,7 +18,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4760954939581768693, guid: 49adf383cb9704e7e834592ef287d4cf, type: 3}
       propertyPath: m_Size.x
-      value: 0.8
+      value: 0.6
       objectReference: {fileID: 0}
     - target: {fileID: 4760954939581768693, guid: 49adf383cb9704e7e834592ef287d4cf, type: 3}
       propertyPath: m_Size.y
@@ -26,7 +26,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4760954939581768693, guid: 49adf383cb9704e7e834592ef287d4cf, type: 3}
       propertyPath: m_Size.z
-      value: 0.8
+      value: 0.55
       objectReference: {fileID: 0}
     - target: {fileID: 4847139957509455244, guid: 49adf383cb9704e7e834592ef287d4cf, type: 3}
       propertyPath: m_LocalPosition.x
@@ -72,6 +72,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7056023827170093450, guid: 49adf383cb9704e7e834592ef287d4cf, type: 3}
+      propertyPath: attackRange
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7942470799032495387, guid: 49adf383cb9704e7e834592ef287d4cf, type: 3}
       propertyPath: m_Name
       value: EnemigoZombie
@@ -115,7 +119,10 @@ MonoBehaviour:
   isBoss: 0
   displayName: ZOMBIE
   figure: {fileID: 4437628061022383608}
-  deathClip: {fileID: 8300000, guid: 1169ac0abc4a580a0978a128d9680f73, type: 3}
+  deathClip: {fileID: 8300000, guid: 96599021d935b38fbb8fd1418d83e387, type: 3}
+  hitClip: {fileID: 8300000, guid: 19e062c47d6e8e840b9c0de92bf02837, type: 3}
+  groanClip: {fileID: 8300000, guid: 5d5dcaf09a45d700f968ef81da5e26b7, type: 3}
+  groanInterval: {x: 4, y: 9}
   coinPrefab: {fileID: 7733439221184182898, guid: 700feaacb5b508f42a70eca99a4a3946, type: 3}
   coinsMin: 1
   coinsMax: 3
@@ -132,8 +139,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyContactDamage
   damage: 10
-  range: 1.6
+  reach: 0.35
+  hitReach: 0.5
+  windup: 0.45
   cooldown: 1
+  swingClip: {fileID: 8300000, guid: b6842c625905744068ea26ffa81b3167, type: 3}
 --- !u!1001 &4188108272382118419
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -226,10 +236,12 @@ MonoBehaviour:
   kneeBend: 30
   armsForward: -75
   armSwing: 12
+  elbowBend: -15
   spineLean: 12
+  spineSway: 5
   headWobble: 10
-  attackDistance: 2.2
-  attackLunge: -35
+  attackRaise: -60
+  attackSlam: 40
 --- !u!4 &4437628061022383608 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a7d0b1e32a5145f4db712cd6a8a4871f, type: 3}

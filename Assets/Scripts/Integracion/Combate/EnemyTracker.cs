@@ -16,6 +16,10 @@ public class EnemyTracker : MonoBehaviour
     [Tooltip("Figura visual (hijo) que se gira hacia el jugador y se anima.")]
     [SerializeField] private Transform figure;
     [SerializeField] private AudioClip deathClip;
+    [SerializeField] private AudioClip hitClip;
+    [Tooltip("Gruñido que suena cada tanto (sonido 3D).")]
+    [SerializeField] private AudioClip groanClip;
+    [SerializeField] private Vector2 groanInterval = new Vector2(4f, 9f);
 
     [Header("Monedas al morir")]
     [SerializeField] private Coin coinPrefab;
@@ -47,6 +51,7 @@ public class EnemyTracker : MonoBehaviour
     private float deathTimer;
     private Vector3 lastPosition;
     private Vector3 figureBaseScale = Vector3.one;
+    private Vector3 figureBasePosition;
     private float walkPhase;
 
     private void Awake()
@@ -65,14 +70,30 @@ public class EnemyTracker : MonoBehaviour
         }
 
         if (figure != null)
+        {
             figureBaseScale = figure.localScale;
+            figureBasePosition = figure.localPosition;   // p. ej. el modelo va 0.95 m abajo para que pise el suelo
+        }
     }
 
     private void OnEnable() => All.Add(this);
     private void OnDisable() => All.Remove(this);
 
+    private AudioSource voice;
+    private float groanTimer;
+    private float lastHitSound;
+
     private void Start()
     {
+        voice = gameObject.AddComponent<AudioSource>();
+        voice.playOnAwake = false;
+        voice.spatialBlend = 1f;                  // 3D: se oye más fuerte cerca
+        voice.rolloffMode = AudioRolloffMode.Linear;
+        voice.minDistance = 2f;
+        voice.maxDistance = 28f;
+        voice.pitch = isBoss ? 0.7f : Random.Range(0.9f, 1.1f);
+        groanTimer = Random.Range(1f, groanInterval.y);
+
         lastHealth = Health;
         lastPosition = transform.position;
     }
@@ -86,6 +107,16 @@ public class EnemyTracker : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (groanClip != null && voice != null && !deathHandled)
+        {
+            groanTimer -= Time.deltaTime;
+            if (groanTimer <= 0f)
+            {
+                groanTimer = Random.Range(groanInterval.x, groanInterval.y);
+                voice.PlayOneShot(groanClip, 0.7f * GameSettings.SfxVolume);
+            }
+        }
+
         float health = Health;
 
         if (health < lastHealth - 0.01f)
@@ -100,6 +131,12 @@ public class EnemyTracker : MonoBehaviour
             PlayerStats.Instance?.RegisterDamage(damage, crit);
             LastDamageTime = Time.time;
             flash = 1f;
+
+            if (hitClip != null && Time.time - lastHitSound > 0.08f)
+            {
+                lastHitSound = Time.time;
+                voice.PlayOneShot(hitClip, 0.9f * GameSettings.SfxVolume);
+            }
         }
 
         lastHealth = health;
@@ -157,7 +194,7 @@ public class EnemyTracker : MonoBehaviour
         // Tambaleo de zombie al caminar.
         walkPhase += speed * Time.deltaTime * 3f;
         float sway = Mathf.Sin(walkPhase) * Mathf.Clamp01(speed / 2f);
-        figure.localPosition = new Vector3(0f, Mathf.Abs(sway) * 0.08f, 0f);
+        figure.localPosition = figureBasePosition + new Vector3(0f, Mathf.Abs(sway) * 0.08f, 0f);
         Vector3 euler = figure.localEulerAngles;
         figure.localRotation = Quaternion.Euler(0f, euler.y, sway * 8f);
 
