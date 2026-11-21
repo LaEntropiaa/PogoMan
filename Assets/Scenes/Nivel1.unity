@@ -2740,16 +2740,27 @@ MonoBehaviour:
   lateWindow: 0.1
   speedBonusPerUnit: 0.09
   maxSpeedBonus: 1.5
-  crouchChargeTime: 0.8
-  crouchMaxBonus: 2.5
   maxJumpVelocity: 13.5
   geyserVelocity: 12
+  airAcceleration: 45
+  airTurnRate: 540
+  minTurnRate: 170
+  airBrake: 20
+  idleDeceleration: 10
+  airDrag: 0.45
+  perfectHopGain: 1.1
+  missedHopKeep: 0.7
+  maxMomentumSpeed: 32
+  dashMomentumBonus: 4
+  flatSlideSpeed: 12
   slideStickForce: 30
   slideMaxUpSpeed: 0.5
-  slopeAcceleration: 16
-  maxExtraSlideSpeed: 12
+  slideJumpVelocity: 8.5
+  slideJumpBoost: 1.5
+  slopeAcceleration: 20
+  maxExtraSlideSpeed: 20
   extraSpeedDecay: 5
-  slideMomentumDecay: 1.2
+  slideMomentumDecay: 1.5
   uphillMomentumDecay: 8
   minSlopeAngle: 4
   airJumpVelocity: 9.5
@@ -5075,6 +5086,7 @@ GameObject:
   - component: {fileID: 972643067}
   - component: {fileID: 972643066}
   - component: {fileID: 972643065}
+  - component: {fileID: 972643070}
   m_Layer: 0
   m_Name: Progresion
   m_TagString: Untagged
@@ -5129,6 +5141,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDirector
   enemyPrefab: {fileID: 8273496981544212081, guid: f3532775f58adc574ad6bce9e2369712, type: 3}
+  otherPrefabs:
+  - {fileID: 2910461850877899014, guid: 9aa1b7b3716c41acf9e5a7235e7017bc, type: 3}
   maxEnemies: 500
   disableOldSpawners: 1
   aliveAtStart: 6
@@ -5181,6 +5195,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &972643070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972643064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03cee1aff5d8675efb9c645cb18201bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LegibleLighting
+  sunColor: {r: 1, g: 0.95, b: 0.88, a: 1}
+  sunIntensity: 1.35
+  fillSaturation: 0.3
+  fillIntensity: 0.45
+  pointSaturation: 0.6
+  pointIntensityMultiplier: 0.7
+  ambientSky: {r: 0.52, g: 0.5, b: 0.58, a: 1}
+  ambientEquator: {r: 0.42, g: 0.38, b: 0.38, a: 1}
+  ambientGround: {r: 0.2, g: 0.17, b: 0.17, a: 1}
+  fogColor: {r: 0.22, g: 0.14, b: 0.16, a: 1}
+  fogDensity: 0.007
 --- !u!1 &982337973
 GameObject:
   m_ObjectHideFlags: 0
