@@ -84,8 +84,11 @@ public class ItemEffects : MonoBehaviour
     [SerializeField] private AudioClip fireClip;
     [SerializeField] private AudioClip fairyShotClip;
     [SerializeField] private AudioClip coinThrowClip;
+    [Tooltip("ZA WARUDO al activarse la Estampita (está en Assets/Audio, fuera de git). Si falta suena timeStopClip.")]
+    [SerializeField] private AudioClip zaWarudoClip;
     [SerializeField] private AudioClip timeStopClip;
-    [SerializeField] private AudioClip timeTickClip;
+    [Tooltip("Tic-tac en loop mientras el tiempo está detenido.")]
+    [SerializeField] private AudioClip clockLoopClip;
     [SerializeField] private AudioClip timeResumeClip;
 
     public Material FxMaterial => fxMaterial;
@@ -140,7 +143,7 @@ public class ItemEffects : MonoBehaviour
         EnemyTracker.StompHit += OnStompHit;
         EnemyTracker.Killed += OnKilled;
 
-        TimeStop.Configure(font, timeStopClip, timeTickClip, timeResumeClip, fxMaterial);
+        TimeStop.Configure(font, zaWarudoClip != null ? zaWarudoClip : timeStopClip, clockLoopClip, timeResumeClip, fxMaterial);
     }
 
     public int Count(string id) => inventory != null ? inventory.Count(id) : 0;

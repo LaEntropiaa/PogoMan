@@ -13,7 +13,7 @@ public class TimeStop : MonoBehaviour
 
     private static TimeStop instance;
     private static Font font;
-    private static AudioClip stopClip, tickClip, resumeClip;
+    private static AudioClip stopClip, clockClip, resumeClip;
     private static Material fxMaterial;
 
     private float duration;
@@ -26,7 +26,7 @@ public class TimeStop : MonoBehaviour
     private Text title, seconds;
     private CanvasGroup group;
     private AudioSource audioSource;
-    private int lastTick = -1;
+    private AudioSource clock;
 
     private class Frozen
     {
@@ -38,11 +38,11 @@ public class TimeStop : MonoBehaviour
     private readonly Dictionary<EnemyTracker, Frozen> frozen = new Dictionary<EnemyTracker, Frozen>();
     private bool directorWasEnabled;
 
-    public static void Configure(Font f, AudioClip stop, AudioClip tick, AudioClip resume, Material fx)
+    public static void Configure(Font f, AudioClip stop, AudioClip clockLoop, AudioClip resume, Material fx)
     {
         font = f;
         stopClip = stop;
-        tickClip = tick;
+        clockClip = clockLoop;
         resumeClip = resume;
         fxMaterial = fx;
     }
@@ -57,6 +57,8 @@ public class TimeStop : MonoBehaviour
     private void Awake()
     {
         audioSource = UiKit.UiAudio(gameObject);
+        clock = UiKit.UiAudio(gameObject);
+        clock.loop = true;
 
         // Filtro de color encima de todo (prioridad alta).
         var go = new GameObject("FiltroTiempo");
@@ -102,7 +104,6 @@ public class TimeStop : MonoBehaviour
         timeLeft = seconds;
         age = 0f;
         origin = at;
-        lastTick = Mathf.CeilToInt(seconds);
 
         if (PlayerStats.Instance != null)
             PlayerStats.Instance.ClockStopped = true;
@@ -116,6 +117,15 @@ public class TimeStop : MonoBehaviour
             director.enabled = false;
 
         Play(stopClip, 1f, 1f);
+
+        // Reloj durante todo el tiempo detenido (más bajito mientras suena el ZA WARUDO).
+        if (clockClip != null)
+        {
+            clock.clip = clockClip;
+            clock.pitch = 1f;
+            clock.volume = 0f;
+            clock.Play();
+        }
         ItemFx.Burst(at + Vector3.up, 60, 0.6f, new Color(1f, 0.9f, 0.5f), fxMaterial, 14f, 0.5f, 0.7f);
     }
 
@@ -131,11 +141,11 @@ public class TimeStop : MonoBehaviour
         FreezeNewEnemies();
         UpdateLook();
 
-        int tick = Mathf.CeilToInt(timeLeft);
-        if (tick != lastTick && tick > 0)
+        if (clock.isPlaying)
         {
-            lastTick = tick;
-            Play(tickClip, tick <= 3 ? 1.25f : 1f, tick <= 3 ? 0.9f : 0.6f);
+            float under = stopClip != null && age < stopClip.length ? 0.35f : 0.8f;
+            clock.volume = Mathf.MoveTowards(clock.volume, under * Mathf.Clamp01(timeLeft / 0.3f) * GameSettings.SfxVolume, Time.deltaTime * 2f);
+            clock.pitch = timeLeft <= 3f ? 1.35f : 1f;   // los últimos segundos el reloj se acelera
         }
         this.seconds.text = Mathf.Max(0, Mathf.CeilToInt(timeLeft)).ToString();
 
@@ -197,6 +207,7 @@ public class TimeStop : MonoBehaviour
     {
         timeLeft = 0f;
         volume.weight = 0f;
+        clock.Stop();
         group.alpha = 0f;
 
         foreach (KeyValuePair<EnemyTracker, Frozen> pair in frozen)
