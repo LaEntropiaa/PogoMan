@@ -15,6 +15,10 @@ public class PogoAbilities : MonoBehaviour
     public float DashCooldownLeft { get; private set; }
     public float DashCooldownTotal { get; private set; } = 1f;
     public bool Dashing => dashTime > 0f;
+    public event System.Action<Vector3> DashStarted;   // posición de inicio
+    public event System.Action<Vector3> DashEnded;
+    // Seguro de Daños a Terceros: el dash ya no es invulnerable.
+    public bool DashInvulnerable { get; set; } = true;
 
     private Rigidbody rb;
     private PogoPlayer player;
@@ -131,8 +135,9 @@ public class PogoAbilities : MonoBehaviour
 
         if (PogoJump.Instance != null)
             PogoJump.Instance.DashSpeedCap = dashSpeed + 1f;
-        if (PlayerVitals.Instance != null)
+        if (PlayerVitals.Instance != null && DashInvulnerable)
             PlayerVitals.Instance.InvulnerableUntil = Time.time + duration + 0.12f;
+        DashStarted?.Invoke(transform.position);
 
         trail.emitting = true;
         Burst(transform.position, 14, 0.5f);
@@ -142,6 +147,7 @@ public class PogoAbilities : MonoBehaviour
     private void EndDash()
     {
         dashTime = 0f;
+        DashEnded?.Invoke(transform.position);
 
         // Sales del dash con más velocidad de la que traías (y se conserva con bunny hops / slide).
         if (PogoJump.Instance != null)

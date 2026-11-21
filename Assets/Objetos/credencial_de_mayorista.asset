@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 742f2819ee425dfd7b97b4760b616fc1, type: 3}
+  m_Name: credencial_de_mayorista
+  m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
+  id: credencial_de_mayorista
+  displayName: Credencial de Mayorista
+  description: "Los enemigos dejan 50 % m\xE1s monedas de compra. El cofre de 50 ahora cuesta 65."
+  quote: "Ahorr\xF3 tanto que sali\xF3 debiendo."
+  icon: {fileID: 21300000, guid: 813987882231acb1495d77eb6eaa7614, type: 3}
+  weight: 1
+  rarity: 2
+  maxCopies: 1
+  active: 0
+  cursed: 1

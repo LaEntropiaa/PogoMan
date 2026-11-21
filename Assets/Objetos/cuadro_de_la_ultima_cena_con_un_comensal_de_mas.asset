@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: cuadro_de_la_ultima_cena_con_un_comensal_de_mas
   displayName: "Cuadro de la \xDAltima Cena con un Comensal de M\xE1s"
-  description: "Invoca a un hada acompa\xF1ante que cada dos segundos ataca al enemigo m\xE1s cercano y le causa un 25 % del da\xF1o del pogo.\nAcumulable: un hada m\xE1s por cada uno."
+  description: "Invoca a un hada acompa\xF1ante que cada dos segundos ataca al enemigo m\xE1s cercano y le causa un 25 % del da\xF1o del pogo."
   quote: "Nadie lo invit\xF3. Nadie se atreve a preguntarle."
   icon: {fileID: 21300000, guid: c223c197a88a560e0bc380fcfff07481, type: 3}
   weight: 1
+  rarity: 2
+  maxCopies: 0
+  active: 0
+  cursed: 0

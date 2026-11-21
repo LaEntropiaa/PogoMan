@@ -9,7 +9,13 @@ public class Chest : MonoBehaviour
     [SerializeField] private int price = 50;
     [SerializeField] private float interactDistance = 2.6f;
 
-    public int Price => price;
+    // Credencial de Mayorista: los cofres de pago cuestan más (los gratis siguen gratis).
+    public static float PriceMultiplier = 1f;
+    public int Price => price <= 0 ? 0 : Mathf.RoundToInt(price * PriceMultiplier);
+    public bool Free => price <= 0;
+    // Se abrió un cofre (lo usa el Vale de Farmacia).
+    public static event System.Action<Chest> AnyOpened;
+    public static void RaiseOpened(Chest c) => AnyOpened?.Invoke(c);
     public bool Opened { get; private set; }
 
     // Material para las chispitas (lo pone RunSystems).

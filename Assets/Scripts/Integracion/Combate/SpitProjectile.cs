@@ -24,6 +24,15 @@ public class SpitProjectile : MonoBehaviour
     private float area;
     private float sizeMultiplier = 1f;
 
+    // Proyectil central de su salva (lo usan Salsa de la Casa y Muela de Rebote).
+    public bool Central { get; set; }
+    public float ExtraSplashRadius { get; set; }
+    public float ExtraSplashFraction { get; set; }
+    public float Damage => damage;
+    public bool Crit => crit;
+    // Impacto directo en un enemigo (proyectil, enemigo, punto).
+    public static event System.Action<SpitProjectile, EnemyTracker, Vector3> DirectHit;
+
     public void Launch(EnemyTracker target, float damage, bool crit, float speed, float lifetime,
         Transform owner, AudioClip hitClip, AudioClip critClip)
     {
@@ -119,7 +128,10 @@ public class SpitProjectile : MonoBehaviour
         {
             EnemyTracker tracker = enemy.GetComponent<EnemyTracker>();
             if (tracker != null)
+            {
                 tracker.Hit(damage, HitSource.Spit, crit);
+                DirectHit?.Invoke(this, tracker, point);
+            }
             else   // Cualquier enemigo con un método TakeDamage(float) recibe el daño.
                 enemy.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
 
@@ -133,6 +145,17 @@ public class SpitProjectile : MonoBehaviour
         }
 
         SplashDamage(point, enemy);
+        if (ExtraSplashRadius > 0f)
+        {
+            float r2 = ExtraSplashRadius * ExtraSplashRadius;
+            nearby.Clear();
+            foreach (EnemyTracker e in EnemyTracker.All)
+                if (e != null && e.Enemy != enemy && !e.IsDead && (e.Center - point).sqrMagnitude < r2)
+                    nearby.Add(e);
+            foreach (EnemyTracker e in nearby)
+                e.Hit(damage * ExtraSplashFraction, HitSource.Spit);
+            ItemFx.Burst(point, 30, ExtraSplashRadius * 0.5f, new Color(1f, 0.35f, 0.1f), ItemEffects.Instance != null ? ItemEffects.Instance.FxMaterial : null, 6f, 0.35f, 0.5f);
+        }
         SpawnSplat(point, enemy != null ? 10 : 6);
         Destroy(gameObject);
     }

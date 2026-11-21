@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 742f2819ee425dfd7b97b4760b616fc1, type: 3}
+  m_Name: chiflador_de_banqueta
+  m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
+  id: chiflador_de_banqueta
+  displayName: Chiflador de Banqueta
+  description: "Saltar desde un slide a 16 m/s o m\xE1s dispara un chiflador al frente. Explota en 2.5 m por 70 % del da\xF1o del pogo."
+  quote: "Se prende lejos de la cara. En teor\xEDa."
+  icon: {fileID: 21300000, guid: c6d85743029ea2dc4afe07f1dd2fa9db, type: 3}
+  weight: 1
+  rarity: 1
+  maxCopies: 2
+  active: 0
+  cursed: 0

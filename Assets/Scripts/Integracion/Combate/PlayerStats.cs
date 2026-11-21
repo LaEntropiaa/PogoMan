@@ -170,6 +170,7 @@ public class PlayerStats : MonoBehaviour
             case PogoStat.AirJumps: return Mathf.Clamp(Mathf.Round(value), 0f, 10f);
             case PogoStat.Projectiles: return Mathf.Clamp(Mathf.Round(value), 1f, 12f);
             case PogoStat.DashCooldown: return Mathf.Max(minDashCooldown, value);
+            case PogoStat.PickupRadius: return Mathf.Clamp(value, 0f, 8f);   // tope global de recogida
             default: return Mathf.Max(0f, value);
         }
     }
@@ -220,6 +221,17 @@ public class PlayerStats : MonoBehaviour
     }
 
     public void RegisterKill() => Kills++;
+
+    // Credencial de Mayorista: más monedas al recoger (se guardan las fracciones).
+    public float CoinPickupMultiplier { get; set; } = 1f;
+    private float coinFraction;
+    public void AddPickupCoins(int amount)
+    {
+        float total = amount * CoinPickupMultiplier + coinFraction;
+        int whole = Mathf.FloorToInt(total);
+        coinFraction = total - whole;
+        AddCoins(whole);
+    }
 
     public void AddCoins(int amount)
     {

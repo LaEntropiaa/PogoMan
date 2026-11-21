@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 742f2819ee425dfd7b97b4760b616fc1, type: 3}
+  m_Name: salsa_de_la_casa
+  m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
+  id: salsa_de_la_casa
+  displayName: Salsa de la Casa
+  description: "Cada quinta salva lleva una salpicadura extra de 2.5 m por 60 % del da\xF1o del escupitajo."
+  quote: "La receta se llev\xF3 al cocinero."
+  icon: {fileID: 21300000, guid: cbc029bb49a5476228e916a0882d83b4, type: 3}
+  weight: 1
+  rarity: 1
+  maxCopies: 2
+  active: 0
+  cursed: 0

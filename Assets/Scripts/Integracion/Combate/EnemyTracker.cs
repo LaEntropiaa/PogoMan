@@ -35,6 +35,8 @@ public class EnemyTracker : MonoBehaviour
     [SerializeField] private int coinsMax = 3;
     [Tooltip("Probabilidad de soltar monedas (con cientos de enemigos, no todos sueltan).")]
     [SerializeField, Range(0f, 1f)] private float coinChance = 0.4f;
+    // Modo infinito: más probabilidad de soltar monedas.
+    public static float CoinChanceBonus;
 
     [Header("Experiencia al morir")]
     [SerializeField] private float xpValue = 1f;
@@ -204,7 +206,7 @@ public class EnemyTracker : MonoBehaviour
 
     private void DropCoins()
     {
-        if (coinPrefab == null || (!isBoss && Random.value > coinChance))
+        if (coinPrefab == null || (!isBoss && Random.value > Mathf.Min(0.95f, coinChance + CoinChanceBonus)))
             return;
 
         int count = Random.Range(coinsMin, coinsMax + 1);

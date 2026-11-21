@@ -14,9 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: compresor_de_los_lamentos
   displayName: Compresor de los Lamentos
-  description: 'Aumenta un 25 % la altura del salto con espacio. Permite alcanzar mayor altura sin alargar todos los rebotes.
-
-    Acumulable: +25 % por cada uno.'
+  description: Aumenta un 25 % la altura del salto con espacio. Permite alcanzar mayor altura sin alargar todos los rebotes.
   quote: 
   icon: {fileID: 21300000, guid: b42c8fa30f5ff46ecba27169c525a058, type: 3}
   weight: 1
+  rarity: 0
+  maxCopies: 0
+  active: 0
+  cursed: 0

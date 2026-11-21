@@ -215,11 +215,11 @@ public class RunHUD : MonoBehaviour
         if (shieldRoot == null)
             return;
         PlayerVitals v = PlayerVitals.Instance;
-        bool has = v != null && v.MaxShield > 0f;
+        bool has = v != null && (v.MaxShield > 0f || v.BonusShield > 0f);
         if (shieldRoot.gameObject.activeSelf != has)
             shieldRoot.gameObject.SetActive(has);
         if (has)
-            UiKit.SetFill(shieldFill, v.Shield / v.MaxShield);
+            UiKit.SetFill(shieldFill, Mathf.Clamp01(v.TotalShield / Mathf.Max(1f, v.MaxShield + v.BonusShieldMax)));
     }
 
     private void UpdateAbilities(PlayerStats stats)

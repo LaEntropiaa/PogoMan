@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: empunaduras_de_cain
   displayName: "Empu\xF1aduras de Ca\xEDn"
-  description: "Aumentan un 15 % el da\xF1o del pogo.\nAcumulable: cada una extra rinde un poco menos."
+  description: "Aumentan un 15 % el da\xF1o del pogo."
   quote: Hechas con los dientes del primer asesino. El agarre es personal.
   icon: {fileID: 21300000, guid: 983d25081fa1ebd4a804fd3c97797c3e, type: 3}
   weight: 1
+  rarity: 0
+  maxCopies: 0
+  active: 0
+  cursed: 0

@@ -61,7 +61,7 @@ public class Coin : MonoBehaviour
 
     private void Collect()
     {
-        PlayerStats.Instance?.AddCoins(value);
+        PlayerStats.Instance?.AddPickupCoins(value);
 
 
         if (collectClip != null)

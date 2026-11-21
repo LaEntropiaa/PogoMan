@@ -136,6 +136,12 @@ public class EnemyDirector : MonoBehaviour
             targetAlive += hordeExtraAlive * (1f + 0.3f * (HordeNumber - 1));
             rate = hordeSpawnRate;
         }
+        if (EndlessMode.Active)
+        {
+            // Infierno infinito: empieza como a media partida y cada minuto +20 % de demonios y +15 % de ritmo.
+            targetAlive = aliveAtEnd * 0.45f * (1f + 0.2f * EndlessMode.Level);
+            rate = spawnRateAtEnd * 0.6f * (1f + 0.15f * EndlessMode.Level);
+        }
 
         targetAlive = Mathf.Min(targetAlive, maxEnemies);
 
@@ -167,6 +173,13 @@ public class EnemyDirector : MonoBehaviour
         float t = RunTime;
 
         float limit = PlayerStats.Instance != null ? PlayerStats.Instance.TimeLimit : 900f;
+        if (EndlessMode.Active)
+        {
+            // El modo infinito no usa la horda: lo escala Update minuto a minuto.
+            if (HordeActive) { HordeActive = false; HordeChanged?.Invoke(false); }
+            InfiniteHorde = false;
+            return;
+        }
         if (t >= limit)
         {
             int step = 1 + Mathf.FloorToInt((t - limit) / infiniteStepSeconds);
@@ -225,7 +238,7 @@ public class EnemyDirector : MonoBehaviour
         enemy.SetTarget(player);
 
         // Más vida y velocidad con el tiempo.
-        float minutes = Minutes;
+        float minutes = Minutes + (EndlessMode.Active ? EndlessMode.Minutes * 1.5f : 0f);
         float health = PogoBridge.MaxHealth(enemy) * (1f + healthPerMinute * minutes);
         PogoBridge.SetFloat(enemy, "maxHealth", health);
         PogoBridge.SetFloat(enemy, "currentHealth", health);

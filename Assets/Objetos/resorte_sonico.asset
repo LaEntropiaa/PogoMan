@@ -18,3 +18,7 @@ MonoBehaviour:
   quote: "Perteneci\xF3 a alguien que no sab\xEDa cu\xE1ndo parar."
   icon: {fileID: 21300000, guid: 1b51eb94e3f6d0c8d8bea9c68b6e8750, type: 3}
   weight: 1
+  rarity: 2
+  maxCopies: 1
+  active: 0
+  cursed: 0

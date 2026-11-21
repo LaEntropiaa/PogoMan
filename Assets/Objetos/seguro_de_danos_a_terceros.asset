@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 742f2819ee425dfd7b97b4760b616fc1, type: 3}
+  m_Name: seguro_de_danos_a_terceros
+  m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
+  id: seguro_de_danos_a_terceros
+  displayName: "Seguro de Da\xF1os a Terceros"
+  description: "Tu dash pierde la invulnerabilidad. Cuando est\xE1 listo, deja un doble que atrae enemigos 2 s y explota por 140 % del da\xF1o del pogo."
+  quote: "Al titular jam\xE1s lo cubre."
+  icon: {fileID: 21300000, guid: fb0c4e06dc690c4e9959752e987b67f6, type: 3}
+  weight: 1
+  rarity: 3
+  maxCopies: 1
+  active: 0
+  cursed: 1
