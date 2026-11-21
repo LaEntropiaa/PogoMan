@@ -12,12 +12,101 @@ public class Chest : MonoBehaviour
     public int Price => price;
     public bool Opened { get; private set; }
 
+    // Material para las chispitas (lo pone RunSystems).
+    public static Material SparkleMaterial;
+
+    private static readonly Color GlowColor = new Color(1f, 0.75f, 0.3f);
+
     private static Transform player;
     private Renderer[] renderers;
+    private Light glowLight;
+    private ParticleSystem sparkles;
+    private Material[] glowMaterials;
+    private float glowOffset;
 
     public void Configure(int newPrice) => price = newPrice;
 
     private void Awake() => renderers = GetComponentsInChildren<Renderer>();
+
+    // Los cofres cerrados brillan: luz dorada que late, emisión y chispitas que suben.
+    private void Start()
+    {
+        glowOffset = Random.value * 10f;
+
+        var lightGO = new GameObject("BrilloCofre");
+        lightGO.transform.SetParent(transform, false);
+        lightGO.transform.position = Center + Vector3.up * 0.8f;
+        glowLight = lightGO.AddComponent<Light>();
+        glowLight.type = LightType.Point;
+        glowLight.color = GlowColor;
+        glowLight.range = 4.5f;
+        glowLight.shadows = LightShadows.None;
+
+        glowMaterials = new Material[renderers.Length];
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Material m = renderers[i].material;   // copia propia para poder hacerla brillar
+            if (m.HasProperty("_EmissionColor"))
+            {
+                m.EnableKeyword("_EMISSION");
+                m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+                glowMaterials[i] = m;
+            }
+        }
+
+        sparkles = MakeSparkles();
+    }
+
+    private ParticleSystem MakeSparkles()
+    {
+        var go = new GameObject("ChispasCofre");
+        go.transform.SetParent(transform, false);
+        go.transform.position = Center;
+        go.transform.rotation = Quaternion.Euler(-90f, 0f, 0f);
+        var ps = go.AddComponent<ParticleSystem>();
+        ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+        var main = ps.main;
+        main.loop = true;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(1f, 1.8f);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(0.3f, 0.9f);
+        main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.12f);
+        main.startColor = new Color(1f, 0.85f, 0.4f, 0.9f);
+        main.maxParticles = 30;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+
+        var emission = ps.emission;
+        emission.rateOverTime = 9f;
+
+        var shape = ps.shape;
+        shape.shapeType = ParticleSystemShapeType.Circle;
+        shape.radius = 0.5f;
+
+        var size = ps.sizeOverLifetime;
+        size.enabled = true;
+        size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0f)));
+
+        var r = go.GetComponent<ParticleSystemRenderer>();
+        if (SparkleMaterial != null)
+            r.sharedMaterial = SparkleMaterial;
+        r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        ps.Play();
+        return ps;
+    }
+
+    private void LateUpdate()
+    {
+        if (Opened || glowLight == null)
+            return;
+
+        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 2.6f + glowOffset);
+        glowLight.intensity = 1.6f + pulse * 1.8f;
+        Color emission = GlowColor * (0.25f + pulse * 0.55f);
+        foreach (Material m in glowMaterials)
+            if (m != null)
+                m.SetColor("_EmissionColor", emission);
+    }
 
     private Vector3 Center => renderers.Length > 0 ? renderers[0].bounds.center : transform.position;
 
@@ -50,10 +139,22 @@ public class Chest : MonoBehaviour
         if (Nearest == this)
             Nearest = null;
 
+        // Se apaga el brillo.
+        if (glowLight != null)
+            Destroy(glowLight.gameObject);
+        if (sparkles != null)
+            sparkles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        if (glowMaterials != null)
+            foreach (Material m in glowMaterials)
+                if (m != null)
+                    m.SetColor("_EmissionColor", Color.black);
+
         // Un cofre abierto se ve más apagado.
         var block = new MaterialPropertyBlock();
         foreach (Renderer r in renderers)
         {
+            if (r == null)
+                continue;   // p. ej. chispas que ya se borraron
             r.GetPropertyBlock(block);
             block.SetColor("_BaseColor", new Color(0.45f, 0.4f, 0.4f));
             r.SetPropertyBlock(block);

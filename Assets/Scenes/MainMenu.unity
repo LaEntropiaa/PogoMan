@@ -179,14 +179,14 @@ MonoBehaviour:
   - role: Ideas y desarrollo creativo
     name: "Alonso Adri\xE1n Mart\xEDnez Hern\xE1ndez\nAlan Morales de la Cruz"
   - role: "Programaci\xF3n"
-    name: "Alonso Adri\xE1n Mart\xEDnez Hern\xE1ndez"
+    name: "Alonso Adri\xE1n Mart\xEDnez Hern\xE1ndez\nAlan Morales de la Cruz"
   - role: Arte y modelado 3D
     name: "Rub\xE9n Jes\xFAs Garc\xEDa Torres"
   - role: "M\xFAsica y audio"
     name: Alan Morales de la Cruz
   - role: "Integraci\xF3n y producci\xF3n audiovisual"
     name: Alan Morales de la Cruz
-  notes: "<color=#991208>M\xDASICA DEL MEN\xDA</color>\nTema de Steel Ball Run\n(JoJo's Bizarre Adventure)\n\n<color=#991208>M\xDASICA DEL JUEGO</color>\nDub Hub \u2014 Jimmy Fontanez\n\n<color=#991208>AGRADECIMIENTOS ESPECIALES</color>\nA quienes hicieron posible que una idea tan absurda como un hombre vendiendo su alma por un pogo se convirtiera en un videojuego.\n\nY a todos aquellos que se atrevan a saltar hasta las profundidades del infierno.\n\n<color=#731005>El infierno no acepta devoluciones.</color>\n\n\xB7 \xB7 \xB7\n\n<color=#731005>POGO MAN</color>\nDesarrollado en Unity \u2014 2026"
+  notes: "<color=#991208>M\xDASICA DEL MEN\xDA</color>\nTema de Steel Ball Run\n(JoJo's Bizarre Adventure)\n\n<color=#991208>M\xDASICA DEL JUEGO</color>\nDub Hub \u2014 Jimmy Fontanez\n\n<color=#991208>AGRADECIMIENTOS ESPECIALES</color>\nA quienes hicieron posible que una idea tan absurda como un hombre vendiendo su alma por un pogo se convirtiera en un videojuego.\n\nY a todos aquellos que se atrevan a saltar hasta las profundidades del infierno.\n\n<color=#991208>BETA TESTERS</color>\nChago\n\nGracias por caerse, morir y quedarse atorados en cofres para que nadie m\xE1s tuviera que hacerlo. Cada bug que encontraron es un demonio menos.\n\n<color=#731005>El infierno no acepta devoluciones.</color>\n\n\xB7 \xB7 \xB7\n\n<color=#731005>POGO MAN</color>\nDesarrollado en Unity \u2014 2026"
   roleColor: {r: 0.6, g: 0.07, b: 0.03, a: 1}
   highlightColor: {r: 0.45, g: 0.05, b: 0.02, a: 1}
   body: {fileID: 268146462}
@@ -1631,7 +1631,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 800, y: 1377}
+  m_SizeDelta: {x: 800, y: 1638.6014}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &268146462
 MonoBehaviour:
@@ -1666,7 +1666,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1.1
-  m_Text: "<color=#730D05>POGO MAN\nUn peque\xF1o salto hacia el infierno.</color>\n\n<color=#991208>IDEAS Y DESARROLLO CREATIVO</color>\nAlonso Adri\xE1n Mart\xEDnez Hern\xE1ndez\nAlan Morales de la Cruz\n\n<color=#991208>PROGRAMACI\xD3N</color>\nAlonso Adri\xE1n Mart\xEDnez Hern\xE1ndez\n\n<color=#991208>ARTE Y MODELADO 3D</color>\nRub\xE9n Jes\xFAs Garc\xEDa Torres\n\n<color=#991208>M\xDASICA Y AUDIO</color>\nAlan Morales de la Cruz\n\n<color=#991208>INTEGRACI\xD3N Y PRODUCCI\xD3N AUDIOVISUAL</color>\nAlan Morales de la Cruz\n\n<color=#991208>M\xDASICA DEL MEN\xDA</color>\nTema de Steel Ball Run\n(JoJo's Bizarre Adventure)\n\n<color=#991208>M\xDASICA DEL JUEGO</color>\nDub Hub \u2014 Jimmy Fontanez\n\n<color=#991208>AGRADECIMIENTOS ESPECIALES</color>\nA quienes hicieron posible que una idea tan absurda como un hombre vendiendo su alma por un pogo se convirtiera en un videojuego.\n\nY a todos aquellos que se atrevan a saltar hasta las profundidades del infierno.\n\n<color=#731005>El infierno no acepta devoluciones.</color>\n\n\xB7 \xB7 \xB7\n\n<color=#731005>POGO MAN</color>\nDesarrollado en Unity \u2014 2026"
+  m_Text: "<color=#730D05>POGO MAN\nUn peque\xF1o salto hacia el infierno.</color>\n\n<color=#991208>IDEAS Y DESARROLLO CREATIVO</color>\nAlonso Adri\xE1n Mart\xEDnez Hern\xE1ndez\nAlan Morales de la Cruz\n\n<color=#991208>PROGRAMACI\xD3N</color>\nAlonso Adri\xE1n Mart\xEDnez Hern\xE1ndez\nAlan Morales de la Cruz\n\n<color=#991208>ARTE Y MODELADO 3D</color>\nRub\xE9n Jes\xFAs Garc\xEDa Torres\n\n<color=#991208>M\xDASICA Y AUDIO</color>\nAlan Morales de la Cruz\n\n<color=#991208>INTEGRACI\xD3N Y PRODUCCI\xD3N AUDIOVISUAL</color>\nAlan Morales de la Cruz\n\n<color=#991208>M\xDASICA DEL MEN\xDA</color>\nTema de Steel Ball Run\n(JoJo's Bizarre Adventure)\n\n<color=#991208>M\xDASICA DEL JUEGO</color>\nDub Hub \u2014 Jimmy Fontanez\n\n<color=#991208>AGRADECIMIENTOS ESPECIALES</color>\nA quienes hicieron posible que una idea tan absurda como un hombre vendiendo su alma por un pogo se convirtiera en un videojuego.\n\nY a todos aquellos que se atrevan a saltar hasta las profundidades del infierno.\n\n<color=#991208>BETA TESTERS</color>\nChago\n\nGracias por caerse, morir y quedarse atorados en cofres para que nadie m\xE1s tuviera que hacerlo. Cada bug que encontraron es un demonio menos.\n\n<color=#731005>El infierno no acepta devoluciones.</color>\n\n\xB7 \xB7 \xB7\n\n<color=#731005>POGO MAN</color>\nDesarrollado en Unity \u2014 2026"
 --- !u!222 &268146463
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1989,7 +1989,7 @@ MonoBehaviour:
     m_Mode: 4
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 1252248677}
-    m_SelectOnDown: {fileID: 1423623190}
+    m_SelectOnDown: {fileID: 1650740104}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 0
@@ -2415,6 +2415,101 @@ RectTransform:
   m_AnchoredPosition: {x: -5, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &450995583
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 450995584}
+  - component: {fileID: 450995587}
+  - component: {fileID: 450995586}
+  - component: {fileID: 450995585}
+  m_Layer: 5
+  m_Name: Etiqueta
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &450995584
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 450995583}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1925659884}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: 40, y: 0}
+  m_SizeDelta: {x: 360, y: 60}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &450995585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 450995583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Shadow
+  m_EffectColor: {r: 0.08, g: 0.01, b: 0.01, a: 1}
+  m_EffectDistance: {x: 4, y: -4}
+  m_UseGraphicAlpha: 1
+--- !u!114 &450995586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 450995583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.86, g: 0.76, b: 0.66, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
+    m_FontSize: 30
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 3
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
+    m_LineSpacing: 1
+  m_Text: FILTRO PIXEL
+--- !u!222 &450995587
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 450995583}
+  m_CullTransparentMesh: 1
 --- !u!1 &469943225
 GameObject:
   m_ObjectHideFlags: 0
@@ -2448,7 +2543,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -320}
+  m_AnchoredPosition: {x: 0, y: -360}
   m_SizeDelta: {x: 360, y: 72}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &470530402
@@ -2727,6 +2822,7 @@ RectTransform:
   - {fileID: 896374239}
   - {fileID: 1080789986}
   - {fileID: 1459975817}
+  - {fileID: 1925659884}
   - {fileID: 469943226}
   m_Father: {fileID: 1253912418}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2755,6 +2851,7 @@ MonoBehaviour:
   sfxValue: {fileID: 1235225431}
   displayModeOption: {fileID: 1252248679}
   resolutionOption: {fileID: 327582906}
+  pixelOption: {fileID: 1650740102}
 --- !u!225 &494046442
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -2848,6 +2945,101 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
   m_Asset: {fileID: 585043869}
   m_ActionId: dad70c86-b58c-4b17-88ad-f5e53adf419e
+--- !u!1 &579770332
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 579770333}
+  - component: {fileID: 579770336}
+  - component: {fileID: 579770335}
+  - component: {fileID: 579770334}
+  m_Layer: 5
+  m_Name: Valor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &579770333
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 579770332}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1650740101}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &579770334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 579770332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Shadow
+  m_EffectColor: {r: 0.08, g: 0.01, b: 0.01, a: 1}
+  m_EffectDistance: {x: 4, y: -4}
+  m_UseGraphicAlpha: 1
+--- !u!114 &579770335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 579770332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.86, g: 0.76, b: 0.66, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
+    m_FontSize: 30
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
+    m_LineSpacing: 1
+  m_Text: 
+--- !u!222 &579770336
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 579770332}
+  m_CullTransparentMesh: 1
 --- !u!114 &585043869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5076,6 +5268,81 @@ MonoBehaviour:
   pressScale: 0.94
   scaleSpeed: 18
   indicatorBob: 6
+--- !u!1 &1030403228
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1030403229}
+  - component: {fileID: 1030403231}
+  - component: {fileID: 1030403230}
+  m_Layer: 5
+  m_Name: Flecha
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1030403229
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030403228}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1925659884}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: 30, y: 0}
+  m_SizeDelta: {x: 28, y: 36}
+  m_Pivot: {x: 1, y: 0.5}
+--- !u!114 &1030403230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030403228}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 83e92be9f284cb1b996abeb8b789a567, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 0.25
+--- !u!222 &1030403231
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030403228}
+  m_CullTransparentMesh: 1
 --- !u!1 &1080789985
 GameObject:
   m_ObjectHideFlags: 0
@@ -9461,7 +9728,7 @@ MonoBehaviour:
   m_Navigation:
     m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 327582908}
+    m_SelectOnUp: {fileID: 1650740104}
     m_SelectOnDown: {fileID: 141269083}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
@@ -10209,6 +10476,167 @@ MonoBehaviour:
   blendDistance: 0
   weight: 1
   sharedProfile: {fileID: 11400000, guid: 8dee9b3817680d54f91a2c27321a63bc, type: 2}
+--- !u!1 &1650740100
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1650740101}
+  - component: {fileID: 1650740106}
+  - component: {fileID: 1650740105}
+  - component: {fileID: 1650740104}
+  - component: {fileID: 1650740103}
+  - component: {fileID: 1650740102}
+  m_Layer: 5
+  m_Name: Selector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1650740101
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1650740100}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 579770333}
+  m_Father: {fileID: 1925659884}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: -20, y: 0}
+  m_SizeDelta: {x: 470, y: 62}
+  m_Pivot: {x: 1, y: 0.5}
+--- !u!114 &1650740102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1650740100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c337fd3abb919eaaa92eea2b8d70c72e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OptionCycler
+  valueLabel: {fileID: 579770335}
+--- !u!114 &1650740103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1650740100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8b7b0d7c6655ab308ef4fd9d81277ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MenuButtonFx
+  background: {fileID: 1650740105}
+  label: {fileID: 579770335}
+  indicator: {fileID: 1030403229}
+  normalSprite: {fileID: 21300000, guid: b59ce5ffb1e485eabae0c914ea08432d, type: 3}
+  highlightSprite: {fileID: 21300000, guid: 1e70127f52cc049249535c31cf383516, type: 3}
+  disabledSprite: {fileID: 21300000, guid: 2af992bda4a3d67ba93952610c052606, type: 3}
+  labelNormal: {r: 0.86, g: 0.76, b: 0.66, a: 1}
+  labelHighlight: {r: 1, g: 0.82, b: 0.3, a: 1}
+  labelDisabled: {r: 0.4, g: 0.3, b: 0.28, a: 1}
+  highlightScale: 1.03
+  pressScale: 0.94
+  scaleSpeed: 18
+  indicatorBob: 6
+--- !u!114 &1650740104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1650740100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 4
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 327582908}
+    m_SelectOnDown: {fileID: 1423623190}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 0
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1650740105}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1650740105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1650740100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: b59ce5ffb1e485eabae0c914ea08432d, type: 3}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 0.25
+--- !u!222 &1650740106
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1650740100}
+  m_CullTransparentMesh: 1
 --- !u!1 &1665972111
 GameObject:
   m_ObjectHideFlags: 0
@@ -13026,6 +13454,44 @@ RectTransform:
   m_AnchorMax: {x: 1, y: 0.75}
   m_AnchoredPosition: {x: -5, y: 0}
   m_SizeDelta: {x: -20, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1925659883
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1925659884}
+  m_Layer: 5
+  m_Name: Fila_FILTRO PIXEL
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1925659884
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1925659883}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 450995584}
+  - {fileID: 1650740101}
+  - {fileID: 1030403229}
+  m_Father: {fileID: 494046440}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -260}
+  m_SizeDelta: {x: 900, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1960180437
 GameObject:

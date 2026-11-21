@@ -1,0 +1,211 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &411603011613775772
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5347810951449443796}
+  - component: {fileID: 4639268000400688781}
+  - component: {fileID: 7931255068864365245}
+  - component: {fileID: 7308910017271154913}
+  - component: {fileID: 6853026221473849086}
+  m_Layer: 0
+  m_Name: Guardian_Barquero
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5347810951449443796
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411603011613775772}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6860842586367556907}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!54 &4639268000400688781
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411603011613775772}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!136 &7931255068864365245
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411603011613775772}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.95
+  m_Height: 3.1
+  m_Direction: 1
+  m_Center: {x: 0, y: 1.55, z: 0}
+--- !u!114 &7308910017271154913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411603011613775772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b1f961a63f18a69f904a7fdb3278070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Guardian
+  target: {fileID: 0}
+  moveSpeed: 2.3
+  kind: 3
+  maxHealth: 1250
+  healthPerMinute: 0.04
+  idleClip: Barquero_Reposo
+  moveClip: Barquero_Avance
+  hitClip: Barquero_Impacto
+  defeatClip: Barquero_Derrota
+  defeatLength: 2
+  attacks:
+  - clip: Barquero_Remada
+    activeTime: 1.125
+    duration: 1.875
+    damage: 20
+    cooldown: 3.7
+  - clip: Barquero_Cortejo
+    activeTime: 1.5417
+    duration: 2.375
+    damage: 15
+    cooldown: 6.5
+  recoverTime: 1.1
+  hover: 0.35
+--- !u!114 &6853026221473849086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411603011613775772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60dc3683ca077e178ad6779fcd559dd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyTracker
+  isBoss: 1
+  displayName: EL BARQUERO
+  figure: {fileID: 0}
+  deathClip: {fileID: 8300000, guid: 96599021d935b38fbb8fd1418d83e387, type: 3}
+  hitClip: {fileID: 8300000, guid: 19e062c47d6e8e840b9c0de92bf02837, type: 3}
+  groanClip: {fileID: 0}
+  groanInterval: {x: 4, y: 9}
+  coinPrefab: {fileID: 7733439221184182898, guid: 700feaacb5b508f42a70eca99a4a3946, type: 3}
+  coinsMin: 15
+  coinsMax: 20
+  coinChance: 0.4
+  xpValue: 1
+  bossXpValue: 30
+  bigGemChance: 0.05
+--- !u!1001 &732165740867070692
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5347810951449443796}
+    m_Modifications:
+    - target: {fileID: 5396642977823167242, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+      propertyPath: m_Name
+      value: Barquero
+      objectReference: {fileID: 0}
+    - target: {fileID: 6133822599145773007, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6133822599145773007, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6133822599145773007, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6133822599145773007, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6133822599145773007, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6133822599145773007, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6133822599145773007, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6133822599145773007, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6133822599145773007, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6133822599145773007, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+--- !u!4 &6860842586367556907 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6133822599145773007, guid: cdf480ebfacce8c449beb00904f594ac, type: 3}
+  m_PrefabInstance: {fileID: 732165740867070692}
+  m_PrefabAsset: {fileID: 0}

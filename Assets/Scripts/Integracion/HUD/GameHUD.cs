@@ -87,7 +87,7 @@ public class GameHUD : MonoBehaviour
             vignette = 1f;
             DamageNumbers.Show(player.transform.position + Vector3.up * 1.6f, lastHealth - health, DamageKind.Player);
             if (hurtClip != null)
-                audioSource.PlayOneShot(hurtClip, 0.8f * GameSettings.SfxVolume);
+                audioSource.PlayOneShot(hurtClip, GameSettings.SfxVolume);
         }
         lastHealth = health;
 

@@ -60,47 +60,85 @@ public class SpitAttack : MonoBehaviour
         return transform.position + facing * mouthOffset;
     }
 
-    private static EnemyTracker FindClosestEnemy(Vector3 from, float range)
+    private readonly System.Collections.Generic.List<EnemyTracker> targets = new System.Collections.Generic.List<EnemyTracker>();
+    private readonly System.Collections.Generic.List<float> targetDistances = new System.Collections.Generic.List<float>();
+
+    // Los "count" enemigos más cercanos dentro del alcance (para varios proyectiles).
+    private void FindClosestEnemies(Vector3 from, float range, int count)
     {
-        EnemyTracker best = null;
-        float bestDistance = range * range;
+        targets.Clear();
+        targetDistances.Clear();
+        float max = range * range;
 
         foreach (EnemyTracker e in EnemyTracker.All)
         {
-            if (e == null || e.IsDead)
+            if (e == null || e.IsDead || !e.Targetable)
                 continue;
 
             float d = (e.Center - from).sqrMagnitude;
-            if (d < bestDistance)
+            if (d >= max)
+                continue;
+
+            int i = targets.Count;
+            while (i > 0 && targetDistances[i - 1] > d)
+                i--;
+            if (i >= count)
+                continue;
+            targets.Insert(i, e);
+            targetDistances.Insert(i, d);
+            if (targets.Count > count)
             {
-                bestDistance = d;
-                best = e;
+                targets.RemoveAt(count);
+                targetDistances.RemoveAt(count);
             }
         }
+    }
 
-        return best;
+    private EnemyTracker FindClosestEnemy(Vector3 from, float range)
+    {
+        FindClosestEnemies(from, range, 1);
+        return targets.Count > 0 ? targets[0] : null;
     }
 
     private void Fire(Vector3 mouth, EnemyTracker target, PlayerStats stats, float range)
     {
-        float damage = stats != null ? stats.Get(PogoStat.SpitDamage) : 15f;
+        float baseDamage = stats != null ? stats.Get(PogoStat.SpitDamage) : 15f;
         float critChance = stats != null ? stats.Get(PogoStat.CritChance) : 0.1f;
         float critMultiplier = stats != null ? stats.Get(PogoStat.CritMultiplier) : 2f;
         float speed = stats != null ? stats.Get(PogoStat.ProjectileSpeed) : 22f;
+        float area = stats != null ? stats.Get(PogoStat.SpitArea) : 0f;
+        float size = stats != null ? Mathf.Max(0.3f, stats.Get(PogoStat.SpitSize)) : 1f;
+        int count = stats != null ? Mathf.RoundToInt(stats.Get(PogoStat.Projectiles)) : 1;
 
-        bool crit = Random.value < critChance;
-        if (crit)
-            damage *= critMultiplier;
+        // Cada proyectil va a un enemigo distinto; si hay menos enemigos, se reparten en abanico.
+        FindClosestEnemies(mouth, range, count);
+        if (targets.Count == 0)
+            targets.Add(target);
 
-        SpitProjectile projectile = Instantiate(projectilePrefab, mouth, Quaternion.LookRotation(target.Center - mouth));
-        projectile.Launch(target, damage, crit, speed, range * 1.6f / speed + 0.5f, transform, hitClip, critClip);
+        for (int i = 0; i < count; i++)
+        {
+            EnemyTracker t = targets[i % targets.Count];
+            int round = i / targets.Count;
+            float spread = round == 0 ? 0f : (round % 2 == 1 ? 1f : -1f) * (8f + 6f * ((round - 1) / 2));
+
+            float damage = baseDamage;
+            bool crit = Random.value < critChance;
+            if (crit)
+                damage *= critMultiplier;
+
+            Vector3 aim = t.Center - mouth;
+            Quaternion rotation = Quaternion.AngleAxis(spread, Vector3.up) * Quaternion.LookRotation(aim);
+            SpitProjectile projectile = Instantiate(projectilePrefab, mouth, rotation);
+            projectile.Launch(t, damage, crit, speed, range * 1.6f / speed + 0.5f, transform, hitClip, critClip);
+            projectile.SetUpgrades(area, size, rotation * Vector3.forward);
+        }
 
         if (stats != null)
             stats.Shots++;
 
         if (spitClip != null)
         {
-            audioSource.pitch = Random.Range(0.9f, 1.15f);
+            audioSource.pitch = Random.Range(0.9f, 1.15f) - Mathf.Min(size - 1f, 1f) * 0.15f;
             audioSource.PlayOneShot(spitClip, spitVolume * GameSettings.SfxVolume);
         }
     }

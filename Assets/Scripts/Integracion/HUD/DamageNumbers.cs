@@ -8,6 +8,9 @@ public enum DamageKind
     Crit,
     Stomp,
     Player,
+    Shield,
+    Item,       // daño de objetos (fuego, hada, monedas)
+    Blocked,    // golpe bloqueado (escapulario): muestra "BLOQUEADO"
 }
 
 // Números de daño que flotan sobre los enemigos (y sobre Pogoman cuando lo golpean).
@@ -107,6 +110,21 @@ public class DamageNumbers : MonoBehaviour
                 item.text.text = value.ToString();
                 item.text.fontSize = 44;
                 item.color = new Color(1f, 0.55f, 0.15f);
+                break;
+            case DamageKind.Shield:
+                item.text.text = "-" + value;
+                item.text.fontSize = 34;
+                item.color = new Color(0.45f, 0.8f, 1f);
+                break;
+            case DamageKind.Item:
+                item.text.text = value.ToString();
+                item.text.fontSize = 32;
+                item.color = new Color(1f, 0.5f, 0.95f);
+                break;
+            case DamageKind.Blocked:
+                item.text.text = "¡BLOQUEADO!";
+                item.text.fontSize = 38;
+                item.color = new Color(1f, 0.9f, 0.45f);
                 break;
             case DamageKind.Player:
                 item.text.text = "-" + value;

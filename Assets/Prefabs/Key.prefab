@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7512861351681228414}
   - component: {fileID: 15589602619690780}
   - component: {fileID: 5096348017519231138}
+  - component: {fileID: 7737100082223916512}
   m_Layer: 0
   m_Name: Key
   m_TagString: Untagged
@@ -50,7 +51,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9191176343717340085}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -125,7 +126,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faef64df6694d6d37a2e40d7d44adb82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KeyItem
-  collectionRadius: 1.5
+  keyManager: {fileID: 0}
   player: {fileID: 0}
-  collected: 0
-  collectionEffect: {fileID: 0}
+  collectionRadius: 2.4
+--- !u!114 &7737100082223916512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9191176343717340085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2172a609d56ad4f72befb839081024f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KeyVisual
+  goldMaterial: {fileID: 2100000, guid: 72a72a34505217f6195588a0b93a9d9f, type: 2}
+  sparkleMaterial: {fileID: 2100000, guid: cb297985e50f45082b580c6a46fa44eb, type: 2}
+  size: 1
+  height: 1.1

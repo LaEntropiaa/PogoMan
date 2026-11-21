@@ -86,10 +86,11 @@ public class EnemyHealthBars : MonoBehaviour
 
         foreach (EnemyTracker e in EnemyTracker.All)
         {
-            if (e == null || e.IsDead)
+            if (e == null || e.IsDead || e.CustomUi)
                 continue;
 
-            if (e.IsBoss)
+            // En la arena la barra de arriba es la del Diablo: los mini jefes llevan barra normal.
+            if (e.IsBoss && !ArenaFight.InArena)
             {
                 float d = player != null ? Vector3.Distance(player.position, e.Center) : 0f;
                 if (d < bossDistance)

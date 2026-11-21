@@ -8,20 +8,28 @@ public class ItemDatabase : ScriptableObject
     public List<ItemDefinition> items = new List<ItemDefinition>();
 
     // Elige un objeto al azar respetando el "weight" de cada uno.
-    public ItemDefinition RollRandom()
+    // "allowed" deja fuera los que ya no sirven (no acumulables que ya tienes, o al máximo).
+    public ItemDefinition RollRandom(System.Predicate<ItemDefinition> allowed = null)
     {
-        float total = 0f;
+        var pool = new List<ItemDefinition>();
         foreach (ItemDefinition item in items)
+            if (item != null && (allowed == null || allowed(item)))
+                pool.Add(item);
+        if (pool.Count == 0)
+            pool.AddRange(items);
+
+        float total = 0f;
+        foreach (ItemDefinition item in pool)
             total += Mathf.Max(0f, item.weight);
 
         float roll = Random.value * total;
-        foreach (ItemDefinition item in items)
+        foreach (ItemDefinition item in pool)
         {
             roll -= Mathf.Max(0f, item.weight);
             if (roll <= 0f)
                 return item;
         }
 
-        return items.Count > 0 ? items[items.Count - 1] : null;
+        return pool.Count > 0 ? pool[pool.Count - 1] : null;
     }
 }

@@ -59,7 +59,7 @@ public class PauseMenu : MonoBehaviour
             (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
             (Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame);
 
-        if (pressed && (gameOver == null || !gameOver.IsShown))
+        if (pressed && !LevelUpUI.IsOpen && (gameOver == null || !gameOver.IsShown))
         {
             if (paused) Resume();
             else Pause();
@@ -88,7 +88,8 @@ public class PauseMenu : MonoBehaviour
     public void Resume()
     {
         paused = false;
-        Time.timeScale = 1f;
+        // Si pausaste con un cofre o la pantalla de mejoras abiertos, el juego sigue detenido detrás.
+        Time.timeScale = ChestUI.IsOpen || LevelUpUI.IsOpen ? 0f : 1f;
         SetVisible(false);
         SceneNav.SetGameplayCursor(true);
     }
@@ -120,6 +121,13 @@ public class PauseMenu : MonoBehaviour
             list.Add(new StatLine { label = "PROB. CRÍTICO", value = s.Get(PogoStat.CritChance), format = "0", percent = true });
             list.Add(new StatLine { label = "DAÑO CRÍTICO", value = s.Get(PogoStat.CritMultiplier), format = "0.0", unit = "X" });
             list.Add(new StatLine { label = "ALCANCE", value = s.Get(PogoStat.Range), format = "0", unit = "M" });
+            list.Add(new StatLine { label = "PROYECTILES", value = s.Get(PogoStat.Projectiles), format = "0" });
+            list.Add(new StatLine { label = "ÁREA", value = s.Get(PogoStat.SpitArea), format = "0.0", unit = "M" });
+            list.Add(new StatLine { label = "SALTOS EN AIRE", value = s.Get(PogoStat.AirJumps), format = "0" });
+            list.Add(new StatLine { label = "DASH", value = s.Get(PogoStat.DashDistance), format = "0.0", unit = "M" });
+            list.Add(new StatLine { label = "RECOGIDA", value = s.Get(PogoStat.PickupRadius), format = "0.0", unit = "M" });
+            list.Add(new StatLine { label = "REGENERACIÓN", value = s.Get(PogoStat.Regeneration), format = "0.0" });
+            list.Add(new StatLine { label = "ESCUDO", value = s.Get(PogoStat.Shield), format = "0" });
         }
 
         return list;
@@ -168,6 +176,7 @@ public class PauseMenu : MonoBehaviour
 
             runText.text =
                 "<color=#ffc53a>PARTIDA</color>\n\n" +
+                Pad("NIVEL", 18) + s.Level + "\n" +
                 Pad("TIEMPO", 18) + (t / 60).ToString("00") + ":" + (t % 60).ToString("00") + "\n" +
                 Pad("LLAVES", 18) + keys + " / " + required + "\n" +
                 Pad("ENEMIGOS", 18) + s.Kills + "\n" +

@@ -93,7 +93,9 @@ public class ChestUI : MonoBehaviour
             return;
 
         if (promptText != null)
-            promptText.text = coins >= chest.Price
+            promptText.text = chest.Price <= 0
+                ? "E  ABRIR COFRE  GRATIS"
+                : coins >= chest.Price
                 ? "E  ABRIR COFRE  " + chest.Price + " MONEDAS"
                 : "TE FALTAN " + (chest.Price - coins) + " MONEDAS";
 
@@ -149,7 +151,7 @@ public class ChestUI : MonoBehaviour
         }
 
         // ¡Se abre!
-        ItemDefinition item = database != null ? database.RollRandom() : null;
+        ItemDefinition item = database != null ? database.RollRandom(ItemEffects.CanOffer) : null;
         Play(openClip);
         itemIcon.sprite = item != null ? item.icon : null;
         for (float t = 0f; t < 0.6f; t += Time.unscaledDeltaTime)
@@ -178,8 +180,24 @@ public class ChestUI : MonoBehaviour
             yield return null;
         }
 
-        ItemInventory.Instance?.Add(item);
-        chest.MarkOpened();
+        // Pase lo que pase al entregar el objeto, la ventana se cierra (si no, ya no se podrían abrir más cofres).
+        try
+        {
+            ItemInventory.Instance?.Add(item);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogException(e);
+        }
+        try
+        {
+            if (chest != null)
+                chest.MarkOpened();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogException(e);
+        }
 
         for (float t = 0f; t < 0.2f; t += Time.unscaledDeltaTime)
         {
@@ -206,7 +224,7 @@ public class ChestUI : MonoBehaviour
 
     private IEnumerator PriceFx(int price)
     {
-        if (priceFx == null) yield break;
+        if (priceFx == null || price <= 0) yield break;
         priceFx.text = "-" + price;
         var rect = priceFx.rectTransform;
         for (float t = 0f; t < 1f; t += Time.unscaledDeltaTime)

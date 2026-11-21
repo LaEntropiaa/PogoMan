@@ -24,6 +24,32 @@ public class GameMusic : MonoBehaviour
             source.Play();
     }
 
+    public AudioClip CurrentClip => source != null ? source.clip : null;
+
+    // Cambia de canción con fundido (p. ej. al entrar a la arena).
+    public void SwitchTo(AudioClip clip, float fadeSeconds = 1.2f)
+    {
+        if (clip == null || source.clip == clip)
+            return;
+        StopAllCoroutines();
+        StartCoroutine(Switch(clip, fadeSeconds));
+    }
+
+    private System.Collections.IEnumerator Switch(AudioClip clip, float seconds)
+    {
+        for (float f = fade; f > 0f; f -= Time.unscaledDeltaTime / Mathf.Max(0.05f, seconds))
+        {
+            fade = f;
+            ApplyVolume();
+            yield return null;
+        }
+        fade = 0f;
+        source.clip = clip;
+        source.time = 0f;
+        source.Play();
+        // Update() hace el fundido de entrada.
+    }
+
     private void OnDestroy()
     {
         GameSettings.VolumeChanged -= ApplyVolume;

@@ -19,6 +19,9 @@ public class BossPillar : MonoBehaviour
 
     private Enemy spawnedBoss;
 
+    // Se derrotó al jefe de este pilar (posición del pilar). Lo usa KeyRewards para el cofre gratis.
+    public static event System.Action<Vector3> Cleared;
+
     private bool bossSpawned;
     private bool rewardSpawned;
     private bool placed;
@@ -175,6 +178,7 @@ public class BossPillar : MonoBehaviour
         );
 
         rewardSpawned = true;
+        Cleared?.Invoke(transform.position);
 
         Debug.Log(
             $"{name}: recompensa spawneada en el pilar."

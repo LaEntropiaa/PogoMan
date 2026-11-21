@@ -1,0 +1,211 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1663382377514153020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 562341423257880573}
+  - component: {fileID: 4378348060826797613}
+  - component: {fileID: 5587548475421420056}
+  - component: {fileID: 6809997828398397026}
+  - component: {fileID: 3522705166969766273}
+  m_Layer: 0
+  m_Name: Guardian_Viuda
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &562341423257880573
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663382377514153020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 260701527394739269}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!54 &4378348060826797613
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663382377514153020}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!136 &5587548475421420056
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663382377514153020}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.95
+  m_Height: 3.4
+  m_Direction: 1
+  m_Center: {x: 0, y: 1.7, z: 0}
+--- !u!114 &6809997828398397026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663382377514153020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b1f961a63f18a69f904a7fdb3278070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Guardian
+  target: {fileID: 0}
+  moveSpeed: 2.7
+  kind: 1
+  maxHealth: 1050
+  healthPerMinute: 0.04
+  idleClip: Viuda_Reposo
+  moveClip: Viuda_Avance
+  hitClip: Viuda_Impacto
+  defeatClip: Viuda_Derrota
+  defeatLength: 2
+  attacks:
+  - clip: Viuda_Pendulo
+    activeTime: 1.0833
+    duration: 1.8333
+    damage: 17
+    cooldown: 3.2
+  - clip: Viuda_Doblar
+    activeTime: 1.625
+    duration: 2.4583
+    damage: 22
+    cooldown: 6.8
+  recoverTime: 1.1
+  hover: 0
+--- !u!114 &3522705166969766273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663382377514153020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60dc3683ca077e178ad6779fcd559dd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyTracker
+  isBoss: 1
+  displayName: LA VIUDA
+  figure: {fileID: 0}
+  deathClip: {fileID: 8300000, guid: 96599021d935b38fbb8fd1418d83e387, type: 3}
+  hitClip: {fileID: 8300000, guid: 19e062c47d6e8e840b9c0de92bf02837, type: 3}
+  groanClip: {fileID: 0}
+  groanInterval: {x: 4, y: 9}
+  coinPrefab: {fileID: 7733439221184182898, guid: 700feaacb5b508f42a70eca99a4a3946, type: 3}
+  coinsMin: 15
+  coinsMax: 20
+  coinChance: 0.4
+  xpValue: 1
+  bossXpValue: 30
+  bigGemChance: 0.05
+--- !u!1001 &814999010573516206
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 562341423257880573}
+    m_Modifications:
+    - target: {fileID: 635368051331865067, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 635368051331865067, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 635368051331865067, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 635368051331865067, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 635368051331865067, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 635368051331865067, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 635368051331865067, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 635368051331865067, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 635368051331865067, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 635368051331865067, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5293602340319624607, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+      propertyPath: m_Name
+      value: Viuda
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+--- !u!4 &260701527394739269 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 635368051331865067, guid: 7491856ddae6de553b31f8b9e415fd9b, type: 3}
+  m_PrefabInstance: {fileID: 814999010573516206}
+  m_PrefabAsset: {fileID: 0}

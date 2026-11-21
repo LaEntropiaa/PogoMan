@@ -1,0 +1,211 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3839838021808491396
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4332102120646554831}
+  - component: {fileID: 7217673755693531168}
+  - component: {fileID: 8155377955986147116}
+  - component: {fileID: 947900319930878741}
+  - component: {fileID: 507944173661143330}
+  m_Layer: 0
+  m_Name: Guardian_Fundidor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4332102120646554831
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3839838021808491396}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6141100750468142860}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!54 &7217673755693531168
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3839838021808491396}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!136 &8155377955986147116
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3839838021808491396}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 1.05
+  m_Height: 3.4
+  m_Direction: 1
+  m_Center: {x: 0, y: 1.7, z: 0}
+--- !u!114 &947900319930878741
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3839838021808491396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b1f961a63f18a69f904a7fdb3278070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Guardian
+  target: {fileID: 0}
+  moveSpeed: 1.8
+  kind: 0
+  maxHealth: 1600
+  healthPerMinute: 0.04
+  idleClip: Fundidor_Reposo
+  moveClip: Fundidor_Avance
+  hitClip: Fundidor_Impacto
+  defeatClip: Fundidor_Derrota
+  defeatLength: 2
+  attacks:
+  - clip: Fundidor_Martillazo
+    activeTime: 1.2917
+    duration: 2.0417
+    damage: 24
+    cooldown: 3
+  - clip: Fundidor_Purga
+    activeTime: 1.75
+    duration: 2.5833
+    damage: 18
+    cooldown: 6
+  recoverTime: 1.1
+  hover: 0
+--- !u!114 &507944173661143330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3839838021808491396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60dc3683ca077e178ad6779fcd559dd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyTracker
+  isBoss: 1
+  displayName: EL FUNDIDOR
+  figure: {fileID: 0}
+  deathClip: {fileID: 8300000, guid: 96599021d935b38fbb8fd1418d83e387, type: 3}
+  hitClip: {fileID: 8300000, guid: 19e062c47d6e8e840b9c0de92bf02837, type: 3}
+  groanClip: {fileID: 0}
+  groanInterval: {x: 4, y: 9}
+  coinPrefab: {fileID: 7733439221184182898, guid: 700feaacb5b508f42a70eca99a4a3946, type: 3}
+  coinsMin: 15
+  coinsMax: 20
+  coinChance: 0.4
+  xpValue: 1
+  bossXpValue: 30
+  bigGemChance: 0.05
+--- !u!1001 &1612581520807949013
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4332102120646554831}
+    m_Modifications:
+    - target: {fileID: 4852796553566627289, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4852796553566627289, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4852796553566627289, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4852796553566627289, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4852796553566627289, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4852796553566627289, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4852796553566627289, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4852796553566627289, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4852796553566627289, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4852796553566627289, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9108493318772958979, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+      propertyPath: m_Name
+      value: Fundidor
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+--- !u!4 &6141100750468142860 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4852796553566627289, guid: 619565dcb6f7f2745963a09222710459, type: 3}
+  m_PrefabInstance: {fileID: 1612581520807949013}
+  m_PrefabAsset: {fileID: 0}
