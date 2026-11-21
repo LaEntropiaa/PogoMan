@@ -3,12 +3,14 @@ using UnityEngine.UI;
 
 // Filtro retro suave: la cámara dibuja a menor resolución y se muestra con
 // píxeles nítidos (sin difuminar). El HUD se dibuja encima a resolución completa.
-// pixelSize = 1 lo desactiva; 2 es sutil; el menú usa 4.
+// pixelSize = 1 lo desactiva; 2 es sutil. El jugador lo elige en Opciones > Filtro pixel.
 [RequireComponent(typeof(Camera))]
 public class PixelFilter : MonoBehaviour
 {
     [Range(1, 6)]
     [SerializeField] private int pixelSize = 2;
+    [Tooltip("Usar el nivel que el jugador eligió en Opciones (si no, usa pixelSize).")]
+    [SerializeField] private bool useMenuSetting = true;
 
     private Camera cam;
     private RenderTexture rt;
@@ -50,6 +52,9 @@ public class PixelFilter : MonoBehaviour
 
     private void Apply()
     {
+        if (useMenuSetting)
+            pixelSize = GameSettings.PixelSize;
+
         if (pixelSize <= 1)
         {
             if (cam.targetTexture != null)

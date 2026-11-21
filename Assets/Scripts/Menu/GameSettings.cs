@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-// Preferencias del jugador (volumen y pantalla), guardadas con PlayerPrefs.
+// Preferencias del jugador (volumen, pantalla y filtro pixel), guardadas con PlayerPrefs.
 // Se aplican solas al arrancar el juego, sin importar la escena inicial.
 public static class GameSettings
 {
@@ -11,6 +11,16 @@ public static class GameSettings
     private const string KeyFullscreen = "pogoman.pantalla.completa";
     private const string KeyResWidth = "pogoman.pantalla.ancho";
     private const string KeyResHeight = "pogoman.pantalla.alto";
+    private const string KeyPixel = "pogoman.pantalla.pixel";
+
+    // Filtro que pixela el juego: 1 = apagado, 2 = suave ... 5 = muy retro.
+    public static readonly string[] PixelLevelNames = { "APAGADO", "SUAVE", "MEDIO", "RETRO", "MUY RETRO" };
+
+    public static int PixelSize
+    {
+        get => Mathf.Clamp(PlayerPrefs.GetInt(KeyPixel, 2), 1, PixelLevelNames.Length);
+        set => PlayerPrefs.SetInt(KeyPixel, Mathf.Clamp(value, 1, PixelLevelNames.Length));
+    }
 
     // Se dispara cuando cambia algún volumen, para que los AudioSource se actualicen.
     public static event Action VolumeChanged;
