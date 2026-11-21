@@ -44,6 +44,20 @@ public class ZombieRigAnimator : MonoBehaviour
     private float moveBlend;
     private float timeOffset;
     private bool initialized;
+    private ZombieMotor motor;
+    private Renderer[] renderers;
+
+    private bool AnyVisible()
+    {
+        if (motor == null)
+            motor = body.GetComponent<ZombieMotor>();
+        if (renderers == null)
+            renderers = GetComponentsInChildren<SkinnedMeshRenderer>();   // el de lejos fijo no necesita huesos
+        foreach (Renderer r in renderers)
+            if (r != null && r.enabled && r.isVisible)
+                return true;
+        return false;
+    }
 
     private void Awake() => Init();
 
@@ -93,9 +107,15 @@ public class ZombieRigAnimator : MonoBehaviour
             return;
 
         Vector3 moved = body.position - lastPosition;
-        moved.y = 0f;
+        // Trepando también "camina" (sube como si fuera piso).
+        if (motor == null || !motor.IsClimbing)
+            moved.y = 0f;
         lastPosition = body.position;
         float speed = moved.magnitude / dt;
+
+        // Si la cámara no lo ve, no vale la pena animarlo (con cientos de zombies se nota).
+        if (!AnyVisible())
+            return;
 
         moveBlend = Mathf.MoveTowards(moveBlend, Mathf.Clamp01(speed / 1.5f), dt * 4f);
         phase += speed * dt * stepsPerMeter * Mathf.PI * 2f;
