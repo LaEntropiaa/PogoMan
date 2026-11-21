@@ -29,6 +29,9 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private MenuPanel creditsPanel;
     [SerializeField] private Button optionsBackButton;
     [SerializeField] private Button creditsBackButton;
+    [SerializeField] private Button recordsButton;
+    [SerializeField] private MenuPanel recordsPanel;
+    [SerializeField] private Button recordsBackButton;
 
     [Header("Otros")]
     [SerializeField] private MenuIntroSequence intro;
@@ -44,6 +47,10 @@ public class MainMenuController : MonoBehaviour
         continueButton.onClick.AddListener(ContinueGame);
         optionsButton.onClick.AddListener(() => OpenPanel(optionsPanel));
         creditsButton.onClick.AddListener(() => OpenPanel(creditsPanel));
+        if (recordsButton != null && recordsPanel != null)
+            recordsButton.onClick.AddListener(() => OpenPanel(recordsPanel));
+        if (recordsBackButton != null)
+            recordsBackButton.onClick.AddListener(ClosePanel);
         quitButton.onClick.AddListener(QuitGame);
 
         if (optionsBackButton != null)

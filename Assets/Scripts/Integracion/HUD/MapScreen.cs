@@ -231,7 +231,7 @@ public class MapScreen : MonoBehaviour
         }
 
         bool tab = Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame;
-        if (tab && !ArenaFight.InArena && !ChestUI.IsOpen && !LevelUpUI.IsOpen && (Time.timeScale > 0f || IsOpen))
+        if (tab && !RecordNamePrompt.IsOpen && !ArenaFight.InArena && !ChestUI.IsOpen && !LevelUpUI.IsOpen && (Time.timeScale > 0f || IsOpen))
         {
             IsOpen = !IsOpen;
             if (openClip != null)

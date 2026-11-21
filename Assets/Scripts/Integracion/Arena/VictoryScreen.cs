@@ -64,7 +64,8 @@ public class VictoryScreen : MonoBehaviour
                 new Vector2(0, -70), new Vector2(1200, 200)), font, 34, new Color(0.95f, 0.88f, 0.8f), TextAnchor.MiddleCenter,
                 "TIEMPO  " + (t / 60).ToString("00") + ":" + (t % 60).ToString("00") + "      NIVEL  " + s.Level + "\n" +
                 "MONEDAS  " + s.CoinsCollected + "      DAÑO TOTAL  " + Mathf.RoundToInt(s.DamageDealt) + "\n" +
-                "OBJETOS DISTINTOS  " + items);
+                "OBJETOS DISTINTOS  " + items + "\n" +
+                RunRecords.Summary("VICTORIA"));
         }
 
         creditsButton = MakeButton(root, "VER CRÉDITOS", new Vector2(-230, -260), () =>
@@ -105,5 +106,7 @@ public class VictoryScreen : MonoBehaviour
         group.alpha = 1f;
         if (EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(creditsButton.gameObject);
+        if (RunRecords.LastRank > 0)
+            RecordNamePrompt.Show(font);
     }
 }

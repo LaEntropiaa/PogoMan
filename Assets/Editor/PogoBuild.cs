@@ -18,7 +18,7 @@ public static class PogoBuild
         var options = new BuildPlayerOptions
         {
             scenes = scenes,
-            locationPathName = System.IO.Path.Combine(dir, "PogoMan.exe"),
+            locationPathName = System.IO.Path.Combine(dir, (System.Environment.GetEnvironmentVariable("POGO_NAME") ?? "PogoMan") + ".exe"),
             target = BuildTarget.StandaloneWindows64,
             options = BuildOptions.None,
         };

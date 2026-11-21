@@ -44,6 +44,7 @@ public class GameOverScreen : MonoBehaviour
                 "ENEMIGOS DERROTADOS  " + s.Kills + "\n" +
                 "MONEDAS  " + s.CoinsCollected + "\n" +
                 "DAÑO TOTAL  " + Mathf.RoundToInt(s.DamageDealt) + "\n\n" +
+                RunRecords.Summary(EndlessMode.Active ? "INFIERNO INFINITO NV " + (EndlessMode.Level + 1) : "MURIÓ") + "\n\n" +
                 "EL INFIERNO NO ACEPTA DEVOLUCIONES.";
         }
 
@@ -59,6 +60,7 @@ public class GameOverScreen : MonoBehaviour
         }
 
         group.alpha = 1f;
+
         group.interactable = true;
         group.blocksRaycasts = true;
 
@@ -68,5 +70,8 @@ public class GameOverScreen : MonoBehaviour
             EventSystem.current.SetSelectedGameObject(retryButton.gameObject);
             MenuButtonFx.MuteSelectionSound = false;
         }
+        // Si entraste al top, se pide el nombre (después de seleccionar el botón, para que no le robe el foco).
+        if (RunRecords.LastRank > 0 && summary != null)
+            RecordNamePrompt.Show(summary.font);
     }
 }

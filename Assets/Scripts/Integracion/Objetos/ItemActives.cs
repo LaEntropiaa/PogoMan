@@ -115,7 +115,7 @@ public class ItemActives : MonoBehaviour
     {
         if (fx == null) fx = ItemEffects.Instance;
         float dt = Time.deltaTime;
-        bool paused = Time.timeScale <= 0f || ChestUI.IsOpen || MapScreen.IsOpen;
+        bool paused = Time.timeScale <= 0f || ChestUI.IsOpen || MapScreen.IsOpen || RecordNamePrompt.IsOpen;
 
         for (int i = 0; i < slots.Count; i++)
         {
