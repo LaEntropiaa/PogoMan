@@ -149,7 +149,7 @@ public class ChestUI : MonoBehaviour
         }
 
         // ¡Se abre!
-        ItemDefinition item = database != null ? database.RollRandom() : null;
+        ItemDefinition item = database != null ? database.RollRandom(ItemEffects.CanOffer) : null;
         Play(openClip);
         itemIcon.sprite = item != null ? item.icon : null;
         for (float t = 0f; t < 0.6f; t += Time.unscaledDeltaTime)

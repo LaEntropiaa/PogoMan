@@ -6,10 +6,18 @@ using UnityEngine;
 //  - detecta cuando pierde vida (por escupitajo o por caída del pogo) y muestra el número de daño,
 //  - cuenta la muerte en las estadísticas,
 //  - anima la figura provisional (mirar al jugador, tambalearse, parpadear al recibir daño).
+// De dónde vino un golpe (lo usan los objetos: "al golpear con el pogo", "al matar con el pogo"...).
+public enum HitSource { Stomp, Spit, Item, Other }
+
 [RequireComponent(typeof(Enemy))]
 public class EnemyTracker : MonoBehaviour
 {
     public static readonly List<EnemyTracker> All = new List<EnemyTracker>();
+
+    // Golpe del pogo (caída) a este enemigo, con el daño hecho.
+    public static event System.Action<EnemyTracker, float> StompHit;
+    // Murió; el origen es el del último golpe que recibió.
+    public static event System.Action<EnemyTracker, HitSource> Killed;
 
     [SerializeField] private bool isBoss;
     [SerializeField] private string displayName = "DEMONIO";
@@ -58,8 +66,7 @@ public class EnemyTracker : MonoBehaviour
     private MaterialPropertyBlock block;
     private float lastHealth;
     private bool deathHandled;
-    private float pendingSpitUntil;
-    private bool pendingCrit;
+    private HitSource lastSource = HitSource.Stomp;
     private float flash;
     private float deathTimer;
     private Vector3 lastPosition;
@@ -112,10 +119,37 @@ public class EnemyTracker : MonoBehaviour
     }
 
     // El escupitajo avisa justo antes de hacer daño, para saber si fue crítico.
-    public void MarkIncomingSpit(bool crit)
+    // Daño que no es del pogo (escupitajo, objetos, lava...): se aplica y se cuenta en el momento,
+    // así un pisotón en el mismo frame no se confunde con otro origen.
+    public void Hit(float damage, HitSource source = HitSource.Item, bool crit = false)
     {
-        pendingSpitUntil = Time.time + 0.25f;
-        pendingCrit = crit;
+        if (IsDead || damage <= 0f)
+            return;
+
+        float before = Health;
+        Enemy.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
+        float dealt = before - Health;
+        if (dealt <= 0.01f)
+            return;
+
+        lastHealth -= dealt;   // ya contado: LateUpdate no lo toma como pisotón
+        lastSource = source;
+        DamageKind kind = crit ? DamageKind.Crit : source == HitSource.Spit ? DamageKind.Spit : DamageKind.Item;
+        OnDamaged(dealt, kind, crit);
+    }
+
+    private void OnDamaged(float damage, DamageKind kind, bool crit)
+    {
+        DamageNumbers.Show(Top + Vector3.up * 0.3f, damage, kind);
+        PlayerStats.Instance?.RegisterDamage(damage, crit);
+        LastDamageTime = Time.time;
+        flash = 1f;
+
+        if (hitClip != null && voice != null && Time.time - lastHitSound > 0.08f)
+        {
+            lastHitSound = Time.time;
+            voice.PlayOneShot(hitClip, 0.9f * GameSettings.SfxVolume);
+        }
     }
 
     private void LateUpdate()
@@ -138,24 +172,13 @@ public class EnemyTracker : MonoBehaviour
 
         float health = Health;
 
+        // Lo que bajó sin pasar por Hit() es el golpe del pogo (PogoPlayer llama TakeDamage directo).
         if (health < lastHealth - 0.01f)
         {
             float damage = lastHealth - health;
-            bool fromSpit = Time.time < pendingSpitUntil;
-            bool crit = fromSpit && pendingCrit;
-            pendingSpitUntil = 0f;
-
-            DamageNumbers.Show(Top + Vector3.up * 0.3f, damage,
-                crit ? DamageKind.Crit : fromSpit ? DamageKind.Spit : DamageKind.Stomp);
-            PlayerStats.Instance?.RegisterDamage(damage, crit);
-            LastDamageTime = Time.time;
-            flash = 1f;
-
-            if (hitClip != null && Time.time - lastHitSound > 0.08f)
-            {
-                lastHitSound = Time.time;
-                voice.PlayOneShot(hitClip, 0.9f * GameSettings.SfxVolume);
-            }
+            lastSource = HitSource.Stomp;
+            OnDamaged(damage, DamageKind.Stomp, false);
+            StompHit?.Invoke(this, damage);
         }
 
         lastHealth = health;
@@ -163,6 +186,7 @@ public class EnemyTracker : MonoBehaviour
         if (!deathHandled && IsDead)
         {
             deathHandled = true;
+            Killed?.Invoke(this, lastSource);
             PlayerStats.Instance?.RegisterKill();
             DropCoins();
             DropXp();

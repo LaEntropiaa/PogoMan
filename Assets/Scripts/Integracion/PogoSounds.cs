@@ -54,7 +54,8 @@ public class PogoSounds : MonoBehaviour
 
         if (jump > bounceMinVelocityJump && vy > 2f)
         {
-            if (vy >= geyserVelocity)
+            // Con el Compresor un salto con espacio puede pasar de 12 m/s sin ser géiser.
+            if (vy >= geyserVelocity && (PogoJump.Instance == null || PogoJump.Instance.GeyserAscent))
                 Play(geyserClip, geyserVolume);
             else
                 Play(bounceClip, bounceVolume);
