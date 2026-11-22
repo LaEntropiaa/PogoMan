@@ -7,7 +7,7 @@ using UnityEngine.UI;
 //  1. Cámara lenta, chorro de sangre y charco.
 //  2. Arde en llamas: se va carbonizando, humo negro.
 //  3. Revienta: pedazos chamuscados, sangre, el resorte del pogo sale volando, nube de ceniza.
-//  4. Mientras tanto, y en la pantalla de fin, comentarios burlones para el jugador.
+//  4. Un comentario burlón (uno solo por muerte, al azar) que se queda en la pantalla de fin.
 // GameHUD espera ScreenDelay segundos antes de mostrar la pantalla de fin.
 public class PogoDeathFx : MonoBehaviour
 {
@@ -46,7 +46,6 @@ public class PogoDeathFx : MonoBehaviour
     private Material fx;
     private Text roast;
     private CanvasGroup roastGroup;
-    private readonly List<string> bag = new List<string>();
     private static AudioClip sizzle, splat;
     private AudioSource audioSource;
 
@@ -140,33 +139,26 @@ public class PogoDeathFx : MonoBehaviour
     {
         BuildRoastUi();
         yield return new WaitForSecondsRealtime(0.6f);
-        while (true)
+        // Un solo comentario por muerte, elegido al azar, y se queda en pantalla.
+        string line = Roasts[Random.Range(0, Roasts.Length)];
+        roast.text = "";
+        for (float t = 0f; t < 0.25f; t += Time.unscaledDeltaTime)
         {
-            if (bag.Count == 0) { bag.AddRange(Roasts); }
-            int i = Random.Range(0, bag.Count);
-            string line = bag[i];
-            bag.RemoveAt(i);
-            // Entra de golpe, se escribe, y se va.
-            roast.text = "";
-            for (float t = 0f; t < 0.25f; t += Time.unscaledDeltaTime)
-            {
-                roastGroup.alpha = t / 0.25f;
-                roast.rectTransform.localScale = Vector3.one * (1.4f - 0.4f * (t / 0.25f));
-                yield return null;
-            }
-            roastGroup.alpha = 1f;
-            roast.rectTransform.localScale = Vector3.one;
-            for (int n = 1; n <= line.Length; n++)
-            {
-                roast.text = "“" + line.Substring(0, n) + (n == line.Length ? "”" : "");
-                yield return new WaitForSecondsRealtime(0.022f);
-            }
-            for (float t = 0f; t < 2.6f; t += Time.unscaledDeltaTime)
-            {
-                roast.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(Time.unscaledTime * 2f) * 1.5f);
-                yield return null;
-            }
-            for (float t = 0f; t < 0.3f; t += Time.unscaledDeltaTime) { roastGroup.alpha = 1f - t / 0.3f; yield return null; }
+            roastGroup.alpha = t / 0.25f;
+            roast.rectTransform.localScale = Vector3.one * (1.4f - 0.4f * (t / 0.25f));
+            yield return null;
+        }
+        roastGroup.alpha = 1f;
+        roast.rectTransform.localScale = Vector3.one;
+        for (int n = 1; n <= line.Length; n++)
+        {
+            roast.text = "\u201C" + line.Substring(0, n) + (n == line.Length ? "\u201D" : "");
+            yield return new WaitForSecondsRealtime(0.022f);
+        }
+        while (roast != null)
+        {
+            roast.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(Time.unscaledTime * 2f) * 1.5f);
+            yield return null;
         }
     }
 
