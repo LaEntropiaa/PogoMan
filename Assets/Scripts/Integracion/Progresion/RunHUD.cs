@@ -86,71 +86,6 @@ public class RunHUD : MonoBehaviour
         }
 
         BuildShield();
-        BuildRecords(root);
-    }
-
-    // ---- Top 10 de récords (a la derecha, se actualiza en vivo con tus puntos) ----
-    // Tres columnas (la fuente no es monoespaciada).
-    private Text recRank, recName, recScore;
-    private float recordsTimer;
-
-    private void BuildRecords(Transform root)
-    {
-        RectTransform panel = UiKit.Rect("Records", root, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
-            new Vector2(-20f, 60f), new Vector2(330f, 340f));
-        UiKit.Image(panel, new Color(0.06f, 0.02f, 0.03f, 0.45f));
-        UiKit.Text(UiKit.Rect("Titulo", panel, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -6f), new Vector2(-20f, 30f)),
-            font, 24, new Color(1f, 0.75f, 0.3f), TextAnchor.UpperCenter, "TOP 10");
-        Text Col(string n, float x0, float x1, TextAnchor a)
-        {
-            RectTransform r = UiKit.Rect(n, panel, new Vector2(x0, 0f), new Vector2(x1, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -18f), new Vector2(0f, -48f));
-            Text t = UiKit.Text(r, font, 19, new Color(1f, 0.92f, 0.85f, 0.95f), a);
-            t.supportRichText = true;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            return t;
-        }
-        recRank = Col("Lugar", 0.03f, 0.13f, TextAnchor.UpperRight);
-        recName = Col("Nombre", 0.17f, 0.68f, TextAnchor.UpperLeft);
-        recScore = Col("Puntos", 0.66f, 0.96f, TextAnchor.UpperRight);
-    }
-
-    private void UpdateRecords(PlayerStats stats, float dt)
-    {
-        if (recRank == null)
-            return;
-        // En la arena del Diablo estorba: se esconde.
-        bool show = !ArenaFight.InArena;
-        if (recRank.transform.parent.gameObject.activeSelf != show)
-            recRank.transform.parent.gameObject.SetActive(show);
-        if (!show)
-            return;
-        recordsTimer -= dt;
-        if (recordsTimer > 0f)
-            return;
-        recordsTimer = 0.5f;
-        var table = RunRecords.LiveTable(stats.Kills, stats.RunTime, out int rank);
-        var r = new System.Text.StringBuilder();
-        var n = new System.Text.StringBuilder();
-        var p = new System.Text.StringBuilder();
-        void Line(int place, string name, int score, string color)
-        {
-            if (name.Length > 14) name = name.Substring(0, 13) + ".";
-            string o = color != null ? "<color=" + color + ">" : "", c = color != null ? "</color>" : "";
-            r.AppendLine(o + place + c);
-            n.AppendLine(o + name + c);
-            p.AppendLine(o + score.ToString("N0") + c);
-        }
-        for (int i = 0; i < table.Count; i++)
-        {
-            RunRecords.Entry e = table[i];
-            string color = e.result == "AHORA" ? "#7CFF6A" : !e.house ? "#8FD3FF" : i == 0 ? "#FFC93C" : null;
-            Line(i + 1, e.name, e.score, color);
-        }
-        if (rank > table.Count)
-            Line(rank, "TÚ (AHORA)", stats.Kills, "#7CFF6A");
-        recRank.text = r.ToString().TrimEnd();
-        recName.text = n.ToString().TrimEnd();
-        recScore.text = p.ToString().TrimEnd();
     }
 
     // El escudo va justo debajo de la barra de vida del HUD original.
@@ -195,7 +130,6 @@ public class RunHUD : MonoBehaviour
             return;
 
         float dt = Time.unscaledDeltaTime;
-        UpdateRecords(stats, dt);
 
         // ---- XP ----
         UiKit.SetFill(xpFill, stats.Xp / Mathf.Max(1f, stats.XpToNext));

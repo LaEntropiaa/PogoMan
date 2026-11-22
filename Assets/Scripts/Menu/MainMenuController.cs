@@ -68,6 +68,9 @@ public class MainMenuController : MonoBehaviour
 
         if (intro != null)
             intro.SetButtons(visible);
+
+        // Brasas, relámpagos, letras con estilo y el TOP 10 a la derecha.
+        gameObject.AddComponent<MenuEpicFx>();
     }
 
     private void Start()

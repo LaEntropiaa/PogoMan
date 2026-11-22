@@ -74,6 +74,8 @@ public static class RunRecords
                     d.entries.Sort(Compare);
                     Entry best = d.entries[0];
                     if (!NeedsName) best.name = SavedName;
+                    else if (!string.IsNullOrWhiteSpace(best.name) && best.name != "TÚ" && best.name != "SIN NOMBRE")
+                        PlayerPrefs.SetString(NameKey, best.name);   // ya lo había escrito antes: no se vuelve a pedir
                     return new List<Entry> { best };
                 }
             }
