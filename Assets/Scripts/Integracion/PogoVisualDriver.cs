@@ -32,6 +32,7 @@ public class PogoVisualDriver : MonoBehaviour
     private PogoPlayer player;
     private PogoJump jump;
     private PogoAbilities abilities;
+    private PogoAnimator animator;
     private bool launched;
     private bool wasGrounded = true;
     private float lastVy;
@@ -48,6 +49,7 @@ public class PogoVisualDriver : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         player = GetComponent<PogoPlayer>();
         jump = GetComponent<PogoJump>();
+        animator = GetComponent<PogoAnimator>();
         if (visual == null)
             visual = GetComponentInChildren<PogoVisual>();
     }
@@ -57,6 +59,7 @@ public class PogoVisualDriver : MonoBehaviour
         if (jump != null)
         {
             jump.AirJumped += OnLaunch;
+            jump.AirJumped += OnAirJump;
             jump.SlideJumped += OnLaunch;
             jump.GeyserLaunched += OnLaunch;
         }
@@ -67,6 +70,7 @@ public class PogoVisualDriver : MonoBehaviour
         if (jump != null)
         {
             jump.AirJumped -= OnLaunch;
+            jump.AirJumped -= OnAirJump;
             jump.SlideJumped -= OnLaunch;
             jump.GeyserLaunched -= OnLaunch;
         }
@@ -75,6 +79,14 @@ public class PogoVisualDriver : MonoBehaviour
     }
 
     private void OnLaunch() => launched = true;
+    private void OnAirJump() => animator?.Flip();
+
+    // Giro: el clip de PogoVisual + una vuelta completa sobre el pogo.
+    private void Turn(float sign)
+    {
+        visual.Giro(sign);
+        animator?.Spin(sign);
+    }
     // El lado se mide contra hacia dónde miraba al empezar; la velocidad del dash se lee un par de pasos después.
     private void OnDash(Vector3 _)
     {
@@ -167,7 +179,7 @@ public class PogoVisualDriver : MonoBehaviour
             float side = flat.sqrMagnitude > 0.01f ? Vector3.Dot(flat.normalized, dashRight) : 0f;
             if (Mathf.Abs(side) > 0.5f)
             {
-                visual.Giro(Mathf.Sign(side));
+                Turn(Mathf.Sign(side));
                 turnCd = turnCooldown;
                 turnAccum = 0f;
             }
@@ -186,7 +198,7 @@ public class PogoVisualDriver : MonoBehaviour
             // En picada o deslizándose no: interrumpiría el Aplastar/Cargar.
             if (Mathf.Abs(turnAccum) >= turnAngle && turnCd <= 0f && state != Vis.Dive && state != Vis.Slide)
             {
-                visual.Giro(Mathf.Sign(turnAccum));
+                Turn(Mathf.Sign(turnAccum));
                 turnCd = turnCooldown;
                 turnAccum = 0f;
             }
