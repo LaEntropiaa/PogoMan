@@ -92,6 +92,14 @@ public class ChestUI : MonoBehaviour
         if (!show)
             return;
 
+        // Cofre de élite: se abre solo (sin E ni monedas).
+        if (chest.AutoOpen)
+        {
+            if (database == null || database.HasAny(ItemEffects.CanOffer))
+                StartCoroutine(OpenRoutine(chest));
+            return;
+        }
+
         if (promptText != null)
             promptText.text = chest.Price <= 0
                 ? "E  ABRIR COFRE  GRATIS"

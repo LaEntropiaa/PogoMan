@@ -22,6 +22,12 @@ public class PogoJump : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float holdGravityFactor = 0.3f;
     [SerializeField] private float maxHoldTime = 0.35f;
 
+    [Header("Rebote automático (sin espacio)")]
+    [Tooltip("Velocidad del rebote solo: brinquitos cortos, casi caminando.")]
+    [SerializeField] private float walkHopVelocity = 4.2f;
+    [Tooltip("Si se queda tocando el piso más de esto sin rebotar (p. ej. tras un dash contra una rampa), rebota.")]
+    [SerializeField] private float groundStuckTime = 0.1f;
+
     [Header("Salto con espacio")]
     [SerializeField] private float spaceBoost = 3f;
     [Tooltip("Si apretaste espacio hasta este tiempo antes de tocar el piso, cuenta.")]
@@ -149,9 +155,21 @@ public class PogoJump : MonoBehaviour
             Instance = null;
     }
 
+    private float groundedTime;
+
     private void Start()
     {
         baseMaxAirSpeed = PogoBridge.GetFloat(player, "maxAirSpeed", 8.5f);
+
+        // Rebote automático cortito; el salto con espacio queda igual de alto que antes.
+        float oldJump = PogoBridge.GetFloat(player, "jumpForce", 7.5f);
+        if (walkHopVelocity > 0f && walkHopVelocity < oldJump)
+        {
+            spaceBoost += oldJump - walkHopVelocity;
+            PogoBridge.SetFloat(player, "jumpForce", walkHopVelocity);
+        }
+        // Continuo: con el dash (35 m/s) ya no atraviesa mallas delgadas del mapa.
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         // El control en el aire es de este script: PogoPlayer ya no acelera ni frena en el aire.
         PogoBridge.SetFloat(player, "airAcceleration", 0f);
         PogoBridge.SetFloat(player, "airDeceleration", 0f);
@@ -289,6 +307,19 @@ public class PogoJump : MonoBehaviour
             supportedTime = 0f;
             v.y = crouching ? 2f : PogoBridge.GetFloat(player, "jumpForce", 7.5f);
             lastVerticalSpeed = 0f;   // que cuente como rebote
+        }
+
+        // Pegado al piso sin rebotar: pasa cuando el dash choca contra una rampa (el rebote del
+        // aterrizaje se pierde bajo el dash y PogoPlayer ya no ve otro "aterrizaje").
+        bool dashing = PogoAbilities.Instance != null && PogoAbilities.Instance.Dashing;
+        groundedTime = grounded && !crouching && !dashing && !geyserFlight ? groundedTime + dt : 0f;
+        // (Subiendo una rampa la velocidad vertical es positiva pero sigue "pegado": por eso no se pide v.y < 0.)
+        float hop = PogoBridge.GetFloat(player, "jumpForce", walkHopVelocity);
+        if (groundedTime > groundStuckTime && v.y < hop * 0.8f)
+        {
+            groundedTime = 0f;
+            v.y = hop + Mathf.Max(0f, v.y) * 0.5f;
+            lastVerticalSpeed = Mathf.Min(lastVerticalSpeed, v.y - 4.5f);   // que cuente como rebote
         }
 
         // ---- Vuelo de géiser: casi balístico hasta tocar piso ----
@@ -499,9 +530,9 @@ public class PogoJump : MonoBehaviour
             return;
 
         float horizontal = Flat(v).magnitude;
-        float bonus = Mathf.Min(horizontal * speedBonusPerUnit, maxSpeedBonus);
-
         bool space = JumpHeld() || Time.time - lastJumpPress < jumpBuffer;
+        // El bono por velocidad solo en el salto con espacio: el rebote solo se queda cortito.
+        float bonus = space ? Mathf.Min(horizontal * speedBonusPerUnit, maxSpeedBonus) : 0f;
         if (space)
         {
             bonus += spaceBoost;

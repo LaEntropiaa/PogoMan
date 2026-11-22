@@ -157,10 +157,17 @@ public class ItemEffects : MonoBehaviour
             if (Count(Taximetro) > 0 && PogoJump.Instance != null)
                 d *= 1f + 0.4f * Mathf.Clamp01((PogoJump.Instance.HorizontalSpeed - 12f) / 20f);
             if (TaponCharged) d *= 1.3f;
+            if (PlayerStats.Instance != null) d *= PlayerStats.Instance.Get(PogoStat.PogoDamage);
             return d;
         }
     }
     public bool TaponCharged => Time.time < taponUntil;
+    // El golpe directo ya no es tan masivo: su área es menor (la onda del pogo cubre lo de alrededor).
+    [Tooltip("Fracción del radio original del pisotón que queda como golpe directo.")]
+    [SerializeField] private float directRadiusFactor = 0.6f;
+    public float BaseStompRadius => baseStompRadius * directRadiusFactor;
+    public float StompRadius => BaseStompRadius + 0.2f * Mathf.Min(Count(Plantilla), 3) + (TaponCharged ? 1.5f : 0f)
+        + (PlayerStats.Instance != null ? PlayerStats.Instance.Get(PogoStat.PogoRadius) : 0f);
     public Transform Player => player != null ? player.transform : null;
     public PogoPlayer Pogo => player;
 
@@ -334,8 +341,7 @@ public class ItemEffects : MonoBehaviour
 
         // Daño y radio del pisotón que usará PogoPlayer en este paso.
         PogoBridge.SetFloat(player, "attackDamage", DirectPogoDamage);
-        float radius = baseStompRadius + 0.2f * Mathf.Min(Count(Plantilla), 3) + (TaponCharged ? 1.5f : 0f);
-        PogoBridge.SetFloat(player, "attackRadius", radius);
+        PogoBridge.SetFloat(player, "attackRadius", StompRadius);
 
         bool grounded = PogoBridge.IsGrounded(player);
         if (grounded && !wasGrounded)

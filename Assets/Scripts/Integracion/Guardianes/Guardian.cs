@@ -439,7 +439,12 @@ public class Guardian : Enemy
                 else
                 {
                     if (furnace != null) furnace.intensity = Mathf.Lerp(0f, 6f, prep) * (0.8f + 0.2f * Mathf.Sin(t * 30f));
-                    if (Step(0, t >= active)) { Kit?.Play(kind, 1, transform.position); if (furnace != null) Destroy(furnace.gameObject); }
+                    if (Step(0, t >= active))
+                    {
+                        Kit?.Play(kind, 1, transform.position);
+                        if (furnace != null) Destroy(furnace.gameObject);
+                        EnemyTracker.HitArea(Feet, 8f, Spec.damage * DemonDamageFactor, HitSource.Other, true, 2f, this, true);
+                    }
                     if (firedSteps > 0)
                     {
                         // Onda que sale de 1 a 8 m en 1.1 s, banda de 0.65 m.
@@ -512,6 +517,7 @@ public class Guardian : Enemy
                         Kit?.Play(kind, 0, transform.position);
                         Vector3 c = Feet + lockedForward * 1.1f;
                         Kit?.Dust(c, 1.55f);
+                        EnemyTracker.HitArea(c, 1.8f, Spec.damage * DemonDamageFactor, HitSource.Other, true, 3f, this, true);
                         Vector3 d = PlayerFeet - c;
                         if (new Vector2(d.x, d.z).magnitude <= 1.55f + PlayerRadius && PlayerHeight <= 1f)
                             HurtPlayer(Spec.damage, true);
@@ -525,6 +531,7 @@ public class Guardian : Enemy
                         {
                             Kit?.Play(kind, 1, points[k]);
                             Kit?.Dust(points[k], 1.1f);
+                            EnemyTracker.HitArea(points[k], 1.5f, Spec.damage * DemonDamageFactor, HitSource.Other, true, 3f, this, true);
                             if (signs.Count > k && signs[k] != null) { Destroy(signs[k].gameObject); }
                             Vector3 d = PlayerFeet - points[k];
                             if (!hitPlayerThisAttack && new Vector2(d.x, d.z).magnitude <= 1.1f + PlayerRadius && PlayerHeight <= 1f)
@@ -623,6 +630,29 @@ public class Guardian : Enemy
         float flat = d.magnitude;
         if (Mathf.Abs(SignedAngleToPlayer()) <= angle / 2f && flat <= rMax + PlayerRadius && flat >= rMin && PlayerHeight >= hMin - 0.1f && PlayerHeight <= hMax)
             HurtPlayer(damage, knock);
+        HurtDemons(rMax, damage, angle, rMin);
+    }
+
+    // Los golpes del guardián también aplastan a los demonios que estén en medio (sin experiencia ni monedas).
+    public const float DemonDamageFactor = 3f;
+    private static readonly List<EnemyTracker> demonBuffer = new List<EnemyTracker>();
+
+    private void HurtDemons(float reach, float damage, float angle = 360f, float rMin = 0f)
+    {
+        demonBuffer.Clear();
+        foreach (EnemyTracker e in EnemyTracker.All)
+        {
+            if (e == null || e.IsDead || e.IsBoss || e.Enemy == this || e.GetComponent<Guardian>() != null) continue;
+            Vector3 d = e.Center - Feet;
+            if (d.y < -1f || d.y > 4f) continue;
+            d.y = 0f;
+            float m = d.magnitude;
+            if (m > reach + 0.4f || m < rMin) continue;
+            if (angle < 359f && m > 0.1f && Mathf.Abs(Vector3.SignedAngle(lockedForward, d, Vector3.up)) > angle / 2f) continue;
+            demonBuffer.Add(e);
+        }
+        foreach (EnemyTracker e in demonBuffer)
+            e.HitNoReward(damage * DemonDamageFactor, HitSource.Other);
     }
 
     private void TryHitArc(float reach, float hMin, float hMax, float damage)
@@ -631,6 +661,7 @@ public class Guardian : Enemy
         // El cuerpo del jugador mide ~2 m: lo toca si sus pies están por debajo de la franja alta.
         if (d.magnitude <= reach + PlayerRadius && PlayerHeight < hMax && PlayerHeight + 2f > hMin)
             HurtPlayer(damage, true);
+        HurtDemons(reach, damage);
     }
 
     private bool LineOfSight()

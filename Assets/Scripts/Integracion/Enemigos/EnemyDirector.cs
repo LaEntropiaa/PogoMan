@@ -46,6 +46,15 @@ public class EnemyDirector : MonoBehaviour
     [SerializeField] private float hordeSpawnRate = 35f;
     [Tooltip("Demonios extra durante la horda (crece con cada horda).")]
     [SerializeField] private float hordeExtraAlive = 220f;
+    [Tooltip("Hordas antes de la horda infinita (minuto 3 y minuto 6).")]
+    [SerializeField] private int maxHordes = 2;
+    [Tooltip("Después de la primera horda salen más demonios (multiplicador de vivos y de ritmo).")]
+    [SerializeField] private float afterFirstHordeAlive = 1.6f;
+    [SerializeField] private float afterFirstHordeRate = 1.5f;
+
+    [Header("Élites (corona)")]
+    [Tooltip("Cada cuántos demonios aparece un élite.")]
+    [SerializeField] private int eliteEvery = 100;
 
     [Header("Aparición")]
     [SerializeField] private float minSpawnDistance = 14f;
@@ -72,6 +81,28 @@ public class EnemyDirector : MonoBehaviour
     [Header("Horda infinita (después del contrarreloj)")]
     [Tooltip("Cada cuántos segundos la horda infinita sube de fuerza.")]
     [SerializeField] private float infiniteStepSeconds = 60f;
+    [Tooltip("En la horda infinita, cada cuántos segundos se multiplica la vida y el daño de los demonios.")]
+    [SerializeField] private float infiniteMultiplyEvery = 180f;
+    [SerializeField] private float infiniteMultiplier = 1.6f;
+    [Tooltip("Velocidad extra de los demonios en la horda infinita.")]
+    [SerializeField] private float infiniteSpeedBonus = 0.15f;
+
+    private int spawnCounter;
+    public int SpawnedTotal => spawnCounter;
+
+    // Multiplicador de vida y daño de la horda infinita (×1.6 cada 3 minutos, acumulado).
+    public float InfiniteScale
+    {
+        get
+        {
+            float limit = PlayerStats.Instance != null ? PlayerStats.Instance.TimeLimit : 600f;
+            if (!InfiniteHorde || RunTime < limit) return 1f;
+            return Mathf.Pow(infiniteMultiplier, Mathf.FloorToInt((RunTime - limit) / infiniteMultiplyEvery));
+        }
+    }
+
+    // Daño de los demonios ahora mismo (lo usan los contraataques).
+    public float DamageMultiplier => (1f + damagePerMinute * (Minutes + (EndlessMode.Active ? EndlessMode.Minutes * 1.5f : 0f))) * InfiniteScale;
 
     // En la arena del Diablo no salen demonios solos: los invoca el jefe con SpawnEnemy.
     private bool arenaMode;
@@ -136,9 +167,17 @@ public class EnemyDirector : MonoBehaviour
         AliveCount = EnemyTracker.All.Count;
 
         // ---- Cuántos demonios queremos vivos y qué tan rápido salen ----
-        float progress = Mathf.Clamp(RunTime / 900f, 0f, 1.3f);
+        float limitTime = PlayerStats.Instance != null ? PlayerStats.Instance.TimeLimit : 600f;
+        float progress = Mathf.Clamp(RunTime / limitTime, 0f, 1.3f);
         float targetAlive = Mathf.Lerp(aliveAtStart, aliveAtEnd, Mathf.Pow(progress, 1.25f));
         float rate = Mathf.Lerp(spawnRateAtStart, spawnRateAtEnd, Mathf.Pow(progress, 1.3f));
+
+        // Pasada la primera horda el infierno ya no se calma: salen más.
+        if (RunTime > hordeInterval + hordeDuration)
+        {
+            targetAlive *= afterFirstHordeAlive;
+            rate *= afterFirstHordeRate;
+        }
 
         if (HordeActive)
         {
@@ -192,7 +231,7 @@ public class EnemyDirector : MonoBehaviour
         if (t >= limit)
         {
             int step = 1 + Mathf.FloorToInt((t - limit) / infiniteStepSeconds);
-            int number = Mathf.FloorToInt(limit / hordeInterval) + step;
+            int number = maxHordes + step;
             HordeTimeLeft = hordeDuration;
             NextHordeIn = 0f;
             if (!InfiniteHorde)
@@ -207,13 +246,13 @@ public class EnemyDirector : MonoBehaviour
             return;
         }
 
-        // La primera horda es al minuto 4, luego cada 4 minutos.
+        // Hordas al minuto 3 y al 6 (luego, al acabarse el tiempo, la horda infinita).
         int index = Mathf.FloorToInt(t / hordeInterval);
         float intoCycle = t - index * hordeInterval;
-        bool active = index >= 1 && intoCycle < hordeDuration;
+        bool active = index >= 1 && index <= maxHordes && intoCycle < hordeDuration;
 
         HordeTimeLeft = active ? hordeDuration - intoCycle : 0f;
-        NextHordeIn = (index + 1) * hordeInterval - t;
+        NextHordeIn = index + 1 <= maxHordes ? (index + 1) * hordeInterval - t : limit - t;
 
         if (active != HordeActive)
         {
@@ -250,14 +289,20 @@ public class EnemyDirector : MonoBehaviour
 
         // Más vida y velocidad con el tiempo.
         float minutes = Minutes + (EndlessMode.Active ? EndlessMode.Minutes * 1.5f : 0f);
-        float health = PogoBridge.MaxHealth(enemy) * (1f + healthPerMinute * minutes);
+        float infinite = InfiniteScale;
+        EnemyTracker tracker = enemy.GetComponent<EnemyTracker>();
+        bool elite = eliteEvery > 0 && (tracker == null || !tracker.IsBoss) && ++spawnCounter % eliteEvery == 0;
+        float health = PogoBridge.MaxHealth(enemy) * (1f + healthPerMinute * minutes) * infinite * (elite ? EliteEnemy.HealthFactor : 1f);
         PogoBridge.SetFloat(enemy, "maxHealth", health);
         PogoBridge.SetFloat(enemy, "currentHealth", health);
 
-        float speed = Mathf.Min(maxSpeedMultiplier, 1f + speedPerMinute * minutes) * UnityEngine.Random.Range(0.88f, 1.12f);
+        float speed = Mathf.Min(maxSpeedMultiplier, 1f + speedPerMinute * minutes) * UnityEngine.Random.Range(0.88f, 1.12f)
+            * (InfiniteHorde ? 1f + infiniteSpeedBonus : 1f);
         PogoBridge.SetFloat(enemy, "moveSpeed", PogoBridge.GetFloat(enemy, "moveSpeed", 3f) * speed);
 
-        float damageMult = 1f + damagePerMinute * minutes;
+        float damageMult = (1f + damagePerMinute * minutes) * infinite * (elite ? EliteEnemy.DamageFactor : 1f);
+        if (elite)
+            EliteEnemy.Make(enemy);
         if (flyer)
         {
             // El ojo vuela solo (OjoAlado): sin ZombieMotor ni salir de la tierra.
@@ -273,6 +318,7 @@ public class EnemyDirector : MonoBehaviour
     }
 
     public Enemy RandomDemonPrefab() => PickPrefab();
+    public Enemy FlyingPrefab => flyingPrefabs != null && flyingPrefabs.Length > 0 ? flyingPrefabs[UnityEngine.Random.Range(0, flyingPrefabs.Length)] : null;
 
     private Enemy PickSpawnPrefab()
     {

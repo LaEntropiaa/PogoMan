@@ -29,6 +29,10 @@ public class SpitProjectile : MonoBehaviour
     public float ExtraSplashRadius { get; set; }
     public float ExtraSplashFraction { get; set; }
     public float Damage => damage;
+    // Rebotes que le quedan (mejora "Gargajo Saltarín"): al pegarle a un demonio salta al siguiente.
+    public int Bounces { get; set; }
+    private Enemy lastEnemy;
+    private System.Collections.Generic.List<EnemyTracker> visited;
     public bool Crit => crit;
     // Impacto directo en un enemigo (proyectil, enemigo, punto).
     public static event System.Action<SpitProjectile, EnemyTracker, Vector3> DirectHit;
@@ -108,6 +112,8 @@ public class SpitProjectile : MonoBehaviour
         {
             if (owner != null && h.collider.transform.IsChildOf(owner))
                 continue;
+            if (lastEnemy != null && h.collider.GetComponentInParent<Enemy>() == lastEnemy)
+                continue;   // el que acaba de golpear (al rebotar sale de adentro de él)
             if (h.collider.isTrigger && h.collider.GetComponentInParent<OjoEnemy>() == null)
                 continue;
 
@@ -160,7 +166,36 @@ public class SpitProjectile : MonoBehaviour
             ItemFx.Burst(point, 30, ExtraSplashRadius * 0.5f, new Color(1f, 0.35f, 0.1f), ItemEffects.Instance != null ? ItemEffects.Instance.FxMaterial : null, 6f, 0.35f, 0.5f);
         }
         SpawnSplat(point, enemy != null ? 10 : 6);
+        if (enemy != null && Bounces > 0 && TryBounce(enemy, point))
+            return;
         Destroy(gameObject);
+    }
+
+    private bool TryBounce(Enemy from, Vector3 point)
+    {
+        if (visited == null) visited = new System.Collections.Generic.List<EnemyTracker>();
+        EnemyTracker fromTracker = from.GetComponent<EnemyTracker>();
+        if (fromTracker != null) visited.Add(fromTracker);
+
+        EnemyTracker best = null;
+        float bestD = 9f * 9f;
+        foreach (EnemyTracker e in EnemyTracker.All)
+        {
+            if (e == null || e.IsDead || !e.Targetable || visited.Contains(e)) continue;
+            float d = (e.Center - point).sqrMagnitude;
+            if (d < bestD) { bestD = d; best = e; }
+        }
+        if (best == null)
+            return false;
+
+        Bounces--;
+        damage *= 0.85f;
+        lastEnemy = from;
+        target = best;
+        transform.position = point;
+        velocity = (best.Center - point).normalized * Mathf.Max(velocity.magnitude, 14f);
+        lifeLeft = Mathf.Max(lifeLeft, 1.2f);
+        return true;
     }
 
     private static readonly System.Collections.Generic.List<EnemyTracker> nearby = new System.Collections.Generic.List<EnemyTracker>();

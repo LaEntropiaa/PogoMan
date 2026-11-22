@@ -35,14 +35,23 @@ public static class Upgrades
     {
         // ---- Escupitajo ----
         new UpgradeDef { Name = "Saliva de Chile Habanero", Stat = "Daño", Target = PogoStat.SpitDamage, Amount = 5f },
-        new UpgradeDef { Name = "Metralleta de Gargajos", Stat = "Disparos por segundo", Target = PogoStat.FireRate, Percent = true, Amount = 0.12f, Format = "0.00" },
+        new UpgradeDef { Name = "Metralleta de Gargajos", Stat = "Disparos por segundo", Target = PogoStat.FireRate, Percent = true, Amount = 0.3f, Format = "0.00" },
         new UpgradeDef { Name = "Ojo de Halcón Bizco", Stat = "Prob. de crítico", Target = PogoStat.CritChance, Amount = 0.04f, Cap = 1f, Format = "0", Display = 100f, Unit = "%" },
         new UpgradeDef { Name = "Escupitajo Bendito", Stat = "Daño crítico", Target = PogoStat.CritMultiplier, Amount = 0.25f, Format = "0.00", Unit = "x" },
         new UpgradeDef { Name = "Pulmones de Fumador", Stat = "Alcance", Target = PogoStat.Range, Percent = true, Amount = 0.1f, Unit = " m" },
         new UpgradeDef { Name = "Gargajo Supersónico", Stat = "Velocidad del proyectil", Target = PogoStat.ProjectileSpeed, Percent = true, Amount = 0.15f },
         new UpgradeDef { Name = "Salpicadura de Agua Puerca", Stat = "Daño en área", Target = PogoStat.SpitArea, Amount = 0.35f, Format = "0.0", Unit = " m" },
         new UpgradeDef { Name = "Flema Gigante", Stat = "Tamaño", Target = PogoStat.SpitSize, Percent = true, Amount = 0.15f, Format = "0", Display = 100f, Unit = "%" },
-        new UpgradeDef { Name = "Escupitajo Gemelo", Stat = "Proyectiles", Target = PogoStat.Projectiles, Amount = 1f, WholeNumber = true, Cap = 12f, Format = "0" },
+        new UpgradeDef { Name = "Escupitajo Gemelo", Stat = "Proyectiles", Target = PogoStat.Projectiles, Amount = 2f, WholeNumber = true, Cap = 30f, Format = "0" },
+        new UpgradeDef { Name = "Gargajo Saltarín", Stat = "Rebotes", Target = PogoStat.SpitBounces, Amount = 1f, WholeNumber = true, Cap = 12f, Format = "0" },
+        // ---- Pogo (golpe directo) ----
+        new UpgradeDef { Name = "Pogo de Fierro Colado", Stat = "Daño del pogo", Target = PogoStat.PogoDamage, Percent = true, Amount = 0.12f, Format = "0", Display = 100f, Unit = "%" },
+        new UpgradeDef { Name = "Resorte Panzón", Stat = "Radio del pogo", Target = PogoStat.PogoRadius, Amount = 0.25f, Format = "0.00", Unit = " m" },
+        // ---- Onda del pogo (al caer de un salto con espacio) ----
+        new UpgradeDef { Name = "Retumbe de Banda Sinaloense", Stat = "Daño de la onda", Target = PogoStat.WaveDamage, Amount = 7f, Format = "0" },
+        new UpgradeDef { Name = "Temblor del 85", Stat = "Tamaño de la onda", Target = PogoStat.WaveSize, Percent = true, Amount = 0.18f, Format = "0", Display = 100f, Unit = "%" },
+        new UpgradeDef { Name = "Sismo Express", Stat = "Cadencia de la onda", Target = PogoStat.WaveRate, Percent = true, Amount = 0.2f, Format = "0", Display = 100f, Unit = "%" },
+        new UpgradeDef { Name = "Réplicas del Chamuco", Stat = "Ondas por caída", Target = PogoStat.WaveCount, Amount = 1f, WholeNumber = true, Cap = 12f, Format = "0" },
         // ---- Movimiento ----
         new UpgradeDef { Name = "Resorte de Colchón", Stat = "Saltos en el aire", Target = PogoStat.AirJumps, Amount = 1f, WholeNumber = true, Cap = 10f, Format = "0" },
         new UpgradeDef { Name = "Tenis Piratas", Stat = "Velocidad", Target = PogoStat.MoveSpeed, Percent = true, Amount = 0.07f, Format = "0", Display = 100f, Unit = "%" },
@@ -83,8 +92,9 @@ public static class Upgrades
 
     public static Offer MakeOffer(UpgradeDef def, UpgradeRarity rarity)
     {
+        // Enteros (saltos, proyectiles, rebotes, ondas): común/rara = Amount, épica/legendaria = el doble.
         float amount = def.WholeNumber
-            ? (rarity >= UpgradeRarity.Epica ? 2f : 1f)
+            ? def.Amount * (rarity >= UpgradeRarity.Epica ? 2f : 1f)
             : def.Amount * RarityMultiplier[(int)rarity];
 
         return new Offer

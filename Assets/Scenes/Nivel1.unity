@@ -5475,7 +5475,7 @@ MonoBehaviour:
   firstLevelXp: 6
   levelGrowth: 1.35
   minDashCooldown: 0.5
-  timeLimit: 900
+  timeLimit: 600
 --- !u!4 &971777457
 Transform:
   m_ObjectHideFlags: 0
@@ -5591,11 +5591,11 @@ MonoBehaviour:
   aliveAtEnd: 380
   spawnRateAtStart: 0.9
   spawnRateAtEnd: 13
-  healthPerMinute: 0.14
-  speedPerMinute: 0.035
-  damagePerMinute: 0.08
+  healthPerMinute: 0.2
+  speedPerMinute: 0.05
+  damagePerMinute: 0.12
   maxSpeedMultiplier: 1.6
-  hordeInterval: 240
+  hordeInterval: 180
   hordeDuration: 20
   hordeWarning: 5
   hordeSpawnRate: 35

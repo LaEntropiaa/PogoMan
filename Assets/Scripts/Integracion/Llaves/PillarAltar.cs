@@ -10,6 +10,8 @@ using UnityEngine.UI;
 public class PillarAltar : MonoBehaviour
 {
     [SerializeField] private float interactDistance = 5f;
+    [Tooltip("Radio de la onda que limpia demonios al despertar al guardián.")]
+    [SerializeField] private float clearRadius = 10f;
     [SerializeField] private Font font;
     [SerializeField] private Material fxMaterial;
     [SerializeField] private AudioClip awakenClip;
@@ -127,6 +129,10 @@ public class PillarAltar : MonoBehaviour
         if (!pressed)
             return;
 
+        // Onda expansiva al despertar al guardián: limpia a los demonios en 10 m (sin experiencia ni monedas).
+        ShockRing.SpawnClear(near.transform.position + Vector3.up * 0.2f, clearRadius, 999999f, 0.55f,
+            new Color(0.9f, 0.6f, 1f), new Color(0.55f, 0.1f, 1f));
+        EnemyTracker.HitArea(near.transform.position, clearRadius, 999999f, HitSource.Other, true, 8f, null, true);
         SpawnBoss?.Invoke(near, null);
         if (glows.TryGetValue(near, out ParticleSystem glow) && glow != null)
             glow.Stop(true, ParticleSystemStopBehavior.StopEmitting);

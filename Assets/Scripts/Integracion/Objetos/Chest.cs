@@ -21,7 +21,26 @@ public class Chest : MonoBehaviour
     // Material para las chispitas (lo pone RunSystems).
     public static Material SparkleMaterial;
 
-    private static readonly Color GlowColor = new Color(1f, 0.75f, 0.3f);
+    private Color GlowColor = new Color(1f, 0.75f, 0.3f);
+    // Cofre de élite: morado brillante y se abre solo al acercarte.
+    public bool AutoOpen { get; private set; }
+    public bool Elite => AutoOpen;
+
+    public void MakeElite()
+    {
+        AutoOpen = true;
+        price = 0;
+        interactDistance = 3.2f;
+        GlowColor = new Color(0.8f, 0.25f, 1f);
+        var block = new MaterialPropertyBlock();
+        foreach (Renderer r in renderers)
+        {
+            if (r == null) continue;
+            r.GetPropertyBlock(block);
+            block.SetColor("_BaseColor", new Color(0.85f, 0.45f, 1f));
+            r.SetPropertyBlock(block);
+        }
+    }
 
     private static Transform player;
     private Renderer[] renderers;
@@ -45,7 +64,7 @@ public class Chest : MonoBehaviour
         glowLight = lightGO.AddComponent<Light>();
         glowLight.type = LightType.Point;
         glowLight.color = GlowColor;
-        glowLight.range = 4.5f;
+        glowLight.range = AutoOpen ? 7f : 4.5f;
         glowLight.shadows = LightShadows.None;
 
         glowMaterials = new Material[renderers.Length];
@@ -77,7 +96,7 @@ public class Chest : MonoBehaviour
         main.startLifetime = new ParticleSystem.MinMaxCurve(1f, 1.8f);
         main.startSpeed = new ParticleSystem.MinMaxCurve(0.3f, 0.9f);
         main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.12f);
-        main.startColor = new Color(1f, 0.85f, 0.4f, 0.9f);
+        main.startColor = AutoOpen ? new Color(0.85f, 0.4f, 1f, 0.95f) : new Color(1f, 0.85f, 0.4f, 0.9f);
         main.maxParticles = 30;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
 
@@ -107,7 +126,7 @@ public class Chest : MonoBehaviour
             return;
 
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 2.6f + glowOffset);
-        glowLight.intensity = 1.6f + pulse * 1.8f;
+        glowLight.intensity = (1.6f + pulse * 1.8f) * (AutoOpen ? 1.8f : 1f);
         Color emission = GlowColor * (0.25f + pulse * 0.55f);
         foreach (Material m in glowMaterials)
             if (m != null)
