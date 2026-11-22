@@ -11,7 +11,7 @@ using UnityEngine.UI;
 public class MenuEpicFx : MonoBehaviour
 {
     private const int EmberCount = 70;
-    private const float BoardScale = 0.68f;
+    private const float BoardScale = 0.55f;
 
     private MainMenuController menu;
     private MenuIntroSequence intro;
@@ -408,7 +408,7 @@ public class MenuEpicFx : MonoBehaviour
         // Tablero: entra deslizándose después del logo, se esconde con los paneles abiertos.
         bool panelOpen = PogoBridge.Get<MenuPanel>(menu, "openPanel") != null;
         float k = Mathf.Clamp01((since - 0.3f) / 0.7f);
-        board.anchoredPosition = new Vector2(Mathf.Lerp(900f, -50f, EaseOutBack(k)), -150f + Mathf.Sin(time * 0.9f) * 5f);
+        board.anchoredPosition = new Vector2(Mathf.Lerp(900f, -40f, EaseOutBack(k)), -170f + Mathf.Sin(time * 0.9f) * 4f);
         boardGroup.alpha = Mathf.MoveTowards(boardGroup.alpha, panelOpen ? 0f : Mathf.Clamp01(k * 2f), dt * 5f);
         for (int i = 0; i < rows.Count; i++)
         {

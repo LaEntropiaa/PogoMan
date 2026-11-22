@@ -62,7 +62,12 @@ public class MainMenuController : MonoBehaviour
         bool hasSave = SaveGameProbe.HasSave;
         continueButton.transform.parent.gameObject.SetActive(hasSave);
 
+        // El botón de RÉCORDS ya no hace falta: el top 10 se ve a la derecha del menú.
+        if (recordsButton != null)
+            recordsButton.transform.parent.gameObject.SetActive(false);
+
         var visible = LayoutSlots();
+        ChainNavigation(visible);
 
         SetMainInteractable(false);
 
@@ -87,6 +92,25 @@ public class MainMenuController : MonoBehaviour
     }
 
     // Acomoda los botones visibles de arriba hacia abajo y devuelve los botones en orden.
+    // Arriba/abajo entre los botones visibles (sin pasar por los que se escondieron).
+    private static void ChainNavigation(List<RectTransform> visible)
+    {
+        var buttons = new List<Selectable>();
+        foreach (RectTransform r in visible)
+        {
+            Selectable s = r.GetComponent<Selectable>();
+            if (s != null) buttons.Add(s);
+        }
+        for (int i = 0; i < buttons.Count; i++)
+        {
+            Navigation nav = buttons[i].navigation;
+            nav.mode = Navigation.Mode.Explicit;
+            nav.selectOnUp = buttons[(i - 1 + buttons.Count) % buttons.Count];
+            nav.selectOnDown = buttons[(i + 1) % buttons.Count];
+            buttons[i].navigation = nav;
+        }
+    }
+
     private List<RectTransform> LayoutSlots()
     {
         var visible = new List<RectTransform>();
