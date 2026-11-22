@@ -86,6 +86,8 @@ public class Guardian : Enemy
         {
             anim.applyRootMotion = false;
             model = anim.transform;
+            modelScale = model.localScale * SizeFactor;
+            model.localScale = modelScale;
         }
         body = GetComponent<Collider>();
         voice = gameObject.AddComponent<AudioSource>();
@@ -204,7 +206,86 @@ public class Guardian : Enemy
         if (state != State.Emerge && state != State.Defeat)
             CheckStomp();
         Bob();
+        Juice(dt);
         wasGrounded = pogo != null && PogoBridge.IsGrounded(pogo);
+    }
+
+    // ---- Animación extra encima de los clips (más peso y personalidad) ----
+    // Un poquito más grandes que el modelo original.
+    private const float SizeFactor = 1.18f;
+    private Vector3 modelScale = Vector3.one;
+    private float juiceTime, hitShake;
+    private Quaternion juiceRot = Quaternion.identity;
+
+    private void Juice(float dt)
+    {
+        if (model == null) return;
+        juiceTime += dt;
+        float sx = 1f, sy = 1f, pitch = 0f, roll = 0f;
+        float breathe = Mathf.Sin(juiceTime * 2.4f);
+        sy += breathe * 0.025f; sx -= breathe * 0.012f;
+
+        switch (state)
+        {
+            case State.Chase:
+                // Camina echado para adelante y se bambolea.
+                pitch += 7f;
+                roll += Mathf.Sin(juiceTime * 7f) * 3.5f;
+                sy += Mathf.Abs(Mathf.Sin(juiceTime * 7f)) * 0.04f;
+                break;
+            case State.Attack:
+            {
+                float active = Spec.activeTime;
+                float t = attackTime;
+                if (t < active)
+                {
+                    // Anticipación: se agacha, se ensancha y se echa para atrás, temblando al final.
+                    float k = Mathf.SmoothStep(0f, 1f, t / active);
+                    sy -= 0.14f * k; sx += 0.09f * k;
+                    pitch -= 12f * k;
+                    roll += Mathf.Sin(juiceTime * 45f) * 2.5f * k * k;
+                }
+                else
+                {
+                    // Golpe: se estira hacia adelante y regresa con rebote.
+                    float k = Mathf.Clamp01((t - active) / 0.35f);
+                    float snap = Mathf.Sin(k * Mathf.PI) * (1f - k * 0.5f);
+                    sy += 0.16f * snap; sx -= 0.08f * snap;
+                    pitch += 18f * snap;
+                }
+                break;
+            }
+            case State.Recover:
+                pitch -= 4f * (1f - Mathf.Clamp01(stateTime / recoverTime));
+                sy -= 0.05f * (1f - Mathf.Clamp01(stateTime / recoverTime));
+                break;
+            case State.Flinch:
+                hitShake = Mathf.Max(hitShake, 1f - stateTime / 0.45f);
+                break;
+            case State.Emerge:
+            {
+                // Sale como resorte.
+                float k = Mathf.Clamp01(stateTime / EmergeTime);
+                float pop = k > 0.75f ? Mathf.Sin((k - 0.75f) / 0.25f * Mathf.PI) : 0f;
+                sy += pop * 0.2f; sx -= pop * 0.1f;
+                break;
+            }
+        }
+        // Cada golpe que recibe (aunque no se interrumpa) lo hace temblar y aplastarse.
+        hitShake = Mathf.MoveTowards(hitShake, 0f, dt * 3f);
+        if (hitShake > 0f)
+        {
+            roll += Mathf.Sin(juiceTime * 50f) * 6f * hitShake;
+            sy -= 0.1f * hitShake; sx += 0.06f * hitShake;
+        }
+
+        model.localScale = new Vector3(modelScale.x * sx, modelScale.y * sy, modelScale.z * sx);
+        if (state != State.Emerge && state != State.Defeat)
+        {
+            Quaternion target = Quaternion.Euler(pitch, 0f, roll);
+            juiceRot = Quaternion.Slerp(juiceRot, target, 1f - Mathf.Exp(-14f * dt));
+            model.localRotation = juiceRot;
+        }
     }
 
     // Sale del suelo girando.
@@ -704,6 +785,7 @@ public class Guardian : Enemy
     {
         if (isDead || state == State.Emerge || damage <= 0f) return;
         currentHealth -= damage;
+        hitShake = Mathf.Max(hitShake, 0.6f);
         if (currentHealth <= 0f)
         {
             currentHealth = 0f;
