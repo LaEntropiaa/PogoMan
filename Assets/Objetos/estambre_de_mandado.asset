@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: estambre_de_mandado
   displayName: Estambre de Mandado
-  description: Aumenta 1 m el radio de recogida de gemas.
+  description: "Siempre: recoges las gemas desde 1 m m\xE1s lejos."
   quote: "Tu abuela jam\xE1s perd\xEDa el cambio."
   icon: {fileID: 21300000, guid: d849a757df1730c0cbf4842b9eff6f2d, type: 3}
   weight: 1

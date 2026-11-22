@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: olla_expres_de_la_tia
   displayName: "Olla Expr\xE9s de la T\xEDa"
-  description: "Cada golpe que te quite vida carga la olla. Al tercero libera vapor por 180 % del da\xF1o del pogo en 4 m."
+  description: "Al recibir da\xF1o: cada 3 golpes sueltas vapor que quema alrededor (180 % del da\xF1o del pogo)."
   quote: "Mi t\xEDa avisaba con un silbidito."
   icon: {fileID: 21300000, guid: 0c2e09cc97662d2b8923f8010a6e07ab, type: 3}
   weight: 1

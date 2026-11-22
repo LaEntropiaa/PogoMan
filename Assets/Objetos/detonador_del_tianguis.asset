@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: detonador_del_tianguis
   displayName: Detonador del Tianguis
-  description: "Activa. Planta hasta 3 cargas con el pogo. Det\xF3nalas juntas por 120 % del da\xF1o del pogo en 3 m por carga."
+  description: "Tecla: lanzas una bomba que explota al tocar algo (150 % del da\xF1o del pogo). Recarga 8 s."
   quote: "S\xED sirve. Apri\xE9tale."
   icon: {fileID: 21300000, guid: 1811bcd091043d642a6e8064f94444a3, type: 3}
   weight: 1

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: vale_de_farmacia
   displayName: Vale de Farmacia
-  description: Recuperas 6 de vida al abrir un cofre.
+  description: "Al abrir un cofre: te curas 6 de vida."
   quote: "V\xE1lido hasta el juicio final."
   icon: {fileID: 21300000, guid: f365788602deb9bca9ac207f64331a23, type: 3}
   weight: 1

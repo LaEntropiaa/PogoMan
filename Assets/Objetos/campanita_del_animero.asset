@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: campanita_del_animero
   displayName: Campanita del Animero
-  description: "Cada sexta baja directa con el pogo invoca un \xE1nima por 5 s. Ataca una vez por segundo por 30 % del da\xF1o del pogo."
+  description: "Al matar con el pogo: cada 6 bajas aparece un \xE1nima que pelea a tu lado 5 s."
   quote: Se solicita difunto con experiencia.
   icon: {fileID: 21300000, guid: 5ac9eb4e3c29bee3cbc236ca75ee25cb, type: 3}
   weight: 1

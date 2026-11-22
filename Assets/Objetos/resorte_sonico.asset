@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: resorte_sonico
   displayName: "Resorte S\xF3nico"
-  description: Otorga un salto adicional en el aire, que se recupera al tocar el suelo o al rebotar sobre un enemigo.
+  description: "Siempre: tienes un salto extra en el aire. Se recupera al tocar el piso o al pisar a un demonio."
   quote: "Perteneci\xF3 a alguien que no sab\xEDa cu\xE1ndo parar."
   icon: {fileID: 21300000, guid: 1b51eb94e3f6d0c8d8bea9c68b6e8750, type: 3}
   weight: 1

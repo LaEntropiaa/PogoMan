@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: rondana_de_tortilleria
   displayName: "Rondana de Tortiller\xEDa"
-  description: "Suma 5 de da\xF1o base al pogo."
+  description: "Siempre: +5 de da\xF1o del pogo."
   quote: Sale caliente y por kilo.
   icon: {fileID: 21300000, guid: 6a75706606a38acd1a1f4bb839dc477e, type: 3}
   weight: 1

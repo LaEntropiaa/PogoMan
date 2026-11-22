@@ -223,8 +223,18 @@ public class PauseMenu : MonoBehaviour
             sb.AppendLine(Row("SALTOS EN EL AIRE", 0f, s.Get(PogoStat.AirJumps), "0"));
             sb.AppendLine(Row("DISTANCIA DASH", s.GetBase(PogoStat.DashDistance), s.Get(PogoStat.DashDistance), "0.0", " m"));
             sb.AppendLine(Row("RECARGA DASH", s.GetBase(PogoStat.DashCooldown), s.Get(PogoStat.DashCooldown), "0.0", " s", true));
-            sb.AppendLine(Row("ESCUDO", 0f, PlayerVitals.Instance != null ? PlayerVitals.Instance.MaxShield : 0f, "0"));
-            sb.AppendLine(Row("REGENERACIÓN", 0f, s.Get(PogoStat.Regeneration), "0.0", "/s"));
+            bool contrato = PlayerVitals.Instance != null && PlayerVitals.Instance.NoShieldNoRegen;
+            if (contrato)
+            {
+                // El Contrato a Mano Pelona las anula: que se vea por qué están en cero.
+                sb.AppendLine(Pad("ESCUDO", 18) + "<color=#FF6A55>0  (CONTRATO)</color>");
+                sb.AppendLine(Pad("REGENERACIÓN", 18) + "<color=#FF6A55>0  (CONTRATO)</color>");
+            }
+            else
+            {
+                sb.AppendLine(Row("ESCUDO", 0f, PlayerVitals.Instance != null ? PlayerVitals.Instance.MaxShield : 0f, "0"));
+                sb.AppendLine(Row("REGENERACIÓN", 0f, s.Get(PogoStat.Regeneration), "0.0", "/s"));
+            }
             sb.AppendLine(Row("RECOGIDA", s.GetBase(PogoStat.PickupRadius), s.Get(PogoStat.PickupRadius), "0.0", " m"));
             sb.AppendLine(Row("EXPERIENCIA", 100f, s.Get(PogoStat.XpGain) * 100f, "0", "%"));
         }

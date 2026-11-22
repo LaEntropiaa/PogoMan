@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: pinata_del_ultimo_rezo
   displayName: "Pi\xF1ata del \xDAltimo Rezo"
-  description: "Activa. Cuelga una pi\xF1ata por 6 s. P\xEDsala tres veces para hacerla estallar por 300 % del da\xF1o del pogo en 5 m."
+  description: "Tecla: avientas una pi\xF1ata que revienta al caer (300 % del da\xF1o del pogo). Recarga 18 s."
   quote: Dale, dale, que ya te vio.
   icon: {fileID: 21300000, guid: 9d77b799e7c9917a9a05c677b91da3f5, type: 3}
   weight: 1

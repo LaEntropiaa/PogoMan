@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: escrituras_del_panteon
   displayName: "Escrituras del Pante\xF3n"
-  description: "Traza un tri\xE1ngulo con tres pisotones. Al cerrarlo, las l\xE1pidas golpean dentro por 160 % del da\xF1o del pogo."
+  description: "Al aterrizar: cada 4 aterrizajes caen l\xE1pidas a tu alrededor (160 % del da\xF1o del pogo)."
   quote: "El terreno ya tiene due\xF1o."
   icon: {fileID: 21300000, guid: f4d165f643b4953bb829162b4e8591aa, type: 3}
   weight: 1

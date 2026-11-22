@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: boton_de_panico_del_oxxo
   displayName: "Bot\xF3n de P\xE1nico del Oxxo"
-  description: "Activa. Empuja 4 m a los enemigos en un radio de 4 m y les hace 25 de da\xF1o. Recarga en 16 s."
+  description: "Tecla: suelta una onda que empuja a los demonios cercanos y les hace 60 % del da\xF1o del pogo. Recarga 14 s."
   quote: Caja dos solicita auxilio.
   icon: {fileID: 21300000, guid: f89b8fa9c6df46df18ba247819e75dbb, type: 3}
   weight: 1

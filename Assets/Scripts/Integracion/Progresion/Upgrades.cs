@@ -100,8 +100,11 @@ public static class Upgrades
     public static List<Offer> Roll(PlayerStats stats, int count)
     {
         var pool = new List<UpgradeDef>();
+        // Con el Contrato a Mano Pelona la regeneración y el escudo ya no sirven: no se ofrecen.
+        bool contrato = PlayerVitals.Instance != null && PlayerVitals.Instance.NoShieldNoRegen;
         foreach (UpgradeDef d in All)
-            if (stats.Get(d.Target) < d.Cap - 0.001f)
+            if (stats.Get(d.Target) < d.Cap - 0.001f &&
+                !(contrato && (d.Target == PogoStat.Regeneration || d.Target == PogoStat.Shield)))
                 pool.Add(d);
 
         var offers = new List<Offer>();

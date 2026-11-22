@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: tapon_de_geiser
   displayName: "Tap\xF3n de G\xE9iser"
-  description: "Un g\xE9iser potencia tu siguiente pisot\xF3n durante 8 s. Ese golpe gana 1.5 m de radio y 30 % de da\xF1o."
+  description: "Al salir de un g\xE9iser: tu siguiente aterrizaje pega 30 % m\xE1s fuerte y m\xE1s lejos."
   quote: Todo cabe hasta que hierve.
   icon: {fileID: 21300000, guid: 2f0dc9fee4b5a591b9955bc8e021d224, type: 3}
   weight: 1

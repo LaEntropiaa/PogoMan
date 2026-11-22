@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: limosnero
   displayName: Limosnero
-  description: "Al derrotar a un enemigo con el pogo, lanza tres monedas como proyectiles, cada una con un 20 % del da\xF1o del pogo. Estas monedas no se pueden recoger."
+  description: "Al matar con el pogo: lanzas 3 monedas que golpean a otros demonios (20 % del da\xF1o del pogo cada una)."
   quote: "Hoy por m\xED. Tambi\xE9n ma\xF1ana."
   icon: {fileID: 21300000, guid: 8a1ed948f2575464bbdc2f779e0316c1, type: 3}
   weight: 1

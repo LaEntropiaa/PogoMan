@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: botiquin_del_similares
   displayName: "Botiqu\xEDn del Similares"
-  description: "Convierte 40 % de la curaci\xF3n sobrante en escudo temporal, hasta 15 puntos."
+  description: "Al curarte de m\xE1s: el 40 % de lo que sobra se vuelve escudo temporal (hasta 15)."
   quote: "Lo mismo, pero en el m\xE1s all\xE1."
   icon: {fileID: 21300000, guid: 2703859b01c2b9eb495b2ffe61edb52e, type: 3}
   weight: 1
