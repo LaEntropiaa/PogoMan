@@ -5432,7 +5432,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c98a4fb7e55dcd130a2e283793e2264e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
-  spitDamage: 15
+  spitDamage: 29
   fireRate: 1
   critChance: 0.1
   critMultiplier: 2

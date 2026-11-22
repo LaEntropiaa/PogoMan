@@ -102,20 +102,22 @@ public class DevilRig : MonoBehaviour
             }
             case Pose.Stunned:
             {
+                // Hincado: de rodillas (espinillas en el suelo hacia atrás), encorvado y con la cabeza
+                // colgando, para que Pogoman lo alcance con el pogo. DevilBoss baja el cuerpo y el collider.
                 float wob = Mathf.Sin(time * 6f);
-                Rot(spine, R, 22f * pb);
-                Rot(chest, R, 18f * pb);
+                Rot(thighL, R, l * 12f * pb);
+                Rot(thighR, R, l * 12f * pb);
+                Rot(shinL, R, l * 100f * pb);
+                Rot(shinR, R, l * 100f * pb);
+                Rot(spine, R, 28f * pb);
+                Rot(chest, R, 24f * pb);
                 Rot(neck, R, 15f * pb);
-                Rot(head, R, 18f * pb + wob * 6f);
-                Rot(head, Fw, Mathf.Sin(time * 4f) * 12f);
-                Rot(upperL, R, -25f * pb);
-                Rot(upperR, R, -25f * pb);
-                Rot(foreL, R, -20f * pb);
-                Rot(foreR, R, -20f * pb);
-                Rot(thighL, R, l * -25f * pb);
-                Rot(thighR, R, l * -25f * pb);
-                Rot(shinL, R, l * 45f * pb);
-                Rot(shinR, R, l * 45f * pb);
+                Rot(head, R, 20f * pb + wob * 5f);
+                Rot(head, Fw, Mathf.Sin(time * 4f) * 10f);
+                Rot(upperL, R, -40f * pb);
+                Rot(upperR, R, -40f * pb);
+                Rot(foreL, R, -30f * pb);
+                Rot(foreR, R, -30f * pb);
                 break;
             }
             case Pose.Dying:
