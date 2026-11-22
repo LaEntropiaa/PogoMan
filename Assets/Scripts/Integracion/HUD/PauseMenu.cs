@@ -215,16 +215,30 @@ public class PauseMenu : MonoBehaviour
             float maxHp = PogoBridge.MaxHealth(player);
             sb.AppendLine(Row("VIDA MÁXIMA", 100f, maxHp, "0"));
             float pogoBase = 50f;
-            sb.AppendLine(Row("DAÑO DEL POGO", pogoBase, fx != null ? fx.PogoDamage * (fx.Count(ItemEffects.Contrato) > 0 ? 2f : 1f) : pogoBase, "0"));
-            sb.AppendLine(Row("RADIO PISOTÓN", 2.5f, 2.5f + 0.2f * Mathf.Min(fx != null ? fx.Count(ItemEffects.Plantilla) : 0, 3), "0.0", " m"));
+            sb.AppendLine(Row("DAÑO DEL POGO", pogoBase, fx != null ? fx.PogoDamage * (fx.Count(ItemEffects.Contrato) > 0 ? 2f : 1f) * s.Get(PogoStat.PogoDamage) : pogoBase, "0"));
+            sb.AppendLine(Row("RADIO PISOTÓN", fx != null ? fx.BaseStompRadius : 1.5f, fx != null ? fx.StompRadius : 1.5f, "0.0", " m"));
+            sb.AppendLine(Row("DAÑO ONDA", s.GetBase(PogoStat.WaveDamage), s.Get(PogoStat.WaveDamage), "0"));
+            sb.AppendLine(Row("RADIO ONDA", PogoShockwave.BaseRadius, PogoShockwave.Radius, "0.0", " m"));
+            sb.AppendLine(Row("RECARGA ONDA", s.WaveCooldownBase, PogoShockwave.Cooldown, "0.0#", " s", true));
+            sb.AppendLine(Row("ONDAS SEGUIDAS", 1f, PogoShockwave.Count, "0"));
             sb.AppendLine(Row("VELOCIDAD", 100f, s.Get(PogoStat.MoveSpeed) * 100f, "0", "%"));
             sb.AppendLine(Row("CONTROL AÉREO", 100f, (PogoJump.Instance != null ? PogoJump.Instance.AirControlMultiplier : 1f) * 100f, "0", "%"));
             sb.AppendLine(Row("SALTO CON ESPACIO", 100f, (PogoJump.Instance != null ? PogoJump.Instance.ChargedJumpHeightMultiplier : 1f) * 100f, "0", "%"));
             sb.AppendLine(Row("SALTOS EN EL AIRE", 0f, s.Get(PogoStat.AirJumps), "0"));
             sb.AppendLine(Row("DISTANCIA DASH", s.GetBase(PogoStat.DashDistance), s.Get(PogoStat.DashDistance), "0.0", " m"));
             sb.AppendLine(Row("RECARGA DASH", s.GetBase(PogoStat.DashCooldown), s.Get(PogoStat.DashCooldown), "0.0", " s", true));
-            sb.AppendLine(Row("ESCUDO", 0f, PlayerVitals.Instance != null ? PlayerVitals.Instance.MaxShield : 0f, "0"));
-            sb.AppendLine(Row("REGENERACIÓN", 0f, s.Get(PogoStat.Regeneration), "0.0", "/s"));
+            bool contrato = PlayerVitals.Instance != null && PlayerVitals.Instance.NoShieldNoRegen;
+            if (contrato)
+            {
+                // El Contrato a Mano Pelona las anula: que se vea por qué están en cero.
+                sb.AppendLine(Pad("ESCUDO", 18) + "<color=#FF6A55>0  (CONTRATO)</color>");
+                sb.AppendLine(Pad("REGENERACIÓN", 18) + "<color=#FF6A55>0  (CONTRATO)</color>");
+            }
+            else
+            {
+                sb.AppendLine(Row("ESCUDO", 0f, PlayerVitals.Instance != null ? PlayerVitals.Instance.MaxShield : 0f, "0"));
+                sb.AppendLine(Row("REGENERACIÓN", 0f, s.Get(PogoStat.Regeneration), "0.0", "/s"));
+            }
             sb.AppendLine(Row("RECOGIDA", s.GetBase(PogoStat.PickupRadius), s.Get(PogoStat.PickupRadius), "0.0", " m"));
             sb.AppendLine(Row("EXPERIENCIA", 100f, s.Get(PogoStat.XpGain) * 100f, "0", "%"));
         }
@@ -239,6 +253,7 @@ public class PauseMenu : MonoBehaviour
             sb.AppendLine(Row("ÁREA", s.GetBase(PogoStat.SpitArea), s.Get(PogoStat.SpitArea), "0.0", " m"));
             sb.AppendLine(Row("TAMAÑO", 100f, s.Get(PogoStat.SpitSize) * 100f, "0", "%"));
             sb.AppendLine(Row("PROYECTILES", 1f, s.Get(PogoStat.Projectiles), "0"));
+            sb.AppendLine(Row("REBOTES", 0f, s.Get(PogoStat.SpitBounces), "0"));
             sb.AppendLine();
             sb.AppendLine("<color=#FFC34D>PARTIDA</color>");
             sb.AppendLine(Pad("DAÑO TOTAL", 18) + Mathf.RoundToInt(s.DamageDealt));

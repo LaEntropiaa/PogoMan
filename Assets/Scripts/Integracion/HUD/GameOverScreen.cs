@@ -71,7 +71,7 @@ public class GameOverScreen : MonoBehaviour
             MenuButtonFx.MuteSelectionSound = false;
         }
         // Si entraste al top, se pide el nombre (después de seleccionar el botón, para que no le robe el foco).
-        if (RunRecords.LastRank > 0 && summary != null)
+        if (RunRecords.LastRank > 0 && RunRecords.NeedsName && summary != null)
             RecordNamePrompt.Show(summary.font);
     }
 }

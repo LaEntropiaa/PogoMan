@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: matraca_del_cobrador
   displayName: Matraca del Cobrador
-  description: "Activa. Guarda hasta 4 salvas durante 3 s y su\xE9ltalas juntas hacia donde apuntes."
+  description: "Tecla: escupes una bola cargada que atraviesa demonios y revienta al final (250 % del da\xF1o del escupitajo). Recarga 9 s."
   quote: Se le juntaron los pagos.
   icon: {fileID: 21300000, guid: 00cb53cc115133e3b89e8903c82993e3, type: 3}
   weight: 1

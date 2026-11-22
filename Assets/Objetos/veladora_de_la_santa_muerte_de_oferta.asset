@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: veladora_de_la_santa_muerte_de_oferta
   displayName: Veladora de la Santa Muerte de Oferta
-  description: "Cada impacto del pogo contra un enemigo tiene un 10 % de probabilidad de dejar fuego en el suelo durante tres segundos. El fuego da\xF1a a los enemigos que lo pisan."
+  description: "Al pisar a un demonio: 10 % de probabilidad de dejar fuego en el suelo 3 s."
   quote: Lo barato sale ardiendo.
   icon: {fileID: 21300000, guid: 2688d0d075cfbba5e80e25c4ca27133e, type: 3}
   weight: 1

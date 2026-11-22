@@ -32,6 +32,8 @@ public class ArenaFight : MonoBehaviour
     [SerializeField] private Material fxMaterial;
     [SerializeField] private Font font;
     [SerializeField] private AudioClip arenaMusic;
+    [Tooltip("Música de la segunda fase (FURIA).")]
+    [SerializeField] private AudioClip furyMusic;
     [SerializeField] private AudioClip laughClip;
     [SerializeField] private AudioClip castClip;
     [SerializeField] private AudioClip explodeClip;
@@ -93,8 +95,102 @@ public class ArenaFight : MonoBehaviour
         InArena = true;
         BuildHud();
         SpawnDevil();
-        ShowBanner("EL DIABLO TENDERO", "", 3.5f);
+        ShowBanner("EL DIABLO TENDERO", "DUEÑO DEL INFIERNO Y DE LA TIENDITA", 2.6f);
         Play(laughClip, 1f, 1f);
+        devil.IntroTime = IntroBow + IntroLines.Length * LineTime + 0.6f;
+        StartCoroutine(IntroCinematic());
+    }
+
+    // ---- Intro: hace su reverencia y luego te habla ----
+    private const float IntroBow = 2.6f;
+    private const float LineTime = 2.7f;
+    private static readonly string[] IntroLines =
+    {
+        "Vaya, vaya... el cliente que vendió su alma por un pogo.",
+        "¿Creíste que podías rebotar en MI tiendita sin pagar?",
+        "Aquí no se fía, mijo. Se paga con el alma... ¡y la tuya ya es MÍA!",
+    };
+    private static readonly string[] FuryLines =
+    {
+        "¡JA! ¿Creíste que eso era todo?",
+        "¡La tiendita todavía NO CIERRA!",
+    };
+    private RectTransform barTop, barBottom, speech;
+    private Text speechText, speechName;
+    private CanvasGroup speechGroup;
+    private static AudioClip voiceBlip;
+
+    private IEnumerator IntroCinematic()
+    {
+        yield return Letterbox(true);
+        yield return new WaitForSeconds(IntroBow - 0.4f);
+        // Termina la reverencia: desde aquí lo anima DevilRig (hablando).
+        if (graph.IsValid()) graph.Destroy();
+        if (devil != null && devil.Rig != null) devil.Rig.State = DevilRig.Pose.Talk;
+        yield return Speak(IntroLines, LineTime);
+        StartCoroutine(Letterbox(false));
+    }
+
+    private IEnumerator Speak(string[] lines, float perLine)
+    {
+        speechGroup.alpha = 1f;
+        foreach (string line in lines)
+        {
+            float start = Time.time;
+            int shown = 0;
+            while (Time.time - start < perLine)
+            {
+                int n = Mathf.Min(line.Length, Mathf.FloorToInt((Time.time - start) * 38f));
+                if (n > shown)
+                {
+                    // Un "bla" grave por cada par de letras (voz de diablo).
+                    if (n / 2 != shown / 2 && line[n - 1] != ' ')
+                        PlayVoice(0.55f + Random.value * 0.12f);
+                    shown = n;
+                    speechText.text = line.Substring(0, n);
+                }
+                devil?.Rig?.Talking(n < line.Length);
+                speech.localScale = Vector3.one * (1f + Mathf.Max(0f, 0.08f - (Time.time - start)) * 2f);
+                yield return null;
+            }
+            devil?.Rig?.Talking(false);
+        }
+        for (float a = 1f; a > 0f; a -= Time.deltaTime * 4f) { speechGroup.alpha = a; yield return null; }
+        speechGroup.alpha = 0f;
+    }
+
+    private IEnumerator Letterbox(bool show)
+    {
+        for (float k = 0f; k <= 1f; k += Time.unscaledDeltaTime * 3f)
+        {
+            float e = show ? k : 1f - k;
+            e = e * e * (3f - 2f * e);
+            barTop.sizeDelta = new Vector2(0f, 130f * e);
+            barBottom.sizeDelta = new Vector2(0f, 130f * e);
+            yield return null;
+        }
+        barTop.sizeDelta = barBottom.sizeDelta = new Vector2(0f, show ? 130f : 0f);
+    }
+
+    private void PlayVoice(float pitch)
+    {
+        if (voiceBlip == null)
+        {
+            const int rate = 44100;
+            int n = rate / 14;
+            var data = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)rate;
+                float env = Mathf.Sin(Mathf.PI * i / n);
+                // Vocal "a" gruesa: fundamental + formantes aproximados.
+                data[i] = env * (Mathf.Sin(2f * Mathf.PI * 110f * t) * 0.6f + Mathf.Sin(2f * Mathf.PI * 760f * t) * 0.25f * Mathf.Sin(2f * Mathf.PI * 110f * t)
+                    + Mathf.Sin(2f * Mathf.PI * 1150f * t) * 0.12f) * 0.8f;
+            }
+            voiceBlip = AudioClip.Create("VozDiablo", n, 1, rate, false);
+            voiceBlip.SetData(data, 0);
+        }
+        Play(voiceBlip, pitch * 2f, 0.55f);
     }
 
     private void SpawnDevil()
@@ -162,8 +258,8 @@ public class ArenaFight : MonoBehaviour
             var e = aura.emission;
             var mm = aura.main;
             bool vulnerable = p == DevilBoss.Phase.Vulnerable;
-            e.rateOverTime = vulnerable ? 15f : 30f;
-            mm.startColor = vulnerable ? new Color(1f, 0.9f, 0.3f, 0.8f) : new Color(0.55f, 0.15f, 0.9f, 0.7f);
+            e.rateOverTime = vulnerable ? 15f : devil.Fury ? 70f : 30f;
+            mm.startColor = vulnerable ? new Color(1f, 0.9f, 0.3f, 0.8f) : devil.Fury ? new Color(1f, 0.2f, 0.05f, 0.85f) : new Color(0.55f, 0.15f, 0.9f, 0.7f);
         };
 
         var rig = go.AddComponent<DevilRig>();
@@ -251,6 +347,109 @@ public class ArenaFight : MonoBehaviour
     }
 
     public void OnRise() => Play(laughClip, Random.Range(0.95f, 1.05f), 0.8f);
+
+    // ---- Ataques especiales ----
+    public void OnSpecial(int kind)
+    {
+        Play(kind == 2 ? laughClip : castClip, kind == 2 ? 0.8f : 0.7f, 0.9f);
+    }
+
+    public void OnPillarErupt(Vector3 at)
+    {
+        Play(explodeClip, Random.Range(0.8f, 0.95f), 0.6f);
+        for (int i = 0; i < 6; i++)
+            ItemFx.Burst(at + Vector3.up * (i * 0.8f), 18, 0.6f, i % 2 == 0 ? new Color(1f, 0.45f, 0.05f) : new Color(1f, 0.85f, 0.3f), fxMaterial, 4f + i, 0.5f, 0.6f);
+    }
+
+    private float ringFx;
+    public void OnRingTick(Vector3 c, float r)
+    {
+        ringFx -= Time.deltaTime;
+        if (ringFx > 0f) return;
+        ringFx = 0.05f;
+        for (int i = 0; i < 3; i++)
+        {
+            float a = Random.value * Mathf.PI * 2f;
+            ItemFx.Burst(c + new Vector3(Mathf.Cos(a), 0.2f, Mathf.Sin(a)) * r, 6, 0.3f, new Color(1f, 0.4f, 0.05f), fxMaterial, 3f, 0.35f, 0.35f);
+        }
+    }
+
+    // Saca un ojo alado en la arena (furia).
+    public bool SummonFlyer(List<Enemy> list)
+    {
+        EnemyDirector director = EnemyDirector.Instance;
+        return director != null && director.FlyingPrefab != null && Summon(director.FlyingPrefab, list, false);
+    }
+
+    // ---- Segunda fase ----
+    private Renderer[] devilRenderers;
+    private Material[] devilMaterials;
+    private Color[] devilBaseColors;
+    private ParticleSystem devilAura;
+
+    public void OnEnrage(DevilBoss boss)
+    {
+        StartCoroutine(EnrageRoutine(boss));
+    }
+
+    private IEnumerator EnrageRoutine(DevilBoss boss)
+    {
+        Play(vulnerableClip, 0.6f, 1f);
+        Play(laughClip, 0.75f, 1f);
+        ShowBanner("¡FURIA!", "SEGUNDA FASE", 3f);
+        if (furyMusic != null) FindAnyObjectByType<GameMusic>()?.SwitchTo(furyMusic, 0.4f);
+        if (PlayerVitals.Instance != null)
+            PlayerVitals.Instance.InvulnerableUntil = Mathf.Max(PlayerVitals.Instance.InvulnerableUntil, Time.time + 3.5f);
+        ItemFx.Burst(boss.transform.position + Vector3.up * 3f, 120, 2.5f, new Color(1f, 0.15f, 0.05f), fxMaterial, 12f, 0.6f, 1f);
+        StartCoroutine(Letterbox(true));
+        yield return Speak(FuryLines, 1.5f);
+        StartCoroutine(Letterbox(false));
+    }
+
+    // Se va poniendo rojo brillante mientras recupera su vida.
+    public void OnEnrageTick(float k)
+    {
+        if (devil == null) return;
+        if (devilMaterials == null)
+        {
+            devilRenderers = devil.GetComponentsInChildren<Renderer>();
+            var mats = new List<Material>();
+            var cols = new List<Color>();
+            foreach (Renderer r in devilRenderers)
+            {
+                if (r is ParticleSystemRenderer) continue;
+                foreach (Material m in r.materials)
+                {
+                    mats.Add(m);
+                    cols.Add(m.HasProperty("_BaseColor") ? m.GetColor("_BaseColor") : Color.white);
+                    m.EnableKeyword("_EMISSION");
+                }
+            }
+            devilMaterials = mats.ToArray();
+            devilBaseColors = cols.ToArray();
+            devilAura = devil.GetComponentInChildren<ParticleSystem>();
+        }
+        for (int i = 0; i < devilMaterials.Length; i++)
+        {
+            Material m = devilMaterials[i];
+            if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Color.Lerp(devilBaseColors[i], new Color(1f, 0.2f, 0.12f), k * 0.75f));
+            if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", new Color(1f, 0.08f, 0.02f) * (k * 2.2f));
+        }
+        if (devilAura != null)
+        {
+            var main = devilAura.main;
+            main.startColor = new Color(1f, 0.2f, 0.05f, 0.85f);
+            var em = devilAura.emission;
+            em.rateOverTime = 30f + 40f * k;
+        }
+        if (Random.value < 0.25f)
+            ItemFx.Burst(devil.transform.position + Vector3.up * Random.Range(1f, 6f) + Random.insideUnitSphere, 12, 0.5f, new Color(1f, 0.25f, 0.05f), fxMaterial, 5f, 0.4f, 0.5f);
+    }
+
+    public void OnSurviveStarted()
+    {
+        ShowBanner("¡SOBREVIVE!", "", 1.6f);
+    }
     public void OnDescend() { }
 
     public void OnVulnerable()
@@ -412,6 +611,20 @@ public class ArenaFight : MonoBehaviour
         bannerSub = UiKit.Text(UiKit.Rect("AvisoSub", root, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             new Vector2(0, 95), new Vector2(1400, 50)), font, 36, new Color(1f, 0.8f, 0.7f), TextAnchor.MiddleCenter);
         bannerSub.gameObject.AddComponent<Outline>().effectDistance = new Vector2(2, -2);
+
+        // Barras de cine y globo de diálogo (intro y furia).
+        barTop = UiKit.Rect("CineArriba", root, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(0f, 0f));
+        UiKit.Image(barTop, Color.black);
+        barBottom = UiKit.Rect("CineAbajo", root, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), Vector2.zero, new Vector2(0f, 0f));
+        UiKit.Image(barBottom, Color.black);
+        speech = UiKit.Rect("Dialogo", root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 150f), new Vector2(1300f, 150f));
+        UiKit.Image(speech, new Color(0.12f, 0.02f, 0.03f, 0.92f));
+        speech.gameObject.AddComponent<Outline>().effectColor = new Color(1f, 0.35f, 0.15f, 0.9f);
+        speechGroup = speech.gameObject.AddComponent<CanvasGroup>();
+        speechGroup.alpha = 0f;
+        speechName = UiKit.Text(UiKit.Rect("Quien", speech, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(24f, -6f), new Vector2(600f, 40f)),
+            font, 30, new Color(1f, 0.55f, 0.25f), TextAnchor.LowerLeft, "EL DIABLO TENDERO");
+        speechText = UiKit.Text(UiKit.Stretch("Texto", speech, 24f), font, 38, new Color(1f, 0.93f, 0.85f), TextAnchor.MiddleLeft);
     }
 
     private void ShowBanner(string title, string sub, float seconds)
@@ -453,13 +666,28 @@ public class ArenaFight : MonoBehaviour
 
         switch (devil.State)
         {
+            case DevilBoss.Phase.Flying when devil.Fury:
+                bossState.text = "¡SOBREVIVE!  " + Mathf.CeilToInt(devil.SurviveLeft);
+                bossState.color = new Color(1f, 0.45f, 0.3f);
+                break;
             case DevilBoss.Phase.Flying:
                 bossState.text = "QUEDAN " + devil.WaveRemaining;
                 bossState.color = new Color(0.85f, 0.7f, 1f);
                 break;
+            case DevilBoss.Phase.Vulnerable:
+                bossState.text = "¡PÉGALE CON EL POGO!";
+                bossState.color = new Color(1f, 0.9f, 0.4f);
+                break;
             default:
                 bossState.text = "";
                 break;
+        }
+        if (devil.Fury)
+        {
+            // Barra en rojo brillante que late.
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f);
+            bossFill.GetComponent<Image>().color = Color.Lerp(new Color(1f, 0.1f, 0.05f), new Color(1f, 0.5f, 0.2f), pulse * 0.5f);
+            bossName.color = Color.Lerp(new Color(1f, 0.3f, 0.2f), new Color(1f, 0.85f, 0.4f), pulse * 0.4f);
         }
     }
 

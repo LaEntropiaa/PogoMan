@@ -142,7 +142,7 @@ public class GameHUD : MonoBehaviour
         if (deathHandled && gameOver != null && !gameOver.IsShown)
         {
             deathTimer += dt;
-            if (deathTimer > 1.3f)
+            if (deathTimer > PogoDeathFx.ScreenDelay)   // primero se ve cómo arde y revienta
                 gameOver.Show();
         }
     }

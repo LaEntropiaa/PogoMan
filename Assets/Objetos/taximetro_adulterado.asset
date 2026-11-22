@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: taximetro_adulterado
   displayName: "Tax\xEDmetro Adulterado"
-  description: "Tus aterrizajes r\xE1pidos aumentan el da\xF1o directo del pogo. De 12 a 32 m/s, el bono sube hasta 40 %."
+  description: "Siempre: mientras m\xE1s r\xE1pido vas, m\xE1s fuerte pisas (hasta +40 % de da\xF1o)."
   quote: "Ya ven\xEDa corriendo, joven."
   icon: {fileID: 21300000, guid: 9f14f3b4bf3e4708fad0d26a686cabc8, type: 3}
   weight: 1
   rarity: 1
-  maxCopies: 1
+  maxCopies: 0
   active: 0
   cursed: 0

@@ -86,6 +86,8 @@ public class Guardian : Enemy
         {
             anim.applyRootMotion = false;
             model = anim.transform;
+            modelScale = model.localScale * SizeFactor;
+            model.localScale = modelScale;
         }
         body = GetComponent<Collider>();
         voice = gameObject.AddComponent<AudioSource>();
@@ -204,7 +206,86 @@ public class Guardian : Enemy
         if (state != State.Emerge && state != State.Defeat)
             CheckStomp();
         Bob();
+        Juice(dt);
         wasGrounded = pogo != null && PogoBridge.IsGrounded(pogo);
+    }
+
+    // ---- Animación extra encima de los clips (más peso y personalidad) ----
+    // Un poquito más grandes que el modelo original.
+    private const float SizeFactor = 1.18f;
+    private Vector3 modelScale = Vector3.one;
+    private float juiceTime, hitShake;
+    private Quaternion juiceRot = Quaternion.identity;
+
+    private void Juice(float dt)
+    {
+        if (model == null) return;
+        juiceTime += dt;
+        float sx = 1f, sy = 1f, pitch = 0f, roll = 0f;
+        float breathe = Mathf.Sin(juiceTime * 2.4f);
+        sy += breathe * 0.025f; sx -= breathe * 0.012f;
+
+        switch (state)
+        {
+            case State.Chase:
+                // Camina echado para adelante y se bambolea.
+                pitch += 7f;
+                roll += Mathf.Sin(juiceTime * 7f) * 3.5f;
+                sy += Mathf.Abs(Mathf.Sin(juiceTime * 7f)) * 0.04f;
+                break;
+            case State.Attack:
+            {
+                float active = Spec.activeTime;
+                float t = attackTime;
+                if (t < active)
+                {
+                    // Anticipación: se agacha, se ensancha y se echa para atrás, temblando al final.
+                    float k = Mathf.SmoothStep(0f, 1f, t / active);
+                    sy -= 0.14f * k; sx += 0.09f * k;
+                    pitch -= 12f * k;
+                    roll += Mathf.Sin(juiceTime * 45f) * 2.5f * k * k;
+                }
+                else
+                {
+                    // Golpe: se estira hacia adelante y regresa con rebote.
+                    float k = Mathf.Clamp01((t - active) / 0.35f);
+                    float snap = Mathf.Sin(k * Mathf.PI) * (1f - k * 0.5f);
+                    sy += 0.16f * snap; sx -= 0.08f * snap;
+                    pitch += 18f * snap;
+                }
+                break;
+            }
+            case State.Recover:
+                pitch -= 4f * (1f - Mathf.Clamp01(stateTime / recoverTime));
+                sy -= 0.05f * (1f - Mathf.Clamp01(stateTime / recoverTime));
+                break;
+            case State.Flinch:
+                hitShake = Mathf.Max(hitShake, 1f - stateTime / 0.45f);
+                break;
+            case State.Emerge:
+            {
+                // Sale como resorte.
+                float k = Mathf.Clamp01(stateTime / EmergeTime);
+                float pop = k > 0.75f ? Mathf.Sin((k - 0.75f) / 0.25f * Mathf.PI) : 0f;
+                sy += pop * 0.2f; sx -= pop * 0.1f;
+                break;
+            }
+        }
+        // Cada golpe que recibe (aunque no se interrumpa) lo hace temblar y aplastarse.
+        hitShake = Mathf.MoveTowards(hitShake, 0f, dt * 3f);
+        if (hitShake > 0f)
+        {
+            roll += Mathf.Sin(juiceTime * 50f) * 6f * hitShake;
+            sy -= 0.1f * hitShake; sx += 0.06f * hitShake;
+        }
+
+        model.localScale = new Vector3(modelScale.x * sx, modelScale.y * sy, modelScale.z * sx);
+        if (state != State.Emerge && state != State.Defeat)
+        {
+            Quaternion target = Quaternion.Euler(pitch, 0f, roll);
+            juiceRot = Quaternion.Slerp(juiceRot, target, 1f - Mathf.Exp(-14f * dt));
+            model.localRotation = juiceRot;
+        }
     }
 
     // Sale del suelo girando.
@@ -439,7 +520,12 @@ public class Guardian : Enemy
                 else
                 {
                     if (furnace != null) furnace.intensity = Mathf.Lerp(0f, 6f, prep) * (0.8f + 0.2f * Mathf.Sin(t * 30f));
-                    if (Step(0, t >= active)) { Kit?.Play(kind, 1, transform.position); if (furnace != null) Destroy(furnace.gameObject); }
+                    if (Step(0, t >= active))
+                    {
+                        Kit?.Play(kind, 1, transform.position);
+                        if (furnace != null) Destroy(furnace.gameObject);
+                        EnemyTracker.HitArea(Feet, 8f, Spec.damage * DemonDamageFactor, HitSource.Other, true, 2f, this, true);
+                    }
                     if (firedSteps > 0)
                     {
                         // Onda que sale de 1 a 8 m en 1.1 s, banda de 0.65 m.
@@ -512,6 +598,7 @@ public class Guardian : Enemy
                         Kit?.Play(kind, 0, transform.position);
                         Vector3 c = Feet + lockedForward * 1.1f;
                         Kit?.Dust(c, 1.55f);
+                        EnemyTracker.HitArea(c, 1.8f, Spec.damage * DemonDamageFactor, HitSource.Other, true, 3f, this, true);
                         Vector3 d = PlayerFeet - c;
                         if (new Vector2(d.x, d.z).magnitude <= 1.55f + PlayerRadius && PlayerHeight <= 1f)
                             HurtPlayer(Spec.damage, true);
@@ -525,6 +612,7 @@ public class Guardian : Enemy
                         {
                             Kit?.Play(kind, 1, points[k]);
                             Kit?.Dust(points[k], 1.1f);
+                            EnemyTracker.HitArea(points[k], 1.5f, Spec.damage * DemonDamageFactor, HitSource.Other, true, 3f, this, true);
                             if (signs.Count > k && signs[k] != null) { Destroy(signs[k].gameObject); }
                             Vector3 d = PlayerFeet - points[k];
                             if (!hitPlayerThisAttack && new Vector2(d.x, d.z).magnitude <= 1.1f + PlayerRadius && PlayerHeight <= 1f)
@@ -623,6 +711,29 @@ public class Guardian : Enemy
         float flat = d.magnitude;
         if (Mathf.Abs(SignedAngleToPlayer()) <= angle / 2f && flat <= rMax + PlayerRadius && flat >= rMin && PlayerHeight >= hMin - 0.1f && PlayerHeight <= hMax)
             HurtPlayer(damage, knock);
+        HurtDemons(rMax, damage, angle, rMin);
+    }
+
+    // Los golpes del guardián también aplastan a los demonios que estén en medio (sin experiencia ni monedas).
+    public const float DemonDamageFactor = 3f;
+    private static readonly List<EnemyTracker> demonBuffer = new List<EnemyTracker>();
+
+    private void HurtDemons(float reach, float damage, float angle = 360f, float rMin = 0f)
+    {
+        demonBuffer.Clear();
+        foreach (EnemyTracker e in EnemyTracker.All)
+        {
+            if (e == null || e.IsDead || e.IsBoss || e.Enemy == this || e.GetComponent<Guardian>() != null) continue;
+            Vector3 d = e.Center - Feet;
+            if (d.y < -1f || d.y > 4f) continue;
+            d.y = 0f;
+            float m = d.magnitude;
+            if (m > reach + 0.4f || m < rMin) continue;
+            if (angle < 359f && m > 0.1f && Mathf.Abs(Vector3.SignedAngle(lockedForward, d, Vector3.up)) > angle / 2f) continue;
+            demonBuffer.Add(e);
+        }
+        foreach (EnemyTracker e in demonBuffer)
+            e.HitNoReward(damage * DemonDamageFactor, HitSource.Other);
     }
 
     private void TryHitArc(float reach, float hMin, float hMax, float damage)
@@ -631,6 +742,7 @@ public class Guardian : Enemy
         // El cuerpo del jugador mide ~2 m: lo toca si sus pies están por debajo de la franja alta.
         if (d.magnitude <= reach + PlayerRadius && PlayerHeight < hMax && PlayerHeight + 2f > hMin)
             HurtPlayer(damage, true);
+        HurtDemons(reach, damage);
     }
 
     private bool LineOfSight()
@@ -673,6 +785,7 @@ public class Guardian : Enemy
     {
         if (isDead || state == State.Emerge || damage <= 0f) return;
         currentHealth -= damage;
+        hitShake = Mathf.Max(hitShake, 0.6f);
         if (currentHealth <= 0f)
         {
             currentHealth = 0f;

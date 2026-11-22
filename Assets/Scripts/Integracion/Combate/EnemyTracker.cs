@@ -7,7 +7,7 @@ using UnityEngine;
 //  - cuenta la muerte en las estadísticas,
 //  - anima la figura provisional (mirar al jugador, tambalearse, parpadear al recibir daño).
 // De dónde vino un golpe (lo usan los objetos: "al golpear con el pogo", "al matar con el pogo"...).
-public enum HitSource { Stomp, Spit, Item, Other }
+public enum HitSource { Stomp, Spit, Item, Other, Wave }
 
 [RequireComponent(typeof(Enemy))]
 public class EnemyTracker : MonoBehaviour
@@ -60,9 +60,48 @@ public class EnemyTracker : MonoBehaviour
     public float MaxHealth => PogoBridge.MaxHealth(Enemy);
     public bool IsDead => Enemy == null || PogoBridge.IsDead(Enemy);
     public float LastDamageTime { get; private set; } = -100f;
+    // Muertes que no cuentan (onda del pilar, ataques de los guardianes): sin experiencia, monedas ni puntos.
+    public bool NoReward { get; set; }
+    // Élite (corona): más experiencia y monedas, y a veces un cofre (EliteEnemy).
+    public bool IsElite { get; set; }
+    public static event System.Action<EnemyTracker> EliteKilled;
 
-    public Vector3 Center => mainCollider != null ? mainCollider.bounds.center : transform.position;
-    public Vector3 Top => mainCollider != null
+    // Daño que no da recompensa si lo mata (si sobrevive, se le quita la marca).
+    public void HitNoReward(float damage, HitSource source = HitSource.Other)
+    {
+        if (IsDead) return;
+        NoReward = true;
+        Hit(damage, source);
+        if (!IsDead) NoReward = false;
+    }
+
+    private static readonly List<EnemyTracker> areaBuffer = new List<EnemyTracker>();
+
+    // Golpe en área a los demonios (horizontal, con margen de altura). Regresa cuántos tocó.
+    public static int HitArea(Vector3 center, float radius, float damage, HitSource source, bool noReward,
+        float maxHeight = 3f, Enemy except = null, bool skipBosses = false)
+    {
+        areaBuffer.Clear();
+        float r2 = radius * radius;
+        foreach (EnemyTracker e in All)
+        {
+            if (e == null || e.IsDead || e.Enemy == except || (skipBosses && e.IsBoss)) continue;
+            Vector3 d = e.Center - center;
+            if (Mathf.Abs(d.y) > maxHeight) continue;
+            d.y = 0f;
+            if (d.sqrMagnitude <= r2) areaBuffer.Add(e);
+        }
+        foreach (EnemyTracker e in areaBuffer)
+        {
+            if (noReward) e.HitNoReward(damage, source);
+            else e.Hit(damage, source);
+        }
+        return areaBuffer.Count;
+    }
+
+    // Un collider apagado (el Ojo Alado al morir) da bounds vacíos en el origen.
+    public Vector3 Center => mainCollider != null && mainCollider.enabled ? mainCollider.bounds.center : transform.position + Vector3.up * 0.7f;
+    public Vector3 Top => mainCollider != null && mainCollider.enabled
         ? new Vector3(Center.x, mainCollider.bounds.max.y, Center.z)
         : transform.position + Vector3.up * 2f;
 
@@ -192,10 +231,14 @@ public class EnemyTracker : MonoBehaviour
         if (!deathHandled && IsDead)
         {
             deathHandled = true;
-            Killed?.Invoke(this, lastSource);
-            PlayerStats.Instance?.RegisterKill();
-            DropCoins();
-            DropXp();
+            if (!NoReward)
+            {
+                Killed?.Invoke(this, lastSource);
+                PlayerStats.Instance?.RegisterKill();
+                DropCoins();
+                DropXp();
+                if (IsElite) EliteKilled?.Invoke(this);
+            }
             if (deathClip != null)
                 AudioSource.PlayClipAtPoint(deathClip, Center, 0.8f * GameSettings.SfxVolume);
         }
@@ -206,10 +249,10 @@ public class EnemyTracker : MonoBehaviour
 
     private void DropCoins()
     {
-        if (coinPrefab == null || (!isBoss && Random.value > Mathf.Min(0.95f, coinChance + CoinChanceBonus)))
+        if (coinPrefab == null || (!isBoss && !IsElite && Random.value > Mathf.Min(0.95f, coinChance + CoinChanceBonus)))
             return;
 
-        int count = Random.Range(coinsMin, coinsMax + 1);
+        int count = Random.Range(coinsMin, coinsMax + 1) * (IsElite ? 3 : 1);
         for (int i = 0; i < count; i++)
             Instantiate(coinPrefab, Center + Random.insideUnitSphere * 0.3f, Quaternion.Euler(90f, 0f, 0f));
     }
@@ -221,13 +264,26 @@ public class EnemyTracker : MonoBehaviour
             XpGem.Drop(Center, bossXpValue);
             return;
         }
+        if (IsElite)
+        {
+            XpGem.Drop(Center, 5f);
+            XpGem.Drop(Center + Vector3.up * 0.3f, 5f);
+            return;
+        }
         XpGem.Drop(Center, Random.value < bigGemChance ? 5f : xpValue);
     }
+
+    // Contraataque por pararse en su cabeza (HeadStandPunish lo llama con SendMessage).
+    private float punish;
+    public void OnHeadPunish() => punish = 1f;
+    public float Punish => punish;
+    private float idleTime;
 
     private void AnimateFigure()
     {
         if (figure == null)
             return;
+        punish = Mathf.MoveTowards(punish, 0f, Time.deltaTime * 2.2f);
 
         if (deathHandled)
         {
@@ -251,15 +307,24 @@ public class EnemyTracker : MonoBehaviour
             figure.rotation = Quaternion.Slerp(figure.rotation, look, 10f * Time.deltaTime);
         }
 
-        // Tambaleo al caminar.
+        // Tambaleo al caminar (también lo hace el modelo de lejos, que no tiene huesos).
         walkPhase += speed * Time.deltaTime * 3f;
-        float sway = Mathf.Sin(walkPhase) * Mathf.Clamp01(speed / 2f);
-        figure.localPosition = figureBasePosition + new Vector3(0f, Mathf.Abs(sway) * 0.08f, 0f);
-        Vector3 euler = figure.localEulerAngles;
-        figure.localRotation = Quaternion.Euler(0f, euler.y, sway * 8f);
+        float walking = Mathf.Clamp01(speed / 2f);
+        float sway = Mathf.Sin(walkPhase) * walking;
+        idleTime += Time.deltaTime;
+        float breathe = Mathf.Sin(idleTime * 2.1f + walkPhase * 0.1f) * (1f - walking);
 
-        // Pequeño "pop" al recibir daño.
-        figure.localScale = figureBaseScale * (1f + flash * 0.12f);
+        // Reacciones: se echa para atrás al recibir daño y se zarandea cuando te quita de su cabeza.
+        float flinch = flash * flash;
+        float shake = punish > 0f ? Mathf.Sin(idleTime * 42f) * punish : 0f;
+        figure.localPosition = figureBasePosition + new Vector3(0f, Mathf.Abs(sway) * 0.08f + punish * 0.15f, 0f);
+        Vector3 euler = figure.localEulerAngles;
+        figure.localRotation = Quaternion.Euler(-flinch * 14f + breathe * 2f + punish * -10f, euler.y, sway * 8f + shake * 18f);
+
+        // "Pop" al recibir daño, respiración quieto y estirón al contraatacar.
+        float stretch = 1f + punish * 0.25f + breathe * 0.025f;
+        float wide = 1f + flash * 0.12f + (1f - stretch) * 0.5f;
+        figure.localScale = new Vector3(figureBaseScale.x * wide, figureBaseScale.y * stretch * (1f + flash * 0.06f), figureBaseScale.z * wide);
     }
 
     private void ApplyFlash()

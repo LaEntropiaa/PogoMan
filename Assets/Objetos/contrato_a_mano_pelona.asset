@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: contrato_a_mano_pelona
   displayName: Contrato a Mano Pelona
-  description: "Duplica el da\xF1o directo del pogo. Pierdes todo el escudo y la regeneraci\xF3n pasiva por el resto de la partida."
+  description: "Pacto: el pogo hace el doble de da\xF1o, pero pierdes el escudo y la regeneraci\xF3n el resto de la partida."
   quote: "Firme aqu\xED con lo que le quede."
   icon: {fileID: 21300000, guid: fe61c15258895efb29d40772b3f561d4, type: 3}
   weight: 1

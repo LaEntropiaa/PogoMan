@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 // Habilidades activas de los objetos: se asignan a las teclas 1-6 en el orden en que las consigues.
+// Todas funcionan igual: picas la tecla, sale el ataque y empieza la recarga.
 // En el HUD (abajo a la derecha) cada una muestra su ícono, su tecla, la recarga en círculo,
 // los segundos que faltan y, si aplica, sus cargas o el tiempo que le queda activa.
 public class ItemActives : MonoBehaviour
@@ -35,11 +36,8 @@ public class ItemActives : MonoBehaviour
     private ItemEffects fx;
 
     // Estado de las activas
-    private readonly List<DetonatorCharge> charges = new List<DetonatorCharge>();
-    private Slot matracaSlot;
-    private float matracaHold;
     private float timbreTime;
-    private Pinata pinata;
+    private float timbreSlamAt = -1f;
 
     public bool SlotsFull => slots.Count >= MaxSlots;
 
@@ -132,13 +130,10 @@ public class ItemActives : MonoBehaviour
             {
                 var k = Keyboard.current[KeyFor(i)];
                 if (k.wasPressedThisFrame) Press(s);
-                if (k.wasReleasedThisFrame) Release(s);
             }
         }
 
-        UpdateMatraca(dt);
         UpdateTimbre();
-        charges.RemoveAll(c => c == null);
         RefreshHud(dt);
     }
 
@@ -154,28 +149,60 @@ public class ItemActives : MonoBehaviour
         switch (s.item.id)
         {
             case ItemEffects.Panico: Panic(s); break;
-            case ItemEffects.Detonador: Detonate(s); break;
-            case ItemEffects.Matraca: StartMatraca(s); break;
+            case ItemEffects.Detonador: ThrowBomb(s); break;
+            case ItemEffects.Matraca: ChargedSpit(s); break;
             case ItemEffects.Timbre: StartTimbre(s); break;
-            case ItemEffects.Pinata: SpawnPinata(s); break;
+            case ItemEffects.Pinata: ThrowPinata(s); break;
         }
     }
 
-    private void Release(Slot s)
+    // Hacia dónde apunta la cámara (sin inclinación, para lanzar en arco).
+    private Vector3 AimFlat()
     {
-        if (s == matracaSlot) ReleaseMatraca();
+        Vector3 f = Camera.main != null ? Camera.main.transform.forward : fx.Player.forward;
+        f.y = 0f;
+        return f.sqrMagnitude > 0.01f ? f.normalized : Vector3.forward;
     }
 
-    // ---- Botón de Pánico del Oxxo: empuja y daña alrededor ----
+    private Vector3 Hand => fx.Player.position + AimFlat() * 0.8f + Vector3.up * 0.6f;
+
+    // Demonio más cercano enfrente (cono de ~70°), para que lo que avientas le caiga encima.
+    private EnemyTracker AimTarget(float range)
+    {
+        Vector3 from = fx.Player.position, fwd = AimFlat();
+        EnemyTracker best = null;
+        float bestD = range;
+        foreach (EnemyTracker e in EnemyTracker.All)
+        {
+            if (e == null || e.IsDead || !e.Targetable) continue;
+            Vector3 d = e.Center - from; d.y = 0f;
+            float dist = d.magnitude;
+            if (dist < bestD && dist > 0.5f && Vector3.Angle(fwd, d) < 35f) { best = e; bestD = dist; }
+        }
+        return best;
+    }
+
+    // Velocidad para caer en "to" con esa gravedad (si no hay demonio, cae a "fallback" metros al frente).
+    private Vector3 ArcTo(Vector3 from, float gravity, float fallback)
+    {
+        EnemyTracker t = AimTarget(16f);
+        Vector3 to = t != null ? t.Center : ItemEffects.GroundAt(fx.Player.position + AimFlat() * fallback);
+        Vector3 d = to - from;
+        float time = Mathf.Clamp(new Vector3(d.x, 0f, d.z).magnitude / 12f, 0.35f, 0.9f);
+        return d / time + Vector3.up * 0.5f * gravity * time;
+    }
+
+    // ---- Botón de Pánico del Oxxo: onda que empuja y daña alrededor ----
     private void Panic(Slot s)
     {
         Vector3 c = fx.Player.position;
+        float dmg = fx.PogoDamage * 0.6f;
         foreach (EnemyTracker e in new List<EnemyTracker>(EnemyTracker.All))
         {
             if (e == null || e.IsDead) continue;
             Vector3 d = e.Center - c; d.y = 0f;
-            if (d.magnitude > 4f) continue;
-            e.Hit(25f);
+            if (d.magnitude > 4.5f) continue;
+            e.Hit(dmg);
             bool boss = e.IsBoss || e.GetComponent<Guardian>() != null || e.GetComponent<DevilBoss>() != null;
             var body = e.GetComponent<Rigidbody>();
             if (!boss && body != null && !body.isKinematic)
@@ -187,101 +214,80 @@ public class ItemActives : MonoBehaviour
             ItemFx.Burst(c + new Vector3(Mathf.Cos(a), 0.4f, Mathf.Sin(a)) * 2.5f, 8, 0.3f, new Color(1f, 0.25f, 0.2f), fx.FxMaterial, 8f, 0.4f, 0.4f);
         }
         Play(panicClip, 1f, 1f);
-        Cool(s, 16f);
+        Cool(s, 14f);
     }
 
-    // ---- Detonador del Tianguis ----
-    public void PlantCharge(EnemyTracker e)
+    // ---- Detonador del Tianguis: bomba en arco que explota al tocar algo ----
+    private void ThrowBomb(Slot s)
     {
-        if (e == null) return;
-        charges.RemoveAll(c => c == null);
-        if (charges.Count >= 3) return;
-        foreach (DetonatorCharge c in charges) if (c.Target == e) return;
-        charges.Add(DetonatorCharge.Plant(e, fx.FxMaterial));
+        var shot = ActiveShot.Create("Bomba", Hand, ArcTo(Hand, 22f, 9f), 22f, 2.5f, fx.FxMaterial);
+        var ball = shot.AddPart(PrimitiveType.Sphere, Vector3.zero, Vector3.one * 0.55f, new Color(0.12f, 0.1f, 0.1f), 0.1f);
+        shot.AddPart(PrimitiveType.Cylinder, Vector3.up * 0.32f, new Vector3(0.08f, 0.12f, 0.08f), new Color(0.6f, 0.5f, 0.3f), 0.2f);
+        shot.Blink = shot.AddLight(new Color(1f, 0.4f, 0.1f), 3f);
+        shot.Spin = new Vector3(0f, 0f, 360f);
+        shot.Exploded = at => fx.Explode(at, 3.5f, fx.PogoDamage * 1.5f, new Color(1f, 0.55f, 0.1f));
+        Play(panicClip, 1.6f, 0.5f);
+        Cool(s, 8f);
     }
 
-    private void Detonate(Slot s)
+    // ---- Matraca del Cobrador: escupitajo cargado que atraviesa y revienta al final ----
+    private void ChargedSpit(Slot s)
     {
-        charges.RemoveAll(c => c == null);
-        if (charges.Count == 0) { Deny(s); return; }
-        var hitCount = new Dictionary<EnemyTracker, int>();
-        float dmg = fx.PogoDamage * 1.2f;
-        foreach (DetonatorCharge c in charges)
-        {
-            Vector3 at = c.transform.position;
-            foreach (EnemyTracker e in new List<EnemyTracker>(EnemyTracker.All))
-            {
-                if (e == null || e.IsDead || (e.Center - at).sqrMagnitude > 9f) continue;
-                hitCount.TryGetValue(e, out int n);
-                e.Hit(n == 0 ? dmg : dmg * 0.35f);   // explosiones extra en el mismo blanco al 35 %
-                hitCount[e] = n + 1;
-            }
-            ItemFx.Burst(at, 40, 1.2f, new Color(1f, 0.6f, 0.1f), fx.FxMaterial, 9f, 0.5f, 0.6f);
-            Destroy(c.gameObject);
-        }
-        charges.Clear();
-        fx.Play(fx.ExplodeClip, 0.9f, 1f);
-        Cool(s, 6f);
+        PlayerStats stats = PlayerStats.Instance;
+        float spit = stats != null ? stats.Get(PogoStat.SpitDamage) : 29f;
+        EnemyTracker target = AimTarget(25f);
+        Vector3 dir = target != null ? target.Center - Hand : (Camera.main != null ? Camera.main.transform.forward : fx.Player.forward);
+        if (target == null) dir.y = Mathf.Max(dir.y, -0.15f);
+        var shot = ActiveShot.Create("EscupitajoCargado", Hand, dir.normalized * 26f, 0f, 1.1f, fx.FxMaterial);
+        shot.AddPart(PrimitiveType.Sphere, Vector3.zero, Vector3.one * 0.9f, new Color(0.55f, 1f, 0.3f), 1.2f);
+        shot.AddLight(new Color(0.5f, 1f, 0.3f), 4f);
+        ItemFx.Trail(shot.gameObject, new Color(0.6f, 1f, 0.3f), 0.8f, 0.3f, fx.FxMaterial);
+        shot.PierceDamage = spit * 1.5f;
+        shot.HitRadius = 1.4f;
+        shot.Exploded = at => fx.Explode(at, 3f, spit * 2.5f, new Color(0.5f, 1f, 0.3f));
+        Play(panicClip, 2f, 0.5f);
+        Cool(s, 9f);
     }
 
-    // ---- Matraca del Cobrador: guarda salvas y las suelta juntas ----
-    private void StartMatraca(Slot s)
-    {
-        if (SpitAttack.Instance == null) { Deny(s); return; }
-        matracaSlot = s;
-        matracaHold = 3f;
-        s.activeTotal = 3f;
-        s.activeLeft = 3f;
-        SpitAttack.Instance.StoredVolleys = 0;
-        SpitAttack.Instance.Holding = true;
-    }
-
-    private void UpdateMatraca(float dt)
-    {
-        if (matracaSlot == null) return;
-        matracaHold -= dt;
-        if (matracaHold <= 0f) ReleaseMatraca();
-    }
-
-    private void ReleaseMatraca()
-    {
-        if (matracaSlot == null || SpitAttack.Instance == null) return;
-        Slot s = matracaSlot;
-        matracaSlot = null;
-        SpitAttack spit = SpitAttack.Instance;
-        int volleys = spit.StoredVolleys;
-        spit.Holding = false;
-        spit.StoredVolleys = 0;
-        s.activeLeft = 0f;
-        Camera cam = Camera.main;
-        if (volleys > 0)
-            spit.Burst(volleys, cam != null ? cam.transform.forward : fx.Player.forward);
-        Cool(s, 10f);
-    }
-
-    // ---- Timbre de la Micro: caída en picada que explota ----
+    // ---- Timbre de la Micro: brinca (si estás en el piso) y cae en picada explotando ----
     private void StartTimbre(Slot s)
     {
-        if (PogoBridge.IsGrounded(fx.Pogo)) { Deny(s); return; }   // solo en el aire
+        var rb = fx.Pogo.GetComponent<Rigidbody>();
+        Vector3 v = rb.linearVelocity;
+        if (PogoBridge.IsGrounded(fx.Pogo))
+        {
+            rb.linearVelocity = new Vector3(v.x * 0.5f, 13f, v.z * 0.5f);
+            timbreSlamAt = Time.time + 0.4f;   // en lo alto del brinco, se deja caer
+        }
+        else
+            Slam();
+        fx.TimbreSlam = true;
+        timbreTime = Time.time;
+        Cool(s, 12f);
+    }
+
+    private void Slam()
+    {
+        timbreSlamAt = -1f;
         var rb = fx.Pogo.GetComponent<Rigidbody>();
         Vector3 v = rb.linearVelocity;
         rb.linearVelocity = new Vector3(v.x * 0.3f, -30f, v.z * 0.3f);
-        fx.TimbreSlam = true;
-        timbreTime = Time.time;
         ItemFx.Burst(fx.Player.position, 20, 0.5f, new Color(1f, 0.9f, 0.4f), fx.FxMaterial, 4f, 0.3f, 0.4f);
-        Cool(s, 14f);
     }
 
     private void UpdateTimbre()
     {
+        if (timbreSlamAt > 0f && Time.time >= timbreSlamAt && fx != null && fx.Pogo != null)
+            Slam();
         if (fx != null && fx.TimbreSlam && Time.time - timbreTime > 3f)
             fx.TimbreSlam = false;   // por si algo raro pasa, que no se quede sin pisotón
     }
 
     public void TimbreLanded(Vector3 at)
     {
+        if (timbreSlamAt > 0f) return;   // todavía va subiendo
         fx.TimbreSlam = false;
-        int hits = fx.Explode(at, 4f, fx.PogoDamage * 2f, new Color(1f, 0.85f, 0.3f));
+        int hits = fx.Explode(at, 4.5f, fx.PogoDamage * 2f, new Color(1f, 0.85f, 0.3f));
         if (hits > 0)
         {
             var rb = fx.Pogo.GetComponent<Rigidbody>();
@@ -290,16 +296,27 @@ public class ItemActives : MonoBehaviour
         }
     }
 
-    // ---- Piñata del Último Rezo ----
-    private void SpawnPinata(Slot s)
+    // ---- Piñata del Último Rezo: la avientas y revienta en dulces al caer ----
+    private void ThrowPinata(Slot s)
     {
-        Vector3 fwd = Camera.main != null ? Camera.main.transform.forward : fx.Player.forward;
-        fwd.y = 0f;
-        Vector3 at = ItemEffects.GroundAt(fx.Player.position + fwd.normalized * 3f) + Vector3.up * 2f;
-        if (pinata != null) Destroy(pinata.gameObject);
-        pinata = Pinata.Spawn(at, fx, pinataHitClip);
-        s.activeTotal = 6f;
-        s.activeLeft = 6f;
+        Vector3 from = Hand + Vector3.up * 0.4f;
+        var shot = ActiveShot.Create("Pinata", from, ArcTo(from, 20f, 7f), 20f, 3f, fx.FxMaterial);
+        Color[] colors = { new Color(1f, 0.2f, 0.5f), new Color(1f, 0.85f, 0.1f), new Color(0.2f, 0.8f, 1f), new Color(0.4f, 1f, 0.3f), new Color(1f, 0.5f, 0.1f) };
+        shot.AddPart(PrimitiveType.Sphere, Vector3.zero, Vector3.one * 0.9f, colors[0], 0.4f);
+        for (int i = 0; i < 6; i++)
+        {
+            Vector3 d = i < 4 ? Quaternion.Euler(0f, i * 90f, 0f) * Vector3.forward : (i == 4 ? Vector3.up : Vector3.down);
+            var spike = shot.AddPart(PrimitiveType.Cylinder, d * 0.6f, new Vector3(0.2f, 0.32f, 0.2f), colors[1 + i % 4], 0.4f);
+            spike.localRotation = Quaternion.FromToRotation(Vector3.up, d);
+        }
+        shot.Spin = new Vector3(90f, 300f, 0f);
+        shot.Exploded = at =>
+        {
+            fx.Explode(at, 5f, fx.PogoDamage * 3f, new Color(1f, 0.4f, 0.8f));
+            for (int i = 0; i < 4; i++)
+                ItemFx.Burst(at + Vector3.up * 0.5f, 30, 0.5f, Color.HSVToRGB(Random.value, 0.8f, 1f), fx.FxMaterial, 10f, 0.3f, 1f);
+            if (pinataHitClip != null) AudioSource.PlayClipAtPoint(pinataHitClip, at, GameSettings.SfxVolume);
+        };
         Cool(s, 18f);
     }
 
@@ -324,12 +341,7 @@ public class ItemActives : MonoBehaviour
             float k = s.cooldownTotal > 0f ? s.cooldown / s.cooldownTotal : 0f;
             s.ring.fillAmount = k;
             s.timer.text = s.cooldown > 0f ? (s.cooldown >= 10f ? Mathf.CeilToInt(s.cooldown).ToString() : s.cooldown.ToString("0.0")) : "";
-            string label = "";
-            if (s.activeLeft > 0f) label = s.activeLeft.ToString("0.0") + " s";
-            if (s.item.id == ItemEffects.Detonador) label = charges.Count + "/3";
-            if (s.item.id == ItemEffects.Matraca && s == matracaSlot && SpitAttack.Instance != null) label = "x" + SpitAttack.Instance.StoredVolleys;
-            if (s.item.id == ItemEffects.Pinata && pinata != null) label = pinata.Hits + "/3";
-            s.label.text = label;
+            s.label.text = "";
             // Destello al estar lista (verde) o al negarse (rojo).
             if (s.flash > 0f) s.flash = Mathf.MoveTowards(s.flash, 0f, dt * 2f);
             else if (s.flash < 0f) s.flash = Mathf.MoveTowards(s.flash, 0f, dt * 3f);
@@ -341,123 +353,89 @@ public class ItemActives : MonoBehaviour
     }
 }
 
-// Carga del Detonador: sigue al demonio marcado; si muere, se queda en el suelo. Dura 8 s.
-public class DetonatorCharge : MonoBehaviour
+// Proyectil de las activas: vuela (con o sin gravedad), explota al chocar con el mapa, con un demonio
+// o al acabarse su tiempo. Si tiene PierceDamage, atraviesa demonios haciéndoles daño una vez a cada uno.
+public class ActiveShot : MonoBehaviour
 {
-    public EnemyTracker Target { get; private set; }
-    private float life = 8f;
+    public System.Action<Vector3> Exploded;
+    public float PierceDamage;
+    public float HitRadius = 0.8f;
+    public Vector3 Spin;
+    public Light Blink;
 
-    public static DetonatorCharge Plant(EnemyTracker e, Material fx)
+    private Vector3 velocity;
+    private float gravity, life;
+    private Material fx;
+    private readonly HashSet<EnemyTracker> pierced = new HashSet<EnemyTracker>();
+
+    public static ActiveShot Create(string name, Vector3 from, Vector3 velocity, float gravity, float life, Material fx)
     {
-        var go = new GameObject("CargaDetonador");
-        var c = go.AddComponent<DetonatorCharge>();
-        c.Target = e;
-        go.transform.position = e.Center;
-        var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        Destroy(body.GetComponent<Collider>());
-        body.transform.SetParent(go.transform, false);
-        body.transform.localScale = new Vector3(0.35f, 0.25f, 0.25f);
-        ItemFx.Paint(body, new Color(0.9f, 0.2f, 0.1f), 1.2f);
-        var l = go.AddComponent<Light>();
-        l.type = LightType.Point; l.color = Color.red; l.range = 2.5f; l.intensity = 2f; l.shadows = LightShadows.None;
-        ItemFx.Burst(go.transform.position, 8, 0.2f, new Color(1f, 0.3f, 0.1f), fx, 2f, 0.2f, 0.3f);
-        return c;
+        var go = new GameObject(name);
+        go.transform.position = from;
+        var s = go.AddComponent<ActiveShot>();
+        s.velocity = velocity; s.gravity = gravity; s.life = life; s.fx = fx;
+        return s;
+    }
+
+    public Transform AddPart(PrimitiveType type, Vector3 pos, Vector3 scale, Color color, float glow)
+    {
+        var p = GameObject.CreatePrimitive(type);
+        Destroy(p.GetComponent<Collider>());
+        p.transform.SetParent(transform, false);
+        p.transform.localPosition = pos;
+        p.transform.localScale = scale;
+        ItemFx.Paint(p, color, glow);
+        return p.transform;
+    }
+
+    public Light AddLight(Color c, float range)
+    {
+        var l = gameObject.AddComponent<Light>();
+        l.type = LightType.Point; l.color = c; l.range = range; l.intensity = 2.5f; l.shadows = LightShadows.None;
+        return l;
     }
 
     private void Update()
     {
         if (TimeStop.Active) return;
-        life -= Time.deltaTime;
-        if (life <= 0f) { Destroy(gameObject); return; }
-        if (Target != null && !Target.IsDead)
-            transform.position = Target.Top + Vector3.up * 0.2f;
-        else if (Target != null)
-        {
-            transform.position = ItemEffects.GroundAt(transform.position) + Vector3.up * 0.15f;
-            Target = null;
-        }
-        var l = GetComponent<Light>();
-        l.intensity = (Mathf.Sin(Time.time * (life < 2f ? 20f : 8f)) > 0f) ? 3f : 0.5f;
-    }
-}
+        float dt = Time.deltaTime;
+        life -= dt;
+        velocity += Vector3.down * gravity * dt;
+        Vector3 next = transform.position + velocity * dt;
 
-// Piñata del Último Rezo: písala tres veces en 6 s para que estalle.
-public class Pinata : MonoBehaviour
-{
-    public int Hits { get; private set; }
-    private float life = 6f;
-    private ItemEffects fx;
-    private AudioClip hitClip;
-    private Collider col;
-    private bool wasGrounded = true;
-    private Transform body;
-
-    public static Pinata Spawn(Vector3 at, ItemEffects fx, AudioClip hitClip)
-    {
-        var go = new GameObject("Pinata");
-        go.transform.position = at;
-        var p = go.AddComponent<Pinata>();
-        p.fx = fx;
-        p.hitClip = hitClip;
-        p.body = new GameObject("Cuerpo").transform;
-        p.body.SetParent(go.transform, false);
-        Color[] colors = { new Color(1f, 0.2f, 0.5f), new Color(1f, 0.85f, 0.1f), new Color(0.2f, 0.8f, 1f), new Color(0.4f, 1f, 0.3f), new Color(1f, 0.5f, 0.1f) };
-        var core = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        Destroy(core.GetComponent<Collider>());
-        core.transform.SetParent(p.body, false);
-        core.transform.localScale = Vector3.one * 1.2f;
-        ItemFx.Paint(core, colors[0], 0.4f);
-        for (int i = 0; i < 6; i++)
+        // El mapa (sin cuerpo físico: así no choca con Pogoman ni con los demonios).
+        if (Physics.Linecast(transform.position, next, out RaycastHit h, ~0, QueryTriggerInteraction.Ignore) && h.rigidbody == null)
         {
-            var spike = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Destroy(spike.GetComponent<Collider>());
-            spike.transform.SetParent(p.body, false);
-            Vector3 dir = i < 4 ? Quaternion.Euler(0f, i * 90f, 0f) * Vector3.forward : (i == 4 ? Vector3.up : Vector3.down);
-            spike.transform.localPosition = dir * 0.8f;
-            spike.transform.localRotation = Quaternion.FromToRotation(Vector3.up, dir);
-            spike.transform.localScale = new Vector3(0.25f, 0.45f, 0.25f);
-            ItemFx.Paint(spike, colors[1 + i % 4], 0.4f);
-        }
-        var box = go.AddComponent<BoxCollider>();   // sin Rigidbody: Pogoman puede rebotar encima
-        box.size = new Vector3(1.8f, 1.4f, 1.8f);
-        p.col = box;
-        ItemFx.Burst(at, 30, 0.6f, new Color(1f, 0.6f, 0.9f), fx.FxMaterial, 4f, 0.3f, 0.6f);
-        return p;
-    }
-
-    private void Update()
-    {
-        if (TimeStop.Active) return;
-        life -= Time.deltaTime;
-        body.localRotation = Quaternion.Euler(Mathf.Sin(Time.time * 3f) * 10f, Time.time * 40f, 0f);
-        if (life <= 0f)
-        {
-            ItemFx.Burst(transform.position, 20, 0.5f, new Color(0.6f, 0.5f, 0.5f), fx.FxMaterial, 3f, 0.3f, 0.6f);   // se rompe sin explotar
-            Destroy(gameObject);
+            Boom(h.point + h.normal * 0.2f);
             return;
         }
+        transform.position = next;
+        transform.Rotate(Spin * dt, Space.Self);
+        if (Blink != null) Blink.intensity = Mathf.Sin(Time.time * 25f) > 0f ? 4f : 0.5f;
+        if (Random.value < 0.5f)
+            ItemFx.Burst(next, 2, 0.05f, new Color(1f, 0.8f, 0.4f), fx, 1.5f, 0.1f, 0.2f);
 
-        // ¿Pogoman acaba de caer encima?
-        PogoPlayer p = fx.Pogo;
-        bool grounded = p != null && PogoBridge.IsGrounded(p);
-        if (grounded && !wasGrounded)
+        float r2 = HitRadius * HitRadius;
+        foreach (EnemyTracker e in new List<EnemyTracker>(EnemyTracker.All))
         {
-            Vector3 feet = p.transform.position;
-            if (Physics.Raycast(feet, Vector3.down, out RaycastHit hit, 2.2f, ~0, QueryTriggerInteraction.Ignore) && hit.collider == col)
+            if (e == null || e.IsDead || !e.Targetable || (e.Center - next).sqrMagnitude > r2) continue;
+            if (PierceDamage > 0f)
             {
-                Hits++;
-                body.localScale = Vector3.one * (1f + Hits * 0.15f);
-                ItemFx.Burst(transform.position + Vector3.up * 0.6f, 25, 0.5f, new Color(1f, 0.8f, 0.2f), fx.FxMaterial, 5f, 0.3f, 0.5f);
-                if (hitClip != null) AudioSource.PlayClipAtPoint(hitClip, transform.position, GameSettings.SfxVolume);
-                if (Hits >= 3)
-                {
-                    fx.Explode(transform.position, 5f, fx.PogoDamage * 3f, new Color(1f, 0.4f, 0.8f));
-                    for (int i = 0; i < 4; i++)
-                        ItemFx.Burst(transform.position, 30, 0.5f, Color.HSVToRGB(Random.value, 0.8f, 1f), fx.FxMaterial, 10f, 0.3f, 1f);
-                    Destroy(gameObject);
-                }
+                if (pierced.Add(e)) e.Hit(PierceDamage);
+            }
+            else
+            {
+                Boom(next);
+                return;
             }
         }
-        wasGrounded = grounded;
+        if (life <= 0f)
+            Boom(next);
+    }
+
+    private void Boom(Vector3 at)
+    {
+        Exploded?.Invoke(at);
+        Destroy(gameObject);
     }
 }

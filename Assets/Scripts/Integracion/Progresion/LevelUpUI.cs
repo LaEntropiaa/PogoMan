@@ -186,8 +186,8 @@ public class LevelUpUI : MonoBehaviour
         }
         c.values.text = Upgrades.FormatValue(d, now) + " → " + Upgrades.FormatValue(d, next);
 
-        Upgrades.Taken.TryGetValue(d, out int n);
-        c.taken.text = n > 0 ? "Ya la tienes x" + n : "¡Nueva!";
+        // Cuánto tienes ahora de esa stat (las mejoras se acumulan sin límite práctico).
+        c.taken.text = "Tienes: " + Upgrades.FormatValue(d, now);
     }
 
     private void Animate()

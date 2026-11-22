@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: tuerca_de_contrabando
   displayName: Tuerca de Contrabando
-  description: Reduce un 20 % el tiempo de recarga del dash.
+  description: "Siempre: el dash recarga 20 % m\xE1s r\xE1pido."
   quote: "Sobra en todas las m\xE1quinas. Falta en todas las garant\xEDas."
   icon: {fileID: 21300000, guid: b3862dcb004914b56a8de30efbfa1b22, type: 3}
   weight: 1

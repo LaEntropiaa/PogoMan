@@ -24,6 +24,12 @@ public static class RunRecords
     private class Data { public List<Entry> entries = new List<Entry>(); }
 
     public const int TableSize = 15;
+    public const int HudSize = 10;
+    private const string NameKey = "PogoRecordName";
+
+    // El nombre se pide una sola vez; después todas tus partidas usan ese.
+    public static string SavedName => PlayerPrefs.GetString(NameKey, "");
+    public static bool NeedsName => string.IsNullOrEmpty(SavedName);
     public const string Champion = "TLBZ|AlanMD";
 
     // Top de la casa.
@@ -34,6 +40,8 @@ public static class RunRecords
         H("Ruben", 18900, 1610, 29, "VICTORIA"),
         H("PablitoGamerxX", 12340, 1322, 25, "VICTORIA"),
         H("JoSeJoSe", 9870, 1104, 22, "MURIÓ"),
+        H("Gedgar", 8120, 1046, 21, "CAYÓ AL LIMBO"),
+        H("Patrichocle", 7340, 1012, 20, "MURIÓ (INJUSTO)"),
         H("ElPogoDeTuPrima", 6666, 960, 19, "VICTORIA"),
         H("DonChuyRebotes", 4200, 845, 17, "MURIÓ"),
         H("xXSatanasXx", 3333, 702, 15, "MURIÓ"),
@@ -60,7 +68,16 @@ public static class RunRecords
             if (File.Exists(FilePath))
             {
                 var d = JsonUtility.FromJson<Data>(File.ReadAllText(FilePath));
-                if (d != null && d.entries != null) return d.entries;
+                if (d != null && d.entries != null && d.entries.Count > 0)
+                {
+                    // Solo cuenta tu mejor partida (antes se guardaban varias con distinto nombre).
+                    d.entries.Sort(Compare);
+                    Entry best = d.entries[0];
+                    if (!NeedsName) best.name = SavedName;
+                    else if (!string.IsNullOrWhiteSpace(best.name) && best.name != "TÚ" && best.name != "SIN NOMBRE")
+                        PlayerPrefs.SetString(NameKey, best.name);   // ya lo había escrito antes: no se vuelve a pedir
+                    return new List<Entry> { best };
+                }
             }
         }
         catch (Exception e) { Debug.LogWarning("Récords: no se pudo leer " + e.Message); }
@@ -85,6 +102,20 @@ public static class RunRecords
         return all;
     }
 
+    // Top para el HUD durante la partida: la casa + tu mejor + la partida actual (en vivo).
+    public static List<Entry> LiveTable(int currentScore, float currentTime, out int currentRank)
+    {
+        var all = new List<Entry>(House);
+        foreach (Entry e in LoadPlayer())
+            if (e.score > currentScore) all.Add(e);
+        var now = new Entry { name = NeedsName ? "TÚ" : SavedName, score = currentScore, time = currentTime, result = "AHORA" };
+        all.Add(now);
+        all.Sort(Compare);
+        currentRank = all.IndexOf(now) + 1;
+        if (all.Count > HudSize) all.RemoveRange(HudSize, all.Count - HudSize);
+        return all;
+    }
+
     public static int PersonalBest
     {
         get
@@ -105,7 +136,7 @@ public static class RunRecords
         int previousBest = PersonalBest;
         last = new Entry
         {
-            name = "TÚ",
+            name = NeedsName ? "TÚ" : SavedName,
             score = s.Kills,
             time = s.RunTime,
             level = s.Level,
@@ -114,14 +145,16 @@ public static class RunRecords
         };
         LastIsPersonalBest = last.score > previousBest;
 
+        // Solo se guarda si superó tu mejor partida.
         var mine = LoadPlayer();
-        mine.Add(last);
-        mine.Sort(Compare);
-        if (mine.Count > TableSize) mine.RemoveRange(TableSize, mine.Count - TableSize);
+        if (mine.Count == 0 || Compare(last, mine[0]) < 0)
+            mine = new List<Entry> { last };
         SavePlayer(mine);
 
         var table = Table();
-        LastRank = table.FindIndex(e => !e.house && e.score == last.score && Mathf.Approximately(e.time, last.time) && e.date == last.date) + 1;
+        LastRank = LastIsPersonalBest || mine[0] == last
+            ? table.FindIndex(e => !e.house) + 1
+            : 0;
         return LastRank;
     }
 
@@ -131,13 +164,11 @@ public static class RunRecords
         if (last == null) return;
         name = string.IsNullOrWhiteSpace(name) ? "SIN NOMBRE" : name.Trim();
         if (name.Length > 18) name = name.Substring(0, 18);
+        PlayerPrefs.SetString(NameKey, name);
+        PlayerPrefs.Save();
         var mine = LoadPlayer();
         foreach (Entry e in mine)
-            if (e.score == last.score && Mathf.Approximately(e.time, last.time) && e.date == last.date && e.name == last.name)
-            {
-                e.name = name;
-                break;
-            }
+            e.name = name;
         last.name = name;
         SavePlayer(mine);
     }

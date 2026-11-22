@@ -84,6 +84,8 @@ public class SoulProjectile : MonoBehaviour
 
     private void Pop(Vector3 at)
     {
+        // También les pega a los demonios (sin recompensa).
+        EnemyTracker.HitArea(at, 1.4f, damage * Guardian.DemonDamageFactor, HitSource.Other, true, 2f, null, true);
         ItemFx.Burst(at, 18, 0.3f, new Color(0.4f, 1f, 0.9f), fx, 3.5f, 0.3f, 0.5f);
         if (hitClip != null)
             AudioSource.PlayClipAtPoint(hitClip, at, 0.7f * GameSettings.SfxVolume);

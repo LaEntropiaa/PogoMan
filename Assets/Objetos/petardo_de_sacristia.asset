@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: petardo_de_sacristia
   displayName: "Petardo de Sacrist\xEDa"
-  description: "Cada cuarta baja directa con el pogo hace estallar al \xFAltimo enemigo por 80 % del da\xF1o del pogo en 3 m."
+  description: "Al matar con el pogo: cada 4 bajas el demonio explota (80 % del da\xF1o del pogo)."
   quote: El padre dijo que tronara fuerte.
   icon: {fileID: 21300000, guid: cc59db1fc24cd70d9853d09be6185748, type: 3}
   weight: 1
   rarity: 1
-  maxCopies: 2
+  maxCopies: 0
   active: 0
   cursed: 0
