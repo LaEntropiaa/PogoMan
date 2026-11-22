@@ -63,6 +63,8 @@ public class RunSystems : MonoBehaviour
             player.gameObject.AddComponent<PogoShockwave>();
         if (player.GetComponent<HeadStandPunish>() == null)
             player.gameObject.AddComponent<HeadStandPunish>();
+        if (player.GetComponent<PogoDeathFx>() == null)
+            player.gameObject.AddComponent<PogoDeathFx>();
         if (player.GetComponent<OutOfBoundsGuard>() == null)
             player.gameObject.AddComponent<OutOfBoundsGuard>();
     }
