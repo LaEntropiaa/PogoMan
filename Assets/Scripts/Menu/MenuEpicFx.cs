@@ -5,27 +5,26 @@ using UnityEngine.UI;
 
 // Efectos del menú principal (se arma desde código, lo agrega MainMenuController):
 //  - Brasas que suben por toda la pantalla, viñeta que respira y rayos de fuego girando detrás del logo.
-//  - El logo flota y "respira"; de vez en cuando cae un relámpago rojo con temblor y trueno.
+//  - El logo flota y "respira", con el lema "Un salto al infierno..." debajo.
 //  - Letras estilizadas sin perder el pixel (PixelTextFx: degradado de fuego + sombra extruida + brillo).
 //  - Tablero TOP 10 a la derecha que entra deslizándose, fila por fila.
 public class MenuEpicFx : MonoBehaviour
 {
     private const int EmberCount = 70;
+    private const float BoardScale = 0.68f;
 
     private MainMenuController menu;
     private MenuIntroSequence intro;
     private RectTransform root, logo, rays, board;
     private CanvasGroup boardGroup, raysGroup;
-    private Image flash, vignette;
+    private Image vignette;
     private Font font;
     private Vector2 logoBase;
     private Vector3 logoScale;
     private bool started;
     private float since;
-    private float nextLightning;
-    private float lightning, shake;
-    private AudioSource audioSource;
-    private AudioClip thunder;
+    private Text tagline;
+    private CanvasGroup taglineGroup;
 
     private struct Ember { public RectTransform rect; public Image img; public Vector2 pos, vel; public float life, max, phase, size; }
     private Ember[] embers;
@@ -42,9 +41,6 @@ public class MenuEpicFx : MonoBehaviour
         Canvas canvas = main != null ? main.GetComponentInParent<Canvas>() : FindAnyObjectByType<Canvas>();
         root = (RectTransform)canvas.rootCanvas.transform;
         logo = intro != null ? PogoBridge.Get<RectTransform>(intro, "logo") : null;
-        audioSource = gameObject.AddComponent<AudioSource>();
-        audioSource.playOnAwake = false;
-        audioSource.spatialBlend = 0f;
 
         // Letras: botones con fuego y títulos de los paneles.
         foreach (MenuButtonFx b in FindObjectsByType<MenuButtonFx>(FindObjectsInactive.Include))
@@ -74,7 +70,7 @@ public class MenuEpicFx : MonoBehaviour
 
         BuildBackgroundFx();
         BuildBoard();
-        nextLightning = 6f;
+        BuildTagline();
     }
 
     // ------------------------------------------------------------------ sprites hechos en código
@@ -182,11 +178,6 @@ public class MenuEpicFx : MonoBehaviour
             raysGroup.alpha = 0f;
         }
 
-        flash = Img("Relampago", root, White(), new Color(1f, 0.35f, 0.25f, 0f));
-        Stretch(flash);
-        flash.transform.SetAsLastSibling();
-
-        thunder = MakeThunder();
     }
 
     private Vector2 Size => root.rect.size;
@@ -203,26 +194,46 @@ public class MenuEpicFx : MonoBehaviour
         e.rect.sizeDelta = Vector2.one * e.size;
     }
 
-    private static AudioClip MakeThunder()
+    // ------------------------------------------------------------------ lema bajo el logo
+    private const string TaglineText = "UN SALTO AL INFIERNO...";
+
+    private void BuildTagline()
     {
-        const int rate = 22050;
-        int n = rate * 2;
-        var d = new float[n];
-        var rng = new System.Random(3);
-        float lp = 0f, lp2 = 0f;
-        for (int i = 0; i < n; i++)
-        {
-            float t = i / (float)rate;
-            float crack = t < 0.08f ? 1f : 0f;
-            float env = Mathf.Exp(-t * 2.2f) * (0.6f + 0.4f * Mathf.PerlinNoise(t * 9f, 0f)) + crack * 0.6f;
-            float w = (float)rng.NextDouble() * 2f - 1f;
-            lp += (w - lp) * 0.06f;
-            lp2 += (lp - lp2) * 0.1f;
-            d[i] = Mathf.Clamp((lp2 * 6f + w * crack * 0.25f) * env, -1f, 1f);
-        }
-        AudioClip c = AudioClip.Create("TruenoMenu", n, 1, rate, false);
-        c.SetData(d, 0);
-        return c;
+        if (logo == null || font == null) return;
+        var go = new GameObject("Lema", typeof(RectTransform));
+        go.transform.SetParent(logo, false);
+        var r = (RectTransform)go.transform;
+        r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
+        r.pivot = new Vector2(0.5f, 1f);
+        r.anchoredPosition = new Vector2(0f, 6f);
+        r.sizeDelta = new Vector2(1600f, 110f);
+        tagline = go.AddComponent<Text>();
+        tagline.font = font;
+        tagline.fontSize = 72;
+        tagline.alignment = TextAnchor.UpperCenter;
+        tagline.horizontalOverflow = HorizontalWrapMode.Overflow;
+        tagline.color = Color.white;
+        tagline.raycastTarget = false;
+        tagline.text = "";
+        var fx = go.AddComponent<PixelTextFx>();
+        fx.top = new Color(1f, 0.92f, 0.55f);
+        fx.bottom = new Color(0.95f, 0.25f, 0.08f);
+        fx.depth = 4;
+        fx.step = 3f;
+        fx.extrudeFront = new Color(0.4f, 0.04f, 0.02f, 1f);
+        fx.shineEvery = 5f;
+        taglineGroup = go.AddComponent<CanvasGroup>();
+        taglineGroup.alpha = 0f;
+    }
+
+    // Se escribe letra por letra cuando termina la entrada y luego tiembla como brasa.
+    private void UpdateTagline(float time)
+    {
+        if (tagline == null) return;
+        int n = Mathf.Clamp(Mathf.FloorToInt((since - 0.2f) * 16f), 0, TaglineText.Length);
+        if (tagline.text.Length != n) tagline.text = TaglineText.Substring(0, n);
+        taglineGroup.alpha = Mathf.Clamp01(since * 3f) * (0.88f + 0.12f * Mathf.Sin(time * 3.3f));
+        tagline.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(time * 1.1f + 1f) * 0.6f);
     }
 
     // ------------------------------------------------------------------ tablero TOP 10
@@ -234,6 +245,7 @@ public class MenuEpicFx : MonoBehaviour
         board.pivot = new Vector2(1f, 0.5f);
         board.sizeDelta = new Vector2(520f, 610f);
         board.anchoredPosition = new Vector2(900f, -110f);
+        board.localScale = Vector3.one * BoardScale;
         boardGroup = board.gameObject.AddComponent<CanvasGroup>();
         boardGroup.alpha = 0f;
         boardGroup.interactable = false;
@@ -362,33 +374,21 @@ public class MenuEpicFx : MonoBehaviour
         }
         since += dt;
 
-        // Relámpago de vez en cuando.
-        nextLightning -= dt;
-        if (nextLightning <= 0f)
-        {
-            nextLightning = Random.Range(9f, 16f);
-            lightning = 1f;
-            shake = 1f;
-            if (thunder != null) audioSource.PlayOneShot(thunder, 0.55f * GameSettings.SfxVolume);
-        }
-        lightning = Mathf.MoveTowards(lightning, 0f, dt * 2.2f);
-        shake = Mathf.MoveTowards(shake, 0f, dt * 2.5f);
-        float flicker = lightning > 0.55f ? (Mathf.Repeat(time * 18f, 1f) < 0.5f ? 1f : 0.3f) : lightning;   // doble destello
-        flash.color = new Color(1f, 0.55f, 0.45f, 0.38f * flicker * lightning);
-        vignette.color = new Color(0.14f + lightning * 0.2f, 0f, 0f, 0.62f + Mathf.Sin(time * 1.3f) * 0.08f);
+        vignette.color = new Color(0.14f, 0f, 0f, 0.62f + Mathf.Sin(time * 1.3f) * 0.08f);
 
-        Vector2 jolt = shake > 0f ? Random.insideUnitCircle * 10f * shake * shake : Vector2.zero;
+
+        UpdateTagline(time);
 
         // Logo vivo.
         if (logo != null)
         {
-            logo.anchoredPosition = logoBase + new Vector2(0f, Mathf.Sin(time * 1.25f) * 9f) + jolt;
-            logo.localScale = logoScale * (1f + Mathf.Sin(time * 2.1f) * 0.015f + lightning * 0.04f);
+            logo.anchoredPosition = logoBase + new Vector2(0f, Mathf.Sin(time * 1.25f) * 9f);
+            logo.localScale = logoScale * (1f + Mathf.Sin(time * 2.1f) * 0.015f);
             logo.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(time * 0.8f) * 1.2f);
         }
         if (rays != null)
         {
-            raysGroup.alpha = Mathf.MoveTowards(raysGroup.alpha, 0.16f + Mathf.Sin(time * 1.7f) * 0.05f + lightning * 0.25f, dt * 0.8f);
+            raysGroup.alpha = Mathf.MoveTowards(raysGroup.alpha, 0.16f + Mathf.Sin(time * 1.7f) * 0.05f, dt * 0.8f);
             rays.anchoredPosition = logo.anchoredPosition;
             rays.localRotation = Quaternion.Euler(0f, 0f, time * 9f);
             rays.localScale = Vector3.one * (1f + Mathf.Sin(time * 0.9f) * 0.05f);
@@ -408,7 +408,7 @@ public class MenuEpicFx : MonoBehaviour
         // Tablero: entra deslizándose después del logo, se esconde con los paneles abiertos.
         bool panelOpen = PogoBridge.Get<MenuPanel>(menu, "openPanel") != null;
         float k = Mathf.Clamp01((since - 0.3f) / 0.7f);
-        board.anchoredPosition = new Vector2(Mathf.Lerp(900f, -60f, EaseOutBack(k)), -110f + Mathf.Sin(time * 0.9f) * 6f) + jolt * 0.5f;
+        board.anchoredPosition = new Vector2(Mathf.Lerp(900f, -50f, EaseOutBack(k)), -150f + Mathf.Sin(time * 0.9f) * 5f);
         boardGroup.alpha = Mathf.MoveTowards(boardGroup.alpha, panelOpen ? 0f : Mathf.Clamp01(k * 2f), dt * 5f);
         for (int i = 0; i < rows.Count; i++)
         {
