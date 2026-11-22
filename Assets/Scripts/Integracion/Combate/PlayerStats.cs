@@ -37,7 +37,7 @@ public class PlayerStats : MonoBehaviour
     public static PlayerStats Instance { get; private set; }
 
     [Header("Escupitajo (base)")]
-    [SerializeField] private float spitDamage = 15f;
+    [SerializeField] private float spitDamage = 29f;
     [SerializeField] private float fireRate = 1f;
     [SerializeField, Range(0f, 1f)] private float critChance = 0.1f;
     [SerializeField] private float critMultiplier = 2f;

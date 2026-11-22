@@ -6,6 +6,25 @@ using UnityEngine;
 // o desde la terminal con ~/bin/pogoman-windows (lo hace todo y deja un .zip).
 public static class PogoBuild
 {
+    // Compila para Linux (para jugarlo en la compu de Alan). Desde la terminal: pogoman-linux
+    [MenuItem("Pogo Man/Compilar para Linux")]
+    public static void Linux()
+    {
+        string dir = System.Environment.GetEnvironmentVariable("POGO_BUILD");
+        if (string.IsNullOrEmpty(dir))
+            dir = System.IO.Path.GetFullPath("Builds/Linux");
+        var scenes = EditorBuildSettings.scenes.Where(s => s.enabled && !s.path.EndsWith("SampleScene.unity")).Select(s => s.path).ToArray();
+        var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+        {
+            scenes = scenes,
+            locationPathName = System.IO.Path.Combine(dir, "PogoMan"),
+            target = BuildTarget.StandaloneLinux64,
+        });
+        Debug.Log("POGO_BUILD_RESULT " + report.summary.result + " " + dir);
+        if (Application.isBatchMode)
+            EditorApplication.Exit(report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded ? 0 : 1);
+    }
+
     [MenuItem("Pogo Man/Compilar para Windows")]
     public static void Windows()
     {
@@ -18,7 +37,7 @@ public static class PogoBuild
         var options = new BuildPlayerOptions
         {
             scenes = scenes,
-            locationPathName = System.IO.Path.Combine(dir, "PogoMan.exe"),
+            locationPathName = System.IO.Path.Combine(dir, (System.Environment.GetEnvironmentVariable("POGO_NAME") ?? "PogoMan") + ".exe"),
             target = BuildTarget.StandaloneWindows64,
             options = BuildOptions.None,
         };

@@ -70,6 +70,13 @@ public static class GameSettings
         ApplyDisplay();
     }
 
+    // Sensibilidad de la cámara con el mouse (multiplica la del juego): 0.2x a 3x.
+    public static float MouseSensitivity
+    {
+        get => Mathf.Clamp(PlayerPrefs.GetFloat("sensibilidad", 1f), 0.2f, 3f);
+        set => PlayerPrefs.SetFloat("sensibilidad", Mathf.Clamp(Mathf.Round(value * 10f) / 10f, 0.2f, 3f));
+    }
+
     public static void Save() => PlayerPrefs.Save();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]

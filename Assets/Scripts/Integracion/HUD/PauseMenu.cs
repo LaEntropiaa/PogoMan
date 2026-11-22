@@ -310,7 +310,8 @@ public class PauseMenu : MonoBehaviour
         AddOption(page, 1, "MÚSICA", () => Pct(GameSettings.MusicVolume), d => GameSettings.MusicVolume = Mathf.Clamp01(GameSettings.MusicVolume + d * 0.1f));
         AddOption(page, 2, "EFECTOS", () => Pct(GameSettings.SfxVolume), d => GameSettings.SfxVolume = Mathf.Clamp01(GameSettings.SfxVolume + d * 0.1f));
         AddOption(page, 3, "FILTRO PIXEL", () => GameSettings.PixelLevelNames[GameSettings.PixelSize - 1], d => GameSettings.PixelSize = Mathf.Clamp(GameSettings.PixelSize + d, 1, GameSettings.PixelLevelNames.Length));
-        AddOption(page, 4, "PANTALLA COMPLETA", () => Screen.fullScreen ? "SÍ" : "NO", d =>
+        AddOption(page, 4, "SENSIBILIDAD", () => GameSettings.MouseSensitivity.ToString("0.0") + "x", d => GameSettings.MouseSensitivity += d * 0.1f);
+        AddOption(page, 5, "PANTALLA COMPLETA", () => Screen.fullScreen ? "SÍ" : "NO", d =>
         {
             Vector2Int res = GameSettings.Resolution;
             GameSettings.SetDisplay(!Screen.fullScreen, res.x, res.y);
@@ -323,7 +324,7 @@ public class PauseMenu : MonoBehaviour
 
     private void AddOption(RectTransform page, int row, string label, System.Func<string> get, System.Action<int> change)
     {
-        float y = -20f - row * 78f;
+        float y = -10f - row * 72f;
         T(UiKit.Rect(label, page, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(1f, 1f), new Vector2(-60f, y), new Vector2(520f, 56f)), 30, Soft, TextAnchor.MiddleRight, label);
         Arrow(page, "<", new Vector2(10f, y), () => { change(-1); GameSettings.Save(); });
         Text value = T(UiKit.Rect("Valor", page, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, 1f), new Vector2(80f, y), new Vector2(260f, 56f)), 30, Gold, TextAnchor.MiddleCenter);

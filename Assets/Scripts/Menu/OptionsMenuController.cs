@@ -19,6 +19,7 @@ public class OptionsMenuController : MonoBehaviour
     [SerializeField] private OptionCycler displayModeOption;
     [SerializeField] private OptionCycler resolutionOption;
     [SerializeField] private OptionCycler pixelOption;
+    [SerializeField] private OptionCycler sensitivityOption;
 
     private readonly List<Vector2Int> resolutions = new List<Vector2Int>();
     private int resolutionIndex;
@@ -51,6 +52,13 @@ public class OptionsMenuController : MonoBehaviour
             {
                 int count = GameSettings.PixelLevelNames.Length;
                 GameSettings.PixelSize = (GameSettings.PixelSize - 1 + dir + count) % count + 1;
+                RefreshDisplayTexts();
+            };
+
+        if (sensitivityOption != null)
+            sensitivityOption.Changed += dir =>
+            {
+                GameSettings.MouseSensitivity += dir * 0.1f;
                 RefreshDisplayTexts();
             };
 
@@ -123,6 +131,9 @@ public class OptionsMenuController : MonoBehaviour
 
         if (pixelOption != null)
             pixelOption.SetText(GameSettings.PixelLevelNames[GameSettings.PixelSize - 1]);
+
+        if (sensitivityOption != null)
+            sensitivityOption.SetText(GameSettings.MouseSensitivity.ToString("0.0") + "x");
 
         if (resolutionOption != null && resolutions.Count > 0)
         {

@@ -103,6 +103,7 @@ public class MenuButtonFx : MonoBehaviour,
     private void RefreshVisuals()
     {
         bool interactable = selectable == null || selectable.IsInteractable();
+        lastInteractable = interactable;   // así Update detecta cuando vuelve a estar activo
         bool lit = selected && interactable;
 
         if (background != null)

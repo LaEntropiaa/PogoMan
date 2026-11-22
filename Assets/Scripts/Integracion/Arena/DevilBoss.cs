@@ -51,7 +51,11 @@ public class DevilBoss : Enemy
 
     [Header("Golpe del pogo")]
     [Tooltip("Qué tan cerca (horizontal) tienes que caer para que el pisotón le pegue.")]
-    [SerializeField] private float stompRadius = 2.8f;
+    [SerializeField] private float stompRadius = 3.4f;
+    [Tooltip("Qué tanto baja el cuerpo al quedar hincado (fracción de su altura).")]
+    [SerializeField] private float kneelDrop = 0.27f;
+    [Tooltip("Altura del collider hincado (fracción de la normal).")]
+    [SerializeField] private float kneelColliderHeight = 0.55f;
 
     // ---- Estado público (HUD) ----
     public Phase State { get; private set; } = Phase.Intro;
@@ -181,11 +185,13 @@ public class DevilBoss : Enemy
 
             case Phase.Vulnerable:
                 vulnerableTimer -= dt;
-                // Mareado: se tambalea en su lugar.
-                model.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(stateTimer * 5f) * 4f);
+                // Hincado y mareado: baja el cuerpo y el collider para que el pogo lo alcance.
+                SetKneel(Mathf.Clamp01(stateTimer / 0.35f) * Mathf.Clamp01(vulnerableTimer / 0.3f));
+                model.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(stateTimer * 5f) * 3f);
                 CheckStomp();
                 if (vulnerableTimer <= 0f)
                 {
+                    SetKneel(0f);
                     model.localRotation = Quaternion.identity;
                     Wave++;
                     StartRise();
@@ -194,6 +200,20 @@ public class DevilBoss : Enemy
         }
 
         wasGrounded = PogoBridge.IsGrounded(pogo);
+    }
+
+    private CapsuleCollider capsule;
+    private float standHeight = -1f;
+
+    private void SetKneel(float k)
+    {
+        if (capsule == null) capsule = GetComponent<CapsuleCollider>();
+        if (capsule == null) return;
+        if (standHeight < 0f) standHeight = capsule.height;
+        float e = k * k * (3f - 2f * k);
+        model.localPosition = Vector3.down * standHeight * kneelDrop * e;
+        capsule.height = Mathf.Lerp(standHeight, standHeight * kneelColliderHeight, e);
+        capsule.center = Vector3.up * capsule.height * 0.5f;
     }
 
     // ---- Movimiento ----

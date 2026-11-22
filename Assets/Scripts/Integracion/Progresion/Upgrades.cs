@@ -34,7 +34,7 @@ public static class Upgrades
     public static readonly List<UpgradeDef> All = new List<UpgradeDef>
     {
         // ---- Escupitajo ----
-        new UpgradeDef { Name = "Saliva de Chile Habanero", Stat = "Daño", Target = PogoStat.SpitDamage, Amount = 3f },
+        new UpgradeDef { Name = "Saliva de Chile Habanero", Stat = "Daño", Target = PogoStat.SpitDamage, Amount = 5f },
         new UpgradeDef { Name = "Metralleta de Gargajos", Stat = "Disparos por segundo", Target = PogoStat.FireRate, Percent = true, Amount = 0.12f, Format = "0.00" },
         new UpgradeDef { Name = "Ojo de Halcón Bizco", Stat = "Prob. de crítico", Target = PogoStat.CritChance, Amount = 0.04f, Cap = 1f, Format = "0", Display = 100f, Unit = "%" },
         new UpgradeDef { Name = "Escupitajo Bendito", Stat = "Daño crítico", Target = PogoStat.CritMultiplier, Amount = 0.25f, Format = "0.00", Unit = "x" },
