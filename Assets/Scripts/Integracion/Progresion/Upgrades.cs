@@ -47,11 +47,11 @@ public static class Upgrades
         // ---- Pogo (golpe directo) ----
         new UpgradeDef { Name = "Pogo de Fierro Colado", Stat = "Daño del pogo", Target = PogoStat.PogoDamage, Percent = true, Amount = 0.12f, Format = "0", Display = 100f, Unit = "%" },
         new UpgradeDef { Name = "Resorte Panzón", Stat = "Radio del pogo", Target = PogoStat.PogoRadius, Amount = 0.25f, Format = "0.00", Unit = " m" },
-        // ---- Onda del pogo (al caer de un salto con espacio) ----
+        // ---- Onda del pogo (automática, cada pocos segundos) ----
         new UpgradeDef { Name = "Retumbe de Banda Sinaloense", Stat = "Daño de la onda", Target = PogoStat.WaveDamage, Amount = 7f, Format = "0" },
         new UpgradeDef { Name = "Temblor del 85", Stat = "Tamaño de la onda", Target = PogoStat.WaveSize, Percent = true, Amount = 0.18f, Format = "0", Display = 100f, Unit = "%" },
         new UpgradeDef { Name = "Sismo Express", Stat = "Cadencia de la onda", Target = PogoStat.WaveRate, Percent = true, Amount = 0.2f, Format = "0", Display = 100f, Unit = "%" },
-        new UpgradeDef { Name = "Réplicas del Chamuco", Stat = "Ondas por caída", Target = PogoStat.WaveCount, Amount = 1f, WholeNumber = true, Cap = 12f, Format = "0" },
+        new UpgradeDef { Name = "Réplicas del Chamuco", Stat = "Ondas seguidas", Target = PogoStat.WaveCount, Amount = 1f, WholeNumber = true, Cap = 12f, Format = "0" },
         // ---- Movimiento ----
         new UpgradeDef { Name = "Resorte de Colchón", Stat = "Saltos en el aire", Target = PogoStat.AirJumps, Amount = 1f, WholeNumber = true, Cap = 10f, Format = "0" },
         new UpgradeDef { Name = "Tenis Piratas", Stat = "Velocidad", Target = PogoStat.MoveSpeed, Percent = true, Amount = 0.07f, Format = "0", Display = 100f, Unit = "%" },

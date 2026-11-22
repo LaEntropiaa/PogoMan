@@ -220,7 +220,7 @@ public class PauseMenu : MonoBehaviour
             sb.AppendLine(Row("DAÑO ONDA", s.GetBase(PogoStat.WaveDamage), s.Get(PogoStat.WaveDamage), "0"));
             sb.AppendLine(Row("RADIO ONDA", PogoShockwave.BaseRadius, PogoShockwave.Radius, "0.0", " m"));
             sb.AppendLine(Row("RECARGA ONDA", s.WaveCooldownBase, PogoShockwave.Cooldown, "0.0#", " s", true));
-            sb.AppendLine(Row("ONDAS POR CAÍDA", 1f, PogoShockwave.Count, "0"));
+            sb.AppendLine(Row("ONDAS SEGUIDAS", 1f, PogoShockwave.Count, "0"));
             sb.AppendLine(Row("VELOCIDAD", 100f, s.Get(PogoStat.MoveSpeed) * 100f, "0", "%"));
             sb.AppendLine(Row("CONTROL AÉREO", 100f, (PogoJump.Instance != null ? PogoJump.Instance.AirControlMultiplier : 1f) * 100f, "0", "%"));
             sb.AppendLine(Row("SALTO CON ESPACIO", 100f, (PogoJump.Instance != null ? PogoJump.Instance.ChargedJumpHeightMultiplier : 1f) * 100f, "0", "%"));

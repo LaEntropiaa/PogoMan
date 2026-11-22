@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Tercer ataque de Pogoman: la ONDA del pogo.
-// Al caer de un salto con espacio (o desde el slide / salto en el aire) sale un aro por el suelo
-// que daña a los demonios que alcanza. No sale en cada caída: tiene recarga (2 s de base).
+// Tercer ataque de Pogoman: la ONDA del pogo. Es AUTOMÁTICA: cada vez que se cumple su recarga
+// (2 s de base) sale un aro por el suelo debajo de Pogoman, esté saltando, en el aire o deslizándose,
+// y daña a los demonios que alcanza.
 // Lo mejoran:
 //   - Daño de la onda, tamaño, cadencia y ondas por caída (mejoras de nivel).
 //   - También el escupitajo: cadencia (recarga), proyectiles (ondas extra) y tamaño (radio).
@@ -19,8 +19,7 @@ public class PogoShockwave : MonoBehaviour
 
     private PogoPlayer player;
     private Collider body;
-    private bool wasGrounded = true;
-    private float cooldownLeft;
+    private float cooldownLeft = 1f;
     private AudioSource audioSource;
     private static AudioClip thump;
 
@@ -76,17 +75,33 @@ public class PogoShockwave : MonoBehaviour
         if (player == null || PogoBridge.IsDead(player))
             return;
 
+        if (PlayerStats.Instance != null && PlayerStats.Instance.RunEnded)
+            return;
         cooldownLeft -= Time.fixedDeltaTime;
-        bool grounded = PogoBridge.IsGrounded(player);
-        // PogoJump todavía no procesa el rebote nuevo: LastJumpWasBoosted es del salto que acaba de caer.
-        if (grounded && !wasGrounded && cooldownLeft <= 0f && PogoJump.Instance != null && PogoJump.Instance.LastJumpWasBoosted)
-            Fire(Feet);
-        wasGrounded = grounded;
+        if (cooldownLeft <= 0f)
+            Fire(GroundBelow());
     }
 
     private Vector3 Feet => body != null
         ? new Vector3(transform.position.x, body.bounds.min.y + 0.08f, transform.position.z)
         : transform.position;
+
+    private readonly RaycastHit[] hits = new RaycastHit[8];
+
+    // El suelo debajo de Pogoman (aunque vaya en el aire); si no hay nada cerca, sus pies.
+    private Vector3 GroundBelow()
+    {
+        Vector3 feet = Feet;
+        int n = Physics.RaycastNonAlloc(feet + Vector3.up * 0.3f, Vector3.down, hits, 25f, ~0, QueryTriggerInteraction.Ignore);
+        float best = float.MaxValue;
+        Vector3 at = feet;
+        for (int i = 0; i < n; i++)
+        {
+            if (hits[i].rigidbody != null) continue;   // demonios, Pogoman
+            if (hits[i].distance < best) { best = hits[i].distance; at = hits[i].point + Vector3.up * 0.08f; }
+        }
+        return at;
+    }
 
     public void Fire(Vector3 at)
     {
@@ -99,8 +114,8 @@ public class PogoShockwave : MonoBehaviour
     {
         for (int i = 0; i < count; i++)
         {
-            // Cada réplica sale un poco más grande (y de donde va Pogoman, para que se sienta que la empuja él).
-            Vector3 from = i == 0 ? at : new Vector3(transform.position.x, at.y, transform.position.z);
+            // Cada réplica sale un poco más grande, desde donde va Pogoman en ese momento.
+            Vector3 from = i == 0 ? at : GroundBelow();
             ShockRing.Spawn(from, radius * (1f + 0.12f * i), damage, ExpandTime);
             if (thump != null)
             {
