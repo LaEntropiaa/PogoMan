@@ -7177,7 +7177,8 @@ MonoBehaviour:
   fireballMaterial: {fileID: 2100000, guid: 3f0ab88d94caf669fb8bbc684acab7af, type: 2}
   fxMaterial: {fileID: 2100000, guid: cb297985e50f45082b580c6a46fa44eb, type: 2}
   font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
-  arenaMusic: {fileID: 8300000, guid: 21e9eec645c1a814a8a5bb33e5d9d26a, type: 3}
+  arenaMusic: {fileID: 8300000, guid: f4943ad1e8874f24b1101996479d7ca3, type: 3}
+  furyMusic: {fileID: 8300000, guid: 80c1a6ab55e44b738793d005e810bb78, type: 3}
   laughClip: {fileID: 8300000, guid: 4eed3cff923ab8591b0eb67904a4e277, type: 3}
   castClip: {fileID: 8300000, guid: e8c525853713fb8eba0fca3d246f83eb, type: 3}
   explodeClip: {fileID: 8300000, guid: 462a1be1b589f0471ae45524754e7713, type: 3}
