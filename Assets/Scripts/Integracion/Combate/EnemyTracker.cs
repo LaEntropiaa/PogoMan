@@ -61,8 +61,9 @@ public class EnemyTracker : MonoBehaviour
     public bool IsDead => Enemy == null || PogoBridge.IsDead(Enemy);
     public float LastDamageTime { get; private set; } = -100f;
 
-    public Vector3 Center => mainCollider != null ? mainCollider.bounds.center : transform.position;
-    public Vector3 Top => mainCollider != null
+    // Un collider apagado (el Ojo Alado al morir) da bounds vacíos en el origen.
+    public Vector3 Center => mainCollider != null && mainCollider.enabled ? mainCollider.bounds.center : transform.position + Vector3.up * 0.7f;
+    public Vector3 Top => mainCollider != null && mainCollider.enabled
         ? new Vector3(Center.x, mainCollider.bounds.max.y, Center.z)
         : transform.position + Vector3.up * 2f;
 

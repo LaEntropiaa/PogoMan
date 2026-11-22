@@ -97,8 +97,9 @@ public class SpitProjectile : MonoBehaviour
         if (distance < 0.0001f)
             return false;
 
+        // Con triggers: el Ojo Alado solo tiene un trigger. Los demás triggers (monedas, cofres...) se ignoran abajo.
         RaycastHit[] hits = Physics.SphereCastAll(transform.position, radius, step / distance, distance,
-            ~0, QueryTriggerInteraction.Ignore);
+            ~0, QueryTriggerInteraction.Collide);
 
         float best = float.MaxValue;
         bool found = false;
@@ -106,6 +107,8 @@ public class SpitProjectile : MonoBehaviour
         foreach (RaycastHit h in hits)
         {
             if (owner != null && h.collider.transform.IsChildOf(owner))
+                continue;
+            if (h.collider.isTrigger && h.collider.GetComponentInParent<OjoEnemy>() == null)
                 continue;
 
             if (h.distance < best)

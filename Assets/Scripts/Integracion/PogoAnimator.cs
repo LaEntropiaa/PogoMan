@@ -22,6 +22,8 @@ public class PogoAnimator : MonoBehaviour
     [SerializeField] private Material dustMaterial;
 
     [Header("Aplastar y estirar")]
+    [Tooltip("Desactivado con el PogoMan animado: sus clips ya comprimen el resorte y la escala nunca debe estirar el cuerpo.")]
+    [SerializeField] private bool deformBody = true;
     [SerializeField] private float squashOnBounce = 0.3f;
     [SerializeField] private float stretchPerSpeed = 0.018f;
     [SerializeField] private float maxStretch = 0.2f;
@@ -172,11 +174,14 @@ public class PogoAnimator : MonoBehaviour
         scaleVelocity += accel * dt;
         scaleY = Mathf.Clamp(scaleY + scaleVelocity * dt, 0.55f, 1.4f);
 
-        float side = 1f / Mathf.Sqrt(scaleY);
-        visualRoot.localScale = Vector3.Scale(rootBaseScale, new Vector3(side, scaleY, side));
+        if (deformBody)
+        {
+            float side = 1f / Mathf.Sqrt(scaleY);
+            visualRoot.localScale = Vector3.Scale(rootBaseScale, new Vector3(side, scaleY, side));
 
-        if (body != null)
-            body.localPosition = bodyBasePosition + Vector3.up * (scaleY - 1f) * bodySink;
+            if (body != null)
+                body.localPosition = bodyBasePosition + Vector3.up * (scaleY - 1f) * bodySink;
+        }
 
         // ---- Daño ----
         float health = PogoBridge.Health(player);
@@ -189,7 +194,8 @@ public class PogoAnimator : MonoBehaviour
 
         // Temblor por daño o mientras se carga el salto agachado.
         float charge = jump != null ? jump.CrouchCharge : 0f;
-        float shakeAmount = hurtShake * hurt + 0.025f * charge;
+        // Con el modelo animado el golpe lo hace el clip PM_Golpe: sin temblor encima.
+        float shakeAmount = deformBody ? hurtShake * hurt + 0.025f * charge : 0f;
         Vector3 shake = shakeAmount > 0f ? Random.insideUnitSphere * shakeAmount : Vector3.zero;
         visualRoot.localPosition = rootBasePosition + shake;
         visualRoot.localRotation = rootBaseRotation;

@@ -14,6 +14,15 @@ public class EnemyDirector : MonoBehaviour
     [SerializeField] private Enemy enemyPrefab;
     [Tooltip("Otros modelos de demonio: cada aparición elige uno al azar (mismas stats).")]
     [SerializeField] private Enemy[] otherPrefabs;
+
+    [Header("Voladores (Ojo Alado)")]
+    [SerializeField] private Enemy[] flyingPrefabs;
+    [Tooltip("Probabilidad de que una aparición sea un volador.")]
+    [SerializeField, Range(0f, 1f)] private float flyerChance = 0.12f;
+    [SerializeField] private float flyerStartMinute = 1f;
+    [SerializeField] private int maxFlyers = 20;
+    [Tooltip("Alturas sobre el suelo que se prueban para que quepan cuerpo y alas.")]
+    [SerializeField] private float[] flyerHeights = { 2.4f, 3.2f, 4f, 1.8f };
     [SerializeField] private int maxEnemies = 500;
     [Tooltip("Apaga los EnemySpawner viejos de la escena.")]
     [SerializeField] private bool disableOldSpawners = true;
@@ -220,7 +229,7 @@ public class EnemyDirector : MonoBehaviour
         if (!FindSpawnPoint(HordeActive ? hordeMinSpawnDistance : minSpawnDistance, maxSpawnDistance, out Vector3 ground))
             return false;
 
-        SpawnEnemy(PickPrefab(), ground);
+        SpawnEnemy(PickSpawnPrefab(), ground);
         return true;
     }
 
@@ -234,7 +243,9 @@ public class EnemyDirector : MonoBehaviour
         look.y = 0f;
         Quaternion rotation = look.sqrMagnitude > 0.01f ? Quaternion.LookRotation(look) : Quaternion.identity;
 
-        Enemy enemy = Instantiate(prefab, ground + Vector3.up * 1f, rotation);
+        bool flyer = prefab.GetComponent<OjoEnemy>() != null;
+        Vector3 position = flyer ? FlyerSpot(ground) : ground + Vector3.up * 1f;
+        Enemy enemy = Instantiate(prefab, position, rotation);
         enemy.SetTarget(player);
 
         // Más vida y velocidad con el tiempo.
@@ -247,6 +258,12 @@ public class EnemyDirector : MonoBehaviour
         PogoBridge.SetFloat(enemy, "moveSpeed", PogoBridge.GetFloat(enemy, "moveSpeed", 3f) * speed);
 
         float damageMult = 1f + damagePerMinute * minutes;
+        if (flyer)
+        {
+            // El ojo vuela solo (OjoAlado): sin ZombieMotor ni salir de la tierra.
+            PogoBridge.SetFloat(enemy, "damage", PogoBridge.GetFloat(enemy, "damage", 8f) * damageMult);
+            return enemy;
+        }
         foreach (EnemyContactDamage hit in enemy.GetComponentsInChildren<EnemyContactDamage>())
             PogoBridge.SetFloat(hit, "damage", PogoBridge.GetFloat(hit, "damage", 10f) * damageMult);
 
@@ -256,6 +273,30 @@ public class EnemyDirector : MonoBehaviour
     }
 
     public Enemy RandomDemonPrefab() => PickPrefab();
+
+    private Enemy PickSpawnPrefab()
+    {
+        if (flyingPrefabs != null && flyingPrefabs.Length > 0 && Minutes >= flyerStartMinute &&
+            OjoEnemy.Alive < maxFlyers && UnityEngine.Random.value < flyerChance)
+        {
+            Enemy f = flyingPrefabs[UnityEngine.Random.Range(0, flyingPrefabs.Length)];
+            if (f != null)
+                return f;
+        }
+        return PickPrefab();
+    }
+
+    // Punto en el aire sobre "ground" con espacio libre para el cuerpo y las alas (envergadura ~2.9 m).
+    private Vector3 FlyerSpot(Vector3 ground)
+    {
+        foreach (float h in flyerHeights)
+        {
+            Vector3 p = ground + Vector3.up * h;
+            if (!Physics.CheckSphere(p + Vector3.up * 0.7f, 1.5f, ~0, QueryTriggerInteraction.Ignore))
+                return p;
+        }
+        return ground + Vector3.up * flyerHeights[0];
+    }
 
     private Enemy PickPrefab()
     {
@@ -360,6 +401,17 @@ public class EnemyDirector : MonoBehaviour
         {
             if (e == null || e.IsDead)
                 continue;
+
+            if (e.Enemy is OjoEnemy ojo)
+            {
+                Vector3 o = e.transform.position - player.position;
+                if ((o.y < -40f || new Vector3(o.x, 0f, o.z).sqrMagnitude > far) && relocated < 25 && FindSpawnPoint(out Vector3 g))
+                {
+                    ojo.Teleport(FlyerSpot(g));
+                    relocated++;
+                }
+                continue;
+            }
 
             ZombieMotor motor = ZombieMotor.Ensure(e.Enemy);
             if (!motor.CanRelocate)
