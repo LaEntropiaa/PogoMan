@@ -114,15 +114,25 @@ public class ItemBar : MonoBehaviour
         return new Slot { rect = rect, count = text, cooldown = cdImage, icon = img };
     }
 
-    // Centra los íconos en la parte de abajo.
+    // Centra los íconos abajo; si son muchos se achican y se reparten en dos filas.
     private void Layout()
     {
-        float width = slots.Count * slotSize + (slots.Count - 1) * spacing;
-        float x = -width / 2f + slotSize / 2f;
+        const float maxWidth = 1100f;
+        int n = slots.Count;
+        float size = slotSize;
+        int perRow = n;
+        while (perRow * (size + spacing) > maxWidth && size > 34f) size -= 2f;
+        if (perRow * (size + spacing) > maxWidth) perRow = Mathf.CeilToInt(n / 2f);
+        int i = 0;
         foreach (Slot s in slots.Values)
         {
-            s.rect.anchoredPosition = new Vector2(x, 0f);
-            x += slotSize + spacing;
+            int row = i / perRow, col = i % perRow;
+            int inRow = Mathf.Min(perRow, n - row * perRow);
+            float width = inRow * size + (inRow - 1) * spacing;
+            s.rect.sizeDelta = new Vector2(size, size);
+            s.rect.anchoredPosition = new Vector2(-width / 2f + size / 2f + col * (size + spacing), row * (size + spacing));
+            s.count.fontSize = size < 44f ? 14 : 18;
+            i++;
         }
     }
 

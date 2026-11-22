@@ -3047,6 +3047,8 @@ MonoBehaviour:
   resumeButton: {fileID: 690071725}
   menuButton: {fileID: 1912786698}
   gameOver: {fileID: 1381042277}
+  font: {fileID: 12800000, guid: c57d7f6895db52d408615de1b0a49f73, type: 3}
+  database: {fileID: 11400000, guid: 25daef51b9429ee7e95c58b087ccc80c, type: 2}
 --- !u!225 &534190900
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -3916,6 +3918,8 @@ GameObject:
   - component: {fileID: 711870299}
   - component: {fileID: 711870298}
   - component: {fileID: 711870303}
+  - component: {fileID: 711870305}
+  - component: {fileID: 711870304}
   m_Layer: 0
   m_Name: Mundo
   m_TagString: Untagged
@@ -4048,6 +4052,38 @@ MonoBehaviour:
   - {fileID: 6809997828398397026, guid: 23141dacd6e445a6b8a1e6aadd73a0f3, type: 3}
   - {fileID: 276737850836462217, guid: 99d1873e9c9721c71a524282a23c9165, type: 3}
   - {fileID: 7308910017271154913, guid: 3126fa1aaf2141fdebf713a8879d2daa, type: 3}
+--- !u!114 &711870304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 711870297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab40d82380cf72a1385b4b9b0a5bded8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChestSpawner
+  extraChests: 28
+  minSpacing: 14
+  price: 50
+--- !u!114 &711870305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 711870297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a16aa72fe8c18836982cce2454908fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemActives
+  slotSize: 76
+  readyClip: {fileID: 8300000, guid: f2d67852e2b9b3088823a050b2bf13ce, type: 3}
+  denyClip: {fileID: 8300000, guid: 1e80671ee35b346c0bbc500e47adecb7, type: 3}
+  panicClip: {fileID: 8300000, guid: 79d11c2fa0a0f7eafb1f7baf1a5ac399, type: 3}
+  pinataHitClip: {fileID: 8300000, guid: 4be3be3699742953d947be07c46c68c0, type: 3}
 --- !u!1 &719302179
 GameObject:
   m_ObjectHideFlags: 0
@@ -5519,19 +5555,19 @@ MonoBehaviour:
   - {fileID: 2910461850877899014, guid: 9aa1b7b3716c41acf9e5a7235e7017bc, type: 3}
   maxEnemies: 500
   disableOldSpawners: 1
-  aliveAtStart: 6
-  aliveAtEnd: 300
-  spawnRateAtStart: 0.5
-  spawnRateAtEnd: 10
-  healthPerMinute: 0.12
+  aliveAtStart: 10
+  aliveAtEnd: 380
+  spawnRateAtStart: 0.9
+  spawnRateAtEnd: 13
+  healthPerMinute: 0.14
   speedPerMinute: 0.035
-  damagePerMinute: 0.07
+  damagePerMinute: 0.08
   maxSpeedMultiplier: 1.6
   hordeInterval: 240
   hordeDuration: 20
   hordeWarning: 5
   hordeSpawnRate: 35
-  hordeExtraAlive: 220
+  hordeExtraAlive: 260
   minSpawnDistance: 14
   maxSpawnDistance: 26
   hordeMinSpawnDistance: 10
@@ -5647,6 +5683,10 @@ MonoBehaviour:
   timeStopClip: {fileID: 8300000, guid: 6411fab68f4992f3894b66f03ffef656, type: 3}
   clockLoopClip: {fileID: 8300000, guid: 3e3e930af2e428e46addffc781746b9c, type: 3}
   timeResumeClip: {fileID: 8300000, guid: 937e9567e5334a50681885f39e1e2552, type: 3}
+  explodeClip: {fileID: 8300000, guid: 462a1be1b589f0471ae45524754e7713, type: 3}
+  steamClip: {fileID: 8300000, guid: 8733178d87e6dd1d4a350b2ed771c883, type: 3}
+  rocketClip: {fileID: 8300000, guid: 17666793a5b33ccbcad6bde5953d84fa, type: 3}
+  healClip: {fileID: 8300000, guid: 103b36987240594a1a188f0729f9450e, type: 3}
 --- !u!1 &982337973
 GameObject:
   m_ObjectHideFlags: 0
@@ -10733,6 +10773,7 @@ MonoBehaviour:
   openClip: {fileID: 8300000, guid: 0bc2630e134dfcf29a465be3497eb8df, type: 3}
   itemClip: {fileID: 8300000, guid: ce4eeaa22ce4f91fa814b0f35a12b123, type: 3}
   deniedClip: {fileID: 8300000, guid: 1e80671ee35b346c0bbc500e47adecb7, type: 3}
+  rarityClip: {fileID: 8300000, guid: 6f742a634306ba19087a9cab372a7408, type: 3}
 --- !u!1 &2037430255
 GameObject:
   m_ObjectHideFlags: 0

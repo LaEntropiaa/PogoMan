@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 742f2819ee425dfd7b97b4760b616fc1, type: 3}
+  m_Name: olla_expres_de_la_tia
+  m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
+  id: olla_expres_de_la_tia
+  displayName: "Olla Expr\xE9s de la T\xEDa"
+  description: "Cada golpe que te quite vida carga la olla. Al tercero libera vapor por 180 % del da\xF1o del pogo en 4 m."
+  quote: "Mi t\xEDa avisaba con un silbidito."
+  icon: {fileID: 21300000, guid: 0c2e09cc97662d2b8923f8010a6e07ab, type: 3}
+  weight: 1
+  rarity: 2
+  maxCopies: 2
+  active: 0
+  cursed: 0

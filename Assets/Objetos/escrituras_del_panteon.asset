@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 742f2819ee425dfd7b97b4760b616fc1, type: 3}
+  m_Name: escrituras_del_panteon
+  m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
+  id: escrituras_del_panteon
+  displayName: "Escrituras del Pante\xF3n"
+  description: "Traza un tri\xE1ngulo con tres pisotones. Al cerrarlo, las l\xE1pidas golpean dentro por 160 % del da\xF1o del pogo."
+  quote: "El terreno ya tiene due\xF1o."
+  icon: {fileID: 21300000, guid: f4d165f643b4953bb829162b4e8591aa, type: 3}
+  weight: 1
+  rarity: 3
+  maxCopies: 1
+  active: 0
+  cursed: 0

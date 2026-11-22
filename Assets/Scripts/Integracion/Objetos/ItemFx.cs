@@ -3,6 +3,30 @@ using UnityEngine;
 // Partículas sencillas para los efectos de los objetos (se arman desde código).
 public static class ItemFx
 {
+    // Material URP de un color (las primitivas traen un material que en URP sale magenta).
+    private static readonly System.Collections.Generic.Dictionary<Color, Material> colored = new System.Collections.Generic.Dictionary<Color, Material>();
+    public static Material Colored(Color c, float glow = 0.3f)
+    {
+        if (colored.TryGetValue(c, out Material m) && m != null) return m;
+        Material template = ItemEffects.Instance != null ? ItemEffects.Instance.FairyMaterial : null;
+        if (template == null) return null;
+        m = new Material(template);
+        m.SetColor("_BaseColor", c);
+        m.SetColor("_EmissionColor", c * glow);
+        colored[c] = m;
+        return m;
+    }
+
+    public static void Paint(GameObject go, Color c, float glow = 0.3f)
+    {
+        Material m = Colored(c, glow);
+        foreach (Renderer r in go.GetComponentsInChildren<Renderer>())
+        {
+            if (m != null) r.sharedMaterial = m;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+    }
+
     // Ráfaga corta que se destruye sola.
     public static ParticleSystem Burst(Vector3 point, int count, float radius, Color color, Material material,
         float speed = 4f, float size = 0.22f, float lifetime = 0.45f)

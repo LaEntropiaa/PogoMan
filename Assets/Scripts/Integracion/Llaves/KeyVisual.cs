@@ -29,7 +29,7 @@ public class KeyVisual : MonoBehaviour
                 new Vector3(0f, 0f, a * Mathf.Rad2Deg), new Vector3(0.09f, 0.16f, 0.07f));
         }
         // Gema roja al centro de la argolla
-        Part(PrimitiveType.Sphere, new Vector3(0f, 0.32f, 0f), Vector3.zero, Vector3.one * 0.13f).GetComponent<Renderer>().material.color = new Color(0.9f, 0.1f, 0.1f);
+        ItemFx.Paint(Part(PrimitiveType.Sphere, new Vector3(0f, 0.32f, 0f), Vector3.zero, Vector3.one * 0.13f), new Color(0.9f, 0.1f, 0.1f), 1f);
         // Tubo
         Part(PrimitiveType.Cylinder, new Vector3(0f, -0.12f, 0f), Vector3.zero, new Vector3(0.08f, 0.25f, 0.08f));
         // Dientes

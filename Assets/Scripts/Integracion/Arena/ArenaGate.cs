@@ -17,6 +17,20 @@ public class ArenaGate : MonoBehaviour
     [SerializeField] private AudioClip enterClip;
 
     public bool IsOpen { get; private set; }
+    public AudioClip MapMusic { get; private set; }
+    // A dónde regresa Pogoman si acepta el trato: frente a la puerta, del lado del mapa.
+    public Vector3 ReturnPoint => doorPoint + Vector3.up * 1.5f;
+
+    // Después del trato con el Diablo la puerta se cierra para siempre.
+    public void Close()
+    {
+        IsOpen = false;
+        if (marker != null) marker.gameObject.SetActive(false);
+        if (prompt != null) prompt.text = "";
+        var portal = GameObject.Find("PortalArena"); if (portal) Destroy(portal);
+        var beam = GameObject.Find("Columna"); if (beam) Destroy(beam);
+        enabled = false;
+    }
 
     private KeyManager keys;
     private PogoPlayer player;
@@ -224,7 +238,12 @@ public class ArenaGate : MonoBehaviour
         if (PlayerVitals.Instance != null)
             PlayerVitals.Instance.InvulnerableUntil = Time.time + 3f;
 
-        FindAnyObjectByType<GameMusic>()?.SwitchTo(fight.Music, 0.3f);
+        GameMusic gm = FindAnyObjectByType<GameMusic>();
+        if (gm != null)
+        {
+            MapMusic = gm.CurrentClip;
+            gm.SwitchTo(fight.Music, 0.3f);
+        }
 
         yield return new WaitForSecondsRealtime(0.5f);
         fight.Begin(player);

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 742f2819ee425dfd7b97b4760b616fc1, type: 3}
+  m_Name: tapon_de_geiser
+  m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
+  id: tapon_de_geiser
+  displayName: "Tap\xF3n de G\xE9iser"
+  description: "Un g\xE9iser potencia tu siguiente pisot\xF3n durante 8 s. Ese golpe gana 1.5 m de radio y 30 % de da\xF1o."
+  quote: Todo cabe hasta que hierve.
+  icon: {fileID: 21300000, guid: 2f0dc9fee4b5a591b9955bc8e021d224, type: 3}
+  weight: 1
+  rarity: 1
+  maxCopies: 1
+  active: 0
+  cursed: 0

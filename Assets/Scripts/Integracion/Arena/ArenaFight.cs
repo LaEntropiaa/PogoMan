@@ -273,7 +273,76 @@ public class ArenaFight : MonoBehaviour
         }
     }
 
-    public void OnBossDefeated(DevilBoss boss) => StartCoroutine(Victory(boss));
+    public void OnBossDefeated(DevilBoss boss) => StartCoroutine(Defeated(boss));
+
+    // Vencido, cae de rodillas y ofrece un trato.
+    private IEnumerator Defeated(DevilBoss boss)
+    {
+        foreach (EnemyTracker e in new List<EnemyTracker>(EnemyTracker.All))
+            if (e != null && !e.IsDead && e.Enemy != boss)
+                e.Hit(99999f, HitSource.Other);
+        if (PlayerVitals.Instance != null)
+            PlayerVitals.Instance.InvulnerableUntil = float.MaxValue;
+        if (boss.Rig != null) boss.Rig.State = DevilRig.Pose.Stunned;
+        Play(vulnerableClip, 0.8f, 1f);
+        Time.timeScale = 0.35f;
+        yield return new WaitForSecondsRealtime(1.4f);
+        Time.timeScale = 0f;
+        DevilOffer.Show(font, null,
+            () => { Time.timeScale = 1f; StartCoroutine(Victory(boss)); },
+            () => { Time.timeScale = 1f; StartCoroutine(Deal(boss)); });
+    }
+
+    // Aceptaste el trato: legendario al azar y de vuelta al infierno (modo infinito).
+    private IEnumerator Deal(DevilBoss boss)
+    {
+        ChestUI chestUi = FindAnyObjectByType<ChestUI>();
+        ItemDatabase db = chestUi != null ? PogoBridge.Get<ItemDatabase>(chestUi, "database") : null;
+        ItemDefinition gift = null;
+        if (db != null)
+        {
+            var pool = db.items.FindAll(i => i != null && i.rarity == ItemRarity.Legendaria && ItemEffects.CanOffer(i));
+            if (pool.Count == 0) pool = db.items.FindAll(i => i != null && i.rarity == ItemRarity.Legendaria);
+            if (pool.Count > 0) gift = pool[Random.Range(0, pool.Count)];
+        }
+        Play(laughClip, 0.9f, 1f);
+        if (gift != null && chestUi != null)
+        {
+            bool done = false;
+            chestUi.ShowGift(gift, () => done = true);
+            while (!done) yield return null;
+        }
+
+        // El Diablo se ríe y se desvanece.
+        if (boss != null)
+        {
+            ItemFx.Burst(boss.transform.position + Vector3.up * 4f, 80, 2f, new Color(0.6f, 0.15f, 1f), fxMaterial, 8f, 0.6f, 1f);
+            Destroy(boss.gameObject);
+        }
+        yield return new WaitForSeconds(0.8f);
+
+        // De vuelta al mapa, frente a la puerta (que ya no se abre).
+        ArenaGate gate = FindAnyObjectByType<ArenaGate>();
+        Vector3 back = gate != null ? gate.ReturnPoint : Vector3.zero;
+        var rb = Player.GetComponent<Rigidbody>();
+        rb.linearVelocity = Vector3.zero;
+        rb.position = back;
+        Player.transform.position = back;
+        PogoCamera cam = FindAnyObjectByType<PogoCamera>();
+        if (cam != null) PogoBridge.Set(cam, "currentPosition", back - Player.transform.forward * 6f + Vector3.up * 3f);
+        InArena = false;
+        if (hud != null) hud.alpha = 0f;
+        if (arenaRoot != null) arenaRoot.SetActive(false);
+        if (EnemyDirector.Instance != null) EnemyDirector.Instance.ArenaMode = false;
+        if (gate != null)
+        {
+            if (gate.MapMusic != null) FindAnyObjectByType<GameMusic>()?.SwitchTo(gate.MapMusic, 1f);
+            gate.Close();
+        }
+        if (PlayerVitals.Instance != null) PlayerVitals.Instance.InvulnerableUntil = Time.time + 3f;
+        SceneNav.SetGameplayCursor(true);
+        EndlessMode.Begin(font);
+    }
 
     private IEnumerator Victory(DevilBoss boss)
     {

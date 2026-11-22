@@ -93,6 +93,9 @@ public class PogoJump : MonoBehaviour
     public int AirJumpsMax => PlayerStats.Instance != null ? Mathf.RoundToInt(PlayerStats.Instance.Get(PogoStat.AirJumps)) : 0;
     public event System.Action AirJumped;
     public event System.Action SlideJumped;
+    public event System.Action GeyserLaunched;
+    // Balero de Diablito: impulso extra por rebote con espacio.
+    public float ExtraHopGain { get; set; }
     // Velocidad mínima permitida mientras dura el dash (la pone PogoAbilities).
     public float DashSpeedCap { get; set; }
     public float HorizontalSpeed { get; private set; }
@@ -186,6 +189,7 @@ public class PogoJump : MonoBehaviour
     // Lo llaman los géiseres del mapa al lanzar a Pogoman.
     public void OnExternalLaunch(Vector3 velocity)
     {
+        GeyserLaunched?.Invoke();
         geyserFlight = true;
         geyserFlightTime = 0f;
         lastVerticalSpeed = velocity.y;   // que no cuente como rebote
@@ -485,7 +489,7 @@ public class PogoJump : MonoBehaviour
         float speed = h.magnitude;
         if (speed < BaseSpeed * 0.85f)
             return;   // parado o casi parado no se acumula nada
-        h = h / speed * Mathf.Min(speed + perfectHopGain, maxMomentumSpeed);
+        h = h / speed * Mathf.Min(speed + perfectHopGain + ExtraHopGain, maxMomentumSpeed);
         v = new Vector3(h.x, v.y, h.z);
     }
 

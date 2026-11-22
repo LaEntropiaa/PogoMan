@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: manubrio_manijuela
   displayName: Manubrio Manijuela
-  description: "Aumenta un 25 % el control en el aire, lo que permite cambiar de direcci\xF3n y corregir d\xF3nde aterrizas.\nAcumulable: cada uno extra rinde un poco menos."
+  description: "Aumenta un 25 % el control en el aire, lo que permite cambiar de direcci\xF3n y corregir d\xF3nde aterrizas."
   quote: No dirige el pogo. Convence al infierno de moverse.
   icon: {fileID: 21300000, guid: c620a977dbdeb1a1092636bfd63e09ee, type: 3}
   weight: 1
+  rarity: 0
+  maxCopies: 0
+  active: 0
+  cursed: 0
