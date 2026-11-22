@@ -96,6 +96,24 @@ public class HongoRigAnimator : MonoBehaviour, IDemonRig
 
         float attackProgress = attack != null ? attack.AttackProgress : 0f;
         ApplyPose(phase, moveBlend, attackProgress, Time.time + timeOffset);
+        ApplyReactions();
+    }
+
+    // Se aplasta al recibir daño y se infla (esporas) al quitarte de su cabeza.
+    private EnemyTracker tracker;
+    private void ApplyReactions()
+    {
+        if (spine == null) return;
+        if (tracker == null) tracker = body.GetComponent<EnemyTracker>();
+        if (tracker == null) return;
+        float since = Time.time - tracker.LastDamageTime;
+        float flinch = since < 0.35f ? Mathf.Sin(Mathf.Clamp01(since / 0.35f) * Mathf.PI) : 0f;
+        float puff = tracker.Punish;
+        if (flinch <= 0f && puff <= 0f) return;
+        Rotate(spine, 18f * flinch, Mathf.Sin(Time.time * 30f) * 10f * puff);
+        float sy = 1f - flinch * 0.22f + puff * 0.3f;
+        float sw = 1f + flinch * 0.15f + puff * 0.25f;
+        spine.localScale = Vector3.Scale(spine.localScale, new Vector3(sw, sy, sw));
     }
 
     // attackProgress: 0 = nada, 0..0.85 = preparando la mordida, 1 = mordida.

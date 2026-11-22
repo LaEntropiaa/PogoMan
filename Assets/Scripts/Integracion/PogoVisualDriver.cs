@@ -52,6 +52,8 @@ public class PogoVisualDriver : MonoBehaviour
         animator = GetComponent<PogoAnimator>();
         if (visual == null)
             visual = GetComponentInChildren<PogoVisual>();
+        if (visual != null)
+            PogoTongue.Attach(visual.transform, rb);
     }
 
     private void OnEnable()
