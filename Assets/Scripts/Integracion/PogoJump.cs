@@ -173,6 +173,39 @@ public class PogoJump : MonoBehaviour
     // nunca "aterriza" y se queda colgado. Aquí se detecta el apoyo con los contactos reales.
     private float supportedTime;
     private bool supportedThisStep;
+    private float lastSlideTime = -10f;
+    // (Para pruebas: permite comparar con el comportamiento anterior.)
+    public static bool RampFix = true;
+    [Tooltip("Distancia máxima bajo los pies para volver a pegar el slide a la rampa.")]
+    [SerializeField] private float slideSnapDistance = 0.7f;
+
+    // Busca piso justo debajo; si está a menos de slideSnapDistance, baja a Pogoman hasta tocarlo
+    // y le quita la velocidad que lo despegaba (la conserva a lo largo de la rampa).
+    private bool SnapToSlope(ref Vector3 v)
+    {
+        var capsule = GetComponent<CapsuleCollider>();
+        float radius = capsule != null ? capsule.radius * 0.9f : 0.3f;
+        float bottom = capsule != null ? capsule.height * 0.5f - capsule.radius : 0.65f;
+        Vector3 origin = rb.position + Vector3.up * 0.05f;
+        if (!Physics.SphereCast(origin, radius, Vector3.down, out RaycastHit hit, bottom + 0.05f + slideSnapDistance, ~0, QueryTriggerInteraction.Ignore))
+            return false;
+        if (hit.rigidbody != null || Vector3.Angle(hit.normal, Vector3.up) > 55f)
+            return false;
+        float gap = hit.distance - (bottom + 0.05f + (capsule != null ? capsule.radius - radius : 0.035f));
+        if (gap > 0.01f)
+        {
+            rb.position += Vector3.down * gap;
+            transform.position = rb.position;   // PogoPlayer revisa el piso en este mismo paso
+        }
+        float away = Vector3.Dot(v, hit.normal);
+        if (away > 0f)
+        {
+            // Sigue la rampa en vez de salir volando, sin perder rapidez.
+            float speed = v.magnitude;
+            v = Vector3.ProjectOnPlane(v, hit.normal).normalized * speed;
+        }
+        return true;
+    }
 
     private void OnCollisionStay(Collision collision)
     {
@@ -250,7 +283,8 @@ public class PogoJump : MonoBehaviour
         bool stuck = supportedThisStep && !grounded && v.y < 0.5f && v.y > -1f;
         supportedThisStep = false;
         supportedTime = stuck ? supportedTime + dt : 0f;
-        if (supportedTime > 0.08f && !geyserFlight)
+        // Agachado no: en una rampa PogoPlayer a veces no ve el piso y esto hacía "tropiezos" en el slide.
+        if (supportedTime > 0.08f && !geyserFlight && !(crouching && RampFix))
         {
             supportedTime = 0f;
             v.y = crouching ? 2f : PogoBridge.GetFloat(player, "jumpForce", 7.5f);
@@ -290,6 +324,17 @@ public class PogoJump : MonoBehaviour
 
         if ((grounded && Time.time - lastSlideJump > 0.2f) || v.y <= 0f)
             slideHop = false;
+
+        // ---- Slide en rampas: si el piso se separa un instante (bajadas, bordes), se pega otra vez ----
+        if (sliding) lastSlideTime = Time.time;
+        // PogoPlayer.StartSlide deja la velocidad vertical en 0 en cada "aterrizaje": en bajada eso te
+        // despegaba de la rampa, caías, volvías a "aterrizar"... (los tropiezos). Aquí la velocidad sigue la rampa.
+        if (RampFix && crouching && !geyserFlight && Time.time - lastSlideTime < 0.25f &&
+            Time.time - lastSlideJump > 0.3f && v.y < 1f && SnapToSlope(ref v))
+        {
+            sliding = true;
+            lastSlideTime = Time.time;
+        }
 
         // ---- Deslizándose: pegado al piso, sin brincos (los géiseres sí lanzan) ----
         bool justSlideJumped = Time.time - lastSlideJump < 0.2f;
