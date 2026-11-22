@@ -132,7 +132,7 @@ public class SpitAttack : MonoBehaviour
         if (best == null)
             return;
         int perVolley = stats != null ? Mathf.RoundToInt(stats.Get(PogoStat.Projectiles)) : 1;
-        burstCount = Mathf.Clamp(perVolley * volleys, 1, 30);
+        burstCount = Mathf.Clamp(perVolley * volleys, 1, 60);
         Fire(mouth, best, stats, range * 1.3f);
         burstCount = 0;
     }

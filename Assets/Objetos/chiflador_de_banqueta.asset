@@ -19,6 +19,6 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: c6d85743029ea2dc4afe07f1dd2fa9db, type: 3}
   weight: 1
   rarity: 1
-  maxCopies: 2
+  maxCopies: 0
   active: 0
   cursed: 0

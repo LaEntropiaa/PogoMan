@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: muela_de_rebote
   displayName: Muela de Rebote
-  description: "Al acertar un escupitajo: rebota a otro demonio cercano con 65 % del da\xF1o."
+  description: "Siempre: +2 rebotes a todos tus escupitajos (saltan de demonio en demonio)."
   quote: "Esa muela ya conoc\xEDa el camino."
   icon: {fileID: 21300000, guid: 7fcfd8f5a81f0b9f68d859e0ae3daccf, type: 3}
   weight: 1
   rarity: 2
-  maxCopies: 2
+  maxCopies: 0
   active: 0
   cursed: 0

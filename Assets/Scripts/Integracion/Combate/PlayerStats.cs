@@ -187,9 +187,9 @@ public class PlayerStats : MonoBehaviour
         {
             case PogoStat.CritChance: return Mathf.Clamp01(value);
             case PogoStat.AirJumps: return Mathf.Clamp(Mathf.Round(value), 0f, 10f);
-            case PogoStat.Projectiles: return Mathf.Clamp(Mathf.Round(value), 1f, 30f);
-            case PogoStat.SpitBounces: return Mathf.Clamp(Mathf.Round(value), 0f, 12f);
-            case PogoStat.WaveCount: return Mathf.Clamp(Mathf.Round(value), 1f, 12f);
+            case PogoStat.Projectiles: return Mathf.Clamp(Mathf.Round(value), 1f, 60f);
+            case PogoStat.SpitBounces: return Mathf.Clamp(Mathf.Round(value), 0f, 40f);
+            case PogoStat.WaveCount: return Mathf.Clamp(Mathf.Round(value), 1f, 30f);
             case PogoStat.DashCooldown: return Mathf.Max(minDashCooldown, value);
             case PogoStat.PickupRadius: return Mathf.Clamp(value, 0f, 8f);   // tope global de recogida
             default: return Mathf.Max(0f, value);

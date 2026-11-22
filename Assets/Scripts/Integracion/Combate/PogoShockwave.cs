@@ -50,7 +50,7 @@ public class PogoShockwave : MonoBehaviour
     }
 
     public static int Count => S == null ? 1
-        : Mathf.Clamp(Mathf.RoundToInt(S.Get(PogoStat.WaveCount)) + Mathf.FloorToInt((S.Get(PogoStat.Projectiles) - 1f) / 3f), 1, 16);
+        : Mathf.Clamp(Mathf.RoundToInt(S.Get(PogoStat.WaveCount)) + Mathf.FloorToInt((S.Get(PogoStat.Projectiles) - 1f) / 3f), 1, 40);
 
     public static float Damage => S != null ? S.Get(PogoStat.WaveDamage) : 18f;
 
