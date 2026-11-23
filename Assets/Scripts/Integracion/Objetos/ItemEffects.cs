@@ -176,6 +176,7 @@ public class ItemEffects : MonoBehaviour
         Instance = this;
         audioSource = UiKit.UiAudio(gameObject);
         Chest.PriceMultiplier = 1f;   // estado de la partida anterior
+        Chest.PaidOpened = 0;
     }
 
     private void OnDestroy()

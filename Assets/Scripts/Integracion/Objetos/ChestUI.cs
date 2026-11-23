@@ -96,7 +96,10 @@ public class ChestUI : MonoBehaviour
         if (chest.AutoOpen)
         {
             if (database == null || database.HasAny(ItemEffects.CanOffer))
+            {
+                paidCost = 0;
                 StartCoroutine(OpenRoutine(chest));
+            }
             return;
         }
 
@@ -118,14 +121,21 @@ public class ChestUI : MonoBehaviour
             if (promptText != null) promptText.text = "YA NO HAY OBJETOS PARA TI";
             return;
         }
-        if (PlayerStats.Instance != null && PlayerStats.Instance.SpendCoins(chest.Price))
+        int cost = chest.Price;
+        if (PlayerStats.Instance != null && PlayerStats.Instance.SpendCoins(cost))
+        {
+            if (cost > 0) Chest.PaidOpened++;   // el siguiente cuesta 30 % más
+            paidCost = cost;
             StartCoroutine(OpenRoutine(chest));
+        }
         else
         {
             denyShake = 1f;
             Play(deniedClip);
         }
     }
+
+    private int paidCost;
 
     private IEnumerator OpenRoutine(Chest chest)
     {
@@ -169,7 +179,7 @@ public class ChestUI : MonoBehaviour
         StartCoroutine(Dust(10));
         StartCoroutine(Squash(0.22f));
         if (chest != null)
-            StartCoroutine(PriceFx(chest.Price));
+            StartCoroutine(PriceFx(paidCost));
 
         // Tres golpes: brinca, la tapa se levanta un poco más cada vez y se asoma más luz.
         for (int presses = gift ? 3 : 0; presses < 3;)

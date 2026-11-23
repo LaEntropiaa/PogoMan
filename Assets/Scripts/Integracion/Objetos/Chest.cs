@@ -11,7 +11,11 @@ public class Chest : MonoBehaviour
 
     // Credencial de Mayorista: los cofres de pago cuestan más (los gratis siguen gratis).
     public static float PriceMultiplier = 1f;
-    public int Price => price <= 0 ? 0 : Mathf.RoundToInt(price * PriceMultiplier);
+    // Precio que sube: el primer cofre de pago cuesta 10 y cada uno que abres encarece el siguiente 30 %.
+    public const int FirstPrice = 10;
+    public const float PriceGrowth = 1.3f;
+    public static int PaidOpened;
+    public int Price => price <= 0 ? 0 : Mathf.RoundToInt(FirstPrice * Mathf.Pow(PriceGrowth, PaidOpened) * PriceMultiplier);
     public bool Free => price <= 0;
     // Se abrió un cofre (lo usa el Vale de Farmacia).
     public static event System.Action<Chest> AnyOpened;
