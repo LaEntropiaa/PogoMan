@@ -159,8 +159,6 @@ public class ShockRing : MonoBehaviour
 
     private float radius, damage, expand, age;
     private LineRenderer ring, glow;
-    private Transform disc;
-    private Material discMat;
     private readonly HashSet<EnemyTracker> hit = new HashSet<EnemyTracker>();
     private static readonly List<EnemyTracker> buffer = new List<EnemyTracker>();
 

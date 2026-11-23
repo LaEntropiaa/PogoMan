@@ -19,7 +19,6 @@ public class EndlessMode : MonoBehaviour
     //   6:00 ×30 y desde ahí +10 cada minuto.
     private static readonly float[] StepTimes = { 60f, 120f, 150f, 180f, 240f, 300f, 360f };
     private static readonly float[] StepScales = { 2f, 5f, 6f, 10f, 15f, 20f, 30f };
-    public const float DiabolicTime = 180f;
 
     public static int StepAt(float t)
     {
@@ -464,42 +463,5 @@ public class BoltFade : MonoBehaviour
         if (lr != null) lr.enabled = on;
         if (lightComp != null) lightComp.intensity = on ? 14f * (1f - k) : 0f;
         if (k >= 1f) Destroy(gameObject);
-    }
-}
-
-// Temblor de la cámara (encima de lo que haga PogoCamera ese frame).
-[DefaultExecutionOrder(10000)]
-public class CameraShake : MonoBehaviour
-{
-    private static CameraShake instance;
-    private float time, strength;
-    private Vector3 applied;
-
-    public static void Add(float seconds, float amount)
-    {
-        Camera cam = Camera.main;
-        if (cam == null) return;
-        if (instance == null) instance = cam.gameObject.AddComponent<CameraShake>();
-        instance.time = Mathf.Max(instance.time, seconds);
-        instance.strength = Mathf.Max(instance.strength, amount);
-    }
-
-    // Antes de que PogoCamera calcule (Update va antes que cualquier LateUpdate) se quita el temblor
-    // del frame anterior: así la cámara nunca "hereda" el desplazamiento y no se va acumulando.
-    private void Update()
-    {
-        transform.position -= applied;
-        applied = Vector3.zero;
-    }
-
-    private void LateUpdate()
-    {
-        if (time <= 0f) return;
-        time -= Time.deltaTime;
-        float k = Mathf.Clamp01(time / 0.6f) * strength;
-        applied = new Vector3(Mathf.PerlinNoise(Time.time * 25f, 0f) - 0.5f, Mathf.PerlinNoise(0f, Time.time * 25f) - 0.5f, 0f) * 0.9f * k;
-        applied = transform.rotation * applied;
-        transform.position += applied;
-        if (time <= 0f) strength = 0f;
     }
 }

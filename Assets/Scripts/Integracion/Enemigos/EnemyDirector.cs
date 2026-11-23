@@ -89,7 +89,6 @@ public class EnemyDirector : MonoBehaviour
     [SerializeField] private float infiniteSpeedBonus = 0.15f;
 
     private int spawnCounter;
-    public int SpawnedTotal => spawnCounter;
 
     // Multiplicador de vida y daño de la horda infinita: ×2 al empezar y se duplica cada minuto.
     public float InfiniteScale

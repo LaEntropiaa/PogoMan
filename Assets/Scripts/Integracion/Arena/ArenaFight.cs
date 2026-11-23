@@ -66,7 +66,7 @@ public class ArenaFight : MonoBehaviour
     private Text bossTitle, bossHp;
     private RectTransform[] bossEmbers;
     private float lastBossHealth = -1f, barShake;
-    private float bannerTimer, bannerPop, lagHealth = 1f;
+    private float bannerTimer, bannerPop;
 
     private static Vector3 Flat(Vector3 v) { v.y = 0f; return v.sqrMagnitude > 0.0001f ? v.normalized : Vector3.forward; }
 
@@ -370,7 +370,6 @@ public class ArenaFight : MonoBehaviour
         AttackFx.Eruption(at, 2.2f, 6f);
     }
 
-    private float ringFx;
     // El anillo de fuego deja llamas por donde pasa.
     public void OnRingTick(Vector3 c, float r)
     {

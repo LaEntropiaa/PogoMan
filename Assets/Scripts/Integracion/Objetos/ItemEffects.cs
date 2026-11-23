@@ -60,8 +60,7 @@ public class ItemEffects : MonoBehaviour
     [Header("Compresor de los Lamentos")]
     [SerializeField] private float chargedJumpHeightPerItem = 0.25f;
 
-    [Header("Rendimiento decreciente (Manubrio, Empuñaduras)")]
-    [SerializeField, Range(0f, 1f)] private float diminishingFactor = 0.6f;
+    [Header("Manubrio y Empuñaduras (cada copia suma)")]
     [SerializeField] private float airControlPerItem = 0.25f;
     [SerializeField] private float pogoDamagePerItem = 0.15f;
 
@@ -186,7 +185,6 @@ public class ItemEffects : MonoBehaviour
         EnemyTracker.StompHit -= OnStompHit;
         EnemyTracker.Killed -= OnKilled;
         SpitAttack.VolleyFired -= OnVolley;
-        SpitProjectile.DirectHit -= OnSpitHit;
         PlayerVitals.HealthLost -= OnHealthLost;
         Chest.AnyOpened -= OnChestOpened;
         if (inventory != null)
@@ -216,7 +214,6 @@ public class ItemEffects : MonoBehaviour
         EnemyTracker.StompHit += OnStompHit;
         EnemyTracker.Killed += OnKilled;
         SpitAttack.VolleyFired += OnVolley;
-        SpitProjectile.DirectHit += OnSpitHit;
         PlayerVitals.HealthLost += OnHealthLost;
         Chest.AnyOpened += OnChestOpened;
         if (PogoJump.Instance != null)
@@ -236,8 +233,6 @@ public class ItemEffects : MonoBehaviour
 
     public int Count(string id) => inventory != null ? inventory.Count(id) : 0;
 
-    private float Diminishing(float perItem, int n) =>
-        n <= 0 ? 0f : perItem * (1f - Mathf.Pow(diminishingFactor, n)) / (1f - diminishingFactor);
 
     // ¿Puede salir este objeto de un cofre? (copias máximas, topes, máximo 6 activas)
     public static bool CanOffer(ItemDefinition item)
@@ -502,9 +497,6 @@ public class ItemEffects : MonoBehaviour
             central.transform.localScale *= 1.4f;
         }
     }
-
-    // Muela de Rebote: ahora da +2 rebotes por copia a todos los escupitajos (ver OnItemAdded).
-    private void OnSpitHit(SpitProjectile p, EnemyTracker enemy, Vector3 point) { }
 
     // ------------------------------------------------------------------ movimiento
     private void OnSlideJumped()

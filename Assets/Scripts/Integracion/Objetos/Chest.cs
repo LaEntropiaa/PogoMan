@@ -28,7 +28,6 @@ public class Chest : MonoBehaviour
     private Color GlowColor = new Color(1f, 0.75f, 0.3f);
     // Cofre de élite: morado brillante y se abre solo al acercarte.
     public bool AutoOpen { get; private set; }
-    public bool Elite => AutoOpen;
 
     public void MakeElite()
     {

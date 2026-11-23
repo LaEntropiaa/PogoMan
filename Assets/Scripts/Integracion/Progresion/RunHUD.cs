@@ -24,17 +24,13 @@ public class RunHUD : MonoBehaviour
     private RectTransform shieldRoot, shieldFill;
     private FancyBar shieldBar;
     private Text shieldText;
-    private GameHUD gameHud;
-    private RectTransform hpFill;
-    private float lastHp = -1f;
 
     // El HUD original (escena) se decora: mismo tamaño, más llamativo.
     private void StyleGameHud(GameHUD hud, Transform frame)
     {
-        gameHud = hud;
         System.Type t = typeof(GameHUD);
         BindingFlags f = BindingFlags.Instance | BindingFlags.NonPublic;
-        hpFill = t.GetField("healthFill", f)?.GetValue(hud) as RectTransform;
+        RectTransform hpFill = t.GetField("healthFill", f)?.GetValue(hud) as RectTransform;
         RectTransform chip = t.GetField("healthChip", f)?.GetValue(hud) as RectTransform;
         Text hpText = t.GetField("healthText", f)?.GetValue(hud) as Text;
 
