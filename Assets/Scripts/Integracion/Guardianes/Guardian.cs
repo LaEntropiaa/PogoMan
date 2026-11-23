@@ -357,7 +357,7 @@ public class Guardian : Enemy
     private void UpdateOrb(float dt, float dist)
     {
         orbTimer -= dt;
-        if (orbTimer > 0f || dist > 50f || !LineOfSight()) return;
+        if (orbTimer > 0f || dist > 30f || !LineOfSight()) return;
         orbTimer = Random.Range(3f, 4.5f);
         float dmg = (attacks != null && attacks.Length > 0 ? attacks[0].damage : 15f) * 0.6f * damageScale;
         GuardianOrb.Fire(transform.position + Vector3.up * 2.4f + transform.forward * 0.8f, player, dmg, GuardianOrb.ColorFor(kind));
@@ -428,9 +428,9 @@ public class Guardian : Enemy
 
     // ------------------------------------------------------------------ ataques
     // Elige una habilidad lista que tenga sentido a esta distancia.
-    // Alcance: sus ataques llegan 50 METROS más lejos (abanicos, arcos, líneas y la onda del Fundidor).
+    // Alcance: sus ataques llegan 15 METROS más lejos (abanicos, arcos, líneas y la onda del Fundidor).
     // Los golpes chicos (sellos del Recaudador) solo crecen un poco.
-    private const float RangeBonus = 50f;
+    private const float RangeBonus = 15f;
     private const float RangeScale = 1.5f;
     private const float WaveSpeed = 20f;   // m/s de la onda del Fundidor
     private const float LineSpeed = 25f;   // m/s de las líneas de la Viuda
@@ -452,7 +452,7 @@ public class Guardian : Enemy
     private int ChooseAttack(float d)
     {
         bool a = cooldownLeft[0] <= 0f, b = cooldownLeft[1] <= 0f;
-        float far = Mathf.Max(0f, d - RangeBonus);   // con el alcance extra, atacan desde 50 m más lejos
+        float far = Mathf.Max(0f, d - RangeBonus);   // con el alcance extra, atacan desde más lejos
         switch (kind)
         {
             case GuardianKind.Fundidor:
@@ -592,6 +592,14 @@ public class Guardian : Enemy
                         // Onda que sale de 1 a 8 m en 1.1 s, banda de 0.65 m.
                         float k = Mathf.Clamp01((t - active) / WaveTime);
                         float r = Mathf.Lerp(1f, 8f + RangeBonus, k);
+                        if (k < 1f)
+                            for (int f = 0; f < 6; f++)
+                            {
+                                float ang = Random.value * Mathf.PI * 2f;
+                                Vector3 at = Feet + new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * r;
+                                at.y = Telegraph.GroundY(at, Feet.y);
+                                AttackFx.Flicker(at, 0.3f, Color.white);
+                            }
                         signs[0].SetRadii(Mathf.Max(0.5f, r - 0.5f), r + 0.5f);
                         signs[0].SetColor(new Color(1f, 0.95f, 0.6f, 0.95f));
                         if (k < 1f && !hitPlayerThisAttack)
@@ -659,6 +667,7 @@ public class Guardian : Enemy
                         Kit?.Play(kind, 0, transform.position);
                         Vector3 c = Feet + lockedForward * 1.1f * RangeScale;
                         Kit?.Dust(c, 1.55f * RangeScale);
+                        AttackFx.Magic(c + Vector3.up * 0.5f, 1.5f, new Color(1f, 0.82f, 0.2f));
                         EnemyTracker.HitArea(c, 1.8f * RangeScale, Spec.damage * DemonDamageFactor, HitSource.Other, true, 3f, this, true);
                         Vector3 d = PlayerFeet - c;
                         if (new Vector2(d.x, d.z).magnitude <= 1.55f * RangeScale + PlayerRadius && PlayerHeight <= 1f)
@@ -673,6 +682,7 @@ public class Guardian : Enemy
                         {
                             Kit?.Play(kind, 1, points[k]);
                             Kit?.Dust(points[k], 1.1f * RangeScale);
+                            AttackFx.Magic(points[k] + Vector3.up * 0.5f, 1.2f, new Color(1f, 0.82f, 0.2f));
                             EnemyTracker.HitArea(points[k], 1.5f * RangeScale, Spec.damage * DemonDamageFactor, HitSource.Other, true, 3f, this, true);
                             if (signs.Count > k && signs[k] != null) { Destroy(signs[k].gameObject); }
                             Vector3 d = PlayerFeet - points[k];
@@ -691,6 +701,10 @@ public class Guardian : Enemy
                     if (firedSteps > 0 && t <= active + 0.35f && !hitPlayerThisAttack)
                     {
                         float p = Mathf.Clamp01((t - active) / 0.35f);
+                        float ang = fromLeft ? -65f + 130f * p : 65f - 130f * p;
+                        Vector3 oarDir = Quaternion.Euler(0f, ang, 0f) * lockedForward;
+                        for (int w = 0; w < 4; w++)
+                            AttackFx.Wisp(Feet + oarDir * Random.Range(1f, 3.8f + RangeBonus) + Vector3.up * 0.5f, new Color(0.35f, 1f, 0.9f), 0.8f);
                         float a = SignedAngleToPlayer();
                         bool swept = fromLeft ? a >= -65f && a <= -65f + 130f * p : a <= 65f && a >= 65f - 130f * p;
                         if (swept)
