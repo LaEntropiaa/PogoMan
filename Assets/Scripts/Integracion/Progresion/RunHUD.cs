@@ -22,6 +22,65 @@ public class RunHUD : MonoBehaviour
     private Text hordeTitle;
     private Text hordeSub;
     private RectTransform shieldRoot, shieldFill;
+    private FancyBar shieldBar;
+    private Text shieldText;
+    private GameHUD gameHud;
+    private RectTransform hpFill;
+    private float lastHp = -1f;
+
+    // El HUD original (escena) se decora: mismo tamaño, más llamativo.
+    private void StyleGameHud(GameHUD hud, Transform frame)
+    {
+        gameHud = hud;
+        System.Type t = typeof(GameHUD);
+        BindingFlags f = BindingFlags.Instance | BindingFlags.NonPublic;
+        hpFill = t.GetField("healthFill", f)?.GetValue(hud) as RectTransform;
+        RectTransform chip = t.GetField("healthChip", f)?.GetValue(hud) as RectTransform;
+        Text hpText = t.GetField("healthText", f)?.GetValue(hud) as Text;
+
+        // Marco dorado de pixel alrededor de la barra de vida.
+        var frameRt = (RectTransform)frame;
+        Image o = FancyBar.Img("MarcoOro", frameRt, new Color(0.95f, 0.72f, 0.25f));
+        FancyBar.Stretch(o, -3f);
+        o.transform.SetAsFirstSibling();
+        Image o2 = FancyBar.Img("MarcoOscuro", frameRt, new Color(0.18f, 0.02f, 0.02f));
+        FancyBar.Stretch(o2, -1f);
+        o2.transform.SetSiblingIndex(1);
+        if (hpFill != null) Shade(hpFill);
+        if (chip != null) Shade(chip);
+        // Segmentos cada 10 %.
+        for (int i = 1; i < 10; i++)
+        {
+            RectTransform tk = FancyBar.Img("Marca", frameRt, new Color(0f, 0f, 0f, 0.3f)).rectTransform;
+            tk.anchorMin = new Vector2(i / 10f, 0f); tk.anchorMax = new Vector2(i / 10f, 1f); tk.sizeDelta = new Vector2(2f, 0f);
+        }
+        if (hpText != null)
+        {
+            var fx = hpText.gameObject.AddComponent<PixelTextFx>();
+            fx.top = Color.white; fx.bottom = new Color(1f, 0.75f, 0.75f); fx.depth = 2;
+        }
+        foreach (string n in new[] { "timeText", "killsText", "coinsText" })
+            if (t.GetField(n, f)?.GetValue(hud) is Text tx && tx.GetComponent<PixelTextFx>() == null)
+            {
+                var fx = tx.gameObject.AddComponent<PixelTextFx>();
+                fx.top = new Color(1f, 1f, 0.9f); fx.bottom = new Color(1f, 0.7f, 0.35f); fx.depth = 2; fx.shineEvery = 7f;
+            }
+        if (levelText != null && levelText.GetComponent<PixelTextFx>() == null)
+        {
+            var fx = levelText.gameObject.AddComponent<PixelTextFx>();
+            fx.top = new Color(0.9f, 1f, 1f); fx.bottom = new Color(0.4f, 0.7f, 1f);
+            fx.extrudeFront = new Color(0.05f, 0.1f, 0.35f); fx.extrudeBack = new Color(0f, 0.02f, 0.1f); fx.depth = 3;
+        }
+    }
+
+    // Brillo arriba y sombra abajo dentro de un relleno.
+    private static void Shade(RectTransform fill)
+    {
+        RectTransform hi = FancyBar.Img("Brillo", fill, new Color(1f, 1f, 1f, 0.3f)).rectTransform;
+        hi.anchorMin = new Vector2(0f, 0.6f); hi.anchorMax = new Vector2(1f, 0.85f); hi.offsetMin = hi.offsetMax = Vector2.zero;
+        RectTransform sh = FancyBar.Img("Sombra", fill, new Color(0f, 0f, 0f, 0.3f)).rectTransform;
+        sh.anchorMin = Vector2.zero; sh.anchorMax = new Vector2(1f, 0.28f); sh.offsetMin = sh.offsetMax = Vector2.zero;
+    }
     private RectTransform dashRoot, dashFill;
     private Text dashText;
     private Image[] jumpPips;
@@ -99,10 +158,18 @@ public class RunHUD : MonoBehaviour
         if (frame == null)
             return;
 
-        shieldRoot = UiKit.Rect("Escudo", frame, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 1f), new Vector2(0, -4), new Vector2(0, 8));
-        UiKit.Image(shieldRoot, new Color(0.03f, 0.05f, 0.1f, 0.7f));
-        shieldFill = UiKit.Rect("Relleno", shieldRoot, Vector2.zero, new Vector2(1, 1), new Vector2(0, 0.5f), Vector2.zero, Vector2.zero);
-        UiKit.Image(shieldFill, new Color(0.45f, 0.8f, 1f));
+        shieldRoot = UiKit.Rect("Escudo", frame, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 1f), new Vector2(0, -7), new Vector2(0, 9));
+        shieldBar = FancyBar.Build(shieldRoot, new Color(0.35f, 0.8f, 1f), new Color(0.85f, 0.95f, 1f),
+            new Color(0.2f, 0.45f, 0.75f), new Color(0.03f, 0.06f, 0.12f), 5, 2f, 1f);
+        shieldFill = shieldBar.Fill;
+        // Número del escudo a la derecha de la barra.
+        shieldText = UiKit.Text(UiKit.Rect("EscudoNumero", shieldRoot, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0f, 0.5f),
+            new Vector2(10f, -1f), new Vector2(200f, 30f)), font, 22, new Color(0.6f, 0.9f, 1f), TextAnchor.MiddleLeft);
+        var sfx = shieldText.gameObject.AddComponent<PixelTextFx>();
+        sfx.top = new Color(0.85f, 1f, 1f); sfx.bottom = new Color(0.3f, 0.65f, 1f);
+        sfx.extrudeFront = new Color(0.05f, 0.1f, 0.3f); sfx.extrudeBack = new Color(0f, 0.02f, 0.08f); sfx.depth = 2;
+
+        StyleGameHud(hud, frame);
     }
 
     private void OnHordeChanged(bool started)
@@ -219,7 +286,10 @@ public class RunHUD : MonoBehaviour
         if (shieldRoot.gameObject.activeSelf != has)
             shieldRoot.gameObject.SetActive(has);
         if (has)
-            UiKit.SetFill(shieldFill, Mathf.Clamp01(v.TotalShield / Mathf.Max(1f, v.MaxShield + v.BonusShieldMax)));
+        {
+            shieldBar.Set(Mathf.Clamp01(v.TotalShield / Mathf.Max(1f, v.MaxShield + v.BonusShieldMax)));
+            if (shieldText != null) shieldText.text = "ESCUDO " + Mathf.CeilToInt(v.TotalShield);
+        }
     }
 
     private void UpdateAbilities(PlayerStats stats)

@@ -61,7 +61,11 @@ public class ArenaFight : MonoBehaviour
     // HUD
     private CanvasGroup hud;
     private Text bossName, bossState, banner, bannerSub;
-    private RectTransform bossFill, bossFillLag;
+    private RectTransform bossBarRoot;
+    private FancyBar bossBar;
+    private Text bossTitle, bossHp;
+    private RectTransform[] bossEmbers;
+    private float lastBossHealth = -1f, barShake;
     private float bannerTimer, bannerPop, lagHealth = 1f;
 
     private static Vector3 Flat(Vector3 v) { v.y = 0f; return v.sqrMagnitude > 0.0001f ? v.normalized : Vector3.forward; }
@@ -97,7 +101,7 @@ public class ArenaFight : MonoBehaviour
         InArena = true;
         BuildHud();
         SpawnDevil();
-        ShowBanner("EL DIABLO TENDERO", "DUEÑO DEL INFIERNO Y DE LA TIENDITA", 2.6f);
+        ShowBanner("EL DIABLO", "SEÑOR DEL INFIERNO", 2.6f);
         Play(laughClip, 1f, 1f);
         devil.IntroTime = IntroBow + IntroLines.Length * LineTime + 0.6f;
         StartCoroutine(IntroCinematic());
@@ -595,17 +599,48 @@ public class ArenaFight : MonoBehaviour
         hud.blocksRaycasts = false;
         Transform root = canvas.transform;
 
+        // ---- Barra del jefe final: marco dorado con cuernos, nombre con fuego y número de vida ----
         bossName = UiKit.Text(UiKit.Rect("Nombre", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-            new Vector2(0, -70), new Vector2(900, 44)), font, 38, new Color(1f, 0.75f, 0.55f), TextAnchor.MiddleCenter, "EL DIABLO TENDERO");
-        RectTransform bar = UiKit.Rect("Barra", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-            new Vector2(0, -118), new Vector2(760, 22));
-        UiKit.Image(bar, new Color(0.08f, 0.02f, 0.04f, 0.85f));
-        bossFillLag = UiKit.Rect("Retraso", bar, Vector2.zero, Vector2.one, new Vector2(0f, 0.5f), Vector2.zero, Vector2.zero);
-        UiKit.Image(bossFillLag, new Color(1f, 0.85f, 0.6f));
-        bossFill = UiKit.Rect("Vida", bar, Vector2.zero, Vector2.one, new Vector2(0f, 0.5f), Vector2.zero, Vector2.zero);
-        UiKit.Image(bossFill, new Color(0.75f, 0.08f, 0.15f));
+            new Vector2(0, -38), new Vector2(1000, 64)), font, 54, Color.white, TextAnchor.MiddleCenter, "EL DIABLO");
+        var nameFx = bossName.gameObject.AddComponent<PixelTextFx>();
+        nameFx.top = new Color(1f, 0.92f, 0.55f); nameFx.bottom = new Color(1f, 0.25f, 0.08f);
+        nameFx.depth = 4; nameFx.step = 3f; nameFx.shineEvery = 3f;
+        bossTitle = UiKit.Text(UiKit.Rect("Titulo", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+            new Vector2(0, -92), new Vector2(1000, 28)), font, 22, new Color(1f, 0.7f, 0.45f), TextAnchor.MiddleCenter, "· SEÑOR DEL INFIERNO ·");
+        bossTitle.gameObject.AddComponent<PixelTextFx>().depth = 2;
+
+        bossBarRoot = UiKit.Rect("Barra", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+            new Vector2(0, -122), new Vector2(940, 30));
+        bossBar = FancyBar.Build(bossBarRoot, new Color(0.85f, 0.08f, 0.12f), new Color(1f, 0.85f, 0.5f),
+            new Color(0.95f, 0.72f, 0.25f), new Color(0.25f, 0.03f, 0.03f), 20, 4f, 3f);
+        bossBar.SetLagSpeed(0.25f);
+        bossBar.SetShineEvery(3f);
+        // Cuernos de pixel en las orillas.
+        foreach (float side in new[] { -1f, 1f })
+            for (int i = 0; i < 4; i++)
+            {
+                RectTransform h = FancyBar.Img("Cuerno", bossBarRoot, i == 3 ? new Color(1f, 0.95f, 0.8f) : new Color(0.95f, 0.72f, 0.25f)).rectTransform;
+                h.anchorMin = h.anchorMax = new Vector2(side < 0 ? 0f : 1f, 0.5f);
+                h.sizeDelta = new Vector2(14f - i * 2.5f, 14f - i * 2.5f);
+                h.anchoredPosition = new Vector2(side * (14f + i * 11f), 8f + i * i * 4f);
+            }
+        // Gema central.
+        RectTransform gem = FancyBar.Img("Gema", bossBarRoot, new Color(0.7f, 0.1f, 0.15f)).rectTransform;
+        gem.anchorMin = gem.anchorMax = new Vector2(0.5f, 0f);
+        gem.sizeDelta = new Vector2(16f, 16f); gem.anchoredPosition = new Vector2(0f, -8f); gem.localRotation = Quaternion.Euler(0, 0, 45f);
+        bossHp = UiKit.Text(UiKit.Stretch("Numero", bossBarRoot), font, 20, Color.white, TextAnchor.MiddleCenter);
+        bossHp.gameObject.AddComponent<Outline>().effectDistance = new Vector2(2f, -2f);
+        bossEmbers = new RectTransform[24];
+        for (int i = 0; i < bossEmbers.Length; i++)
+        {
+            bossEmbers[i] = FancyBar.Img("Brasa", bossBarRoot, new Color(1f, 0.5f, 0.1f, 0f)).rectTransform;
+            bossEmbers[i].anchorMin = bossEmbers[i].anchorMax = new Vector2(Random.value, 0.5f);
+            bossEmbers[i].sizeDelta = Vector2.one * (Random.value < 0.3f ? 6f : 4f);
+        }
+
         bossState = UiKit.Text(UiKit.Rect("Estado", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-            new Vector2(0, -146), new Vector2(1100, 36)), font, 28, Color.white, TextAnchor.MiddleCenter);
+            new Vector2(0, -170), new Vector2(1100, 36)), font, 28, Color.white, TextAnchor.MiddleCenter);
+        bossState.gameObject.AddComponent<Outline>().effectDistance = new Vector2(2f, -2f);
 
         banner = UiKit.Text(UiKit.Rect("Aviso", root, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             new Vector2(0, 170), new Vector2(1600, 120)), font, 90, new Color(1f, 0.85f, 0.4f), TextAnchor.MiddleCenter);
@@ -625,7 +660,7 @@ public class ArenaFight : MonoBehaviour
         speechGroup = speech.gameObject.AddComponent<CanvasGroup>();
         speechGroup.alpha = 0f;
         speechName = UiKit.Text(UiKit.Rect("Quien", speech, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(24f, -6f), new Vector2(600f, 40f)),
-            font, 30, new Color(1f, 0.55f, 0.25f), TextAnchor.LowerLeft, "EL DIABLO TENDERO");
+            font, 30, new Color(1f, 0.55f, 0.25f), TextAnchor.LowerLeft, "EL DIABLO");
         speechText = UiKit.Text(UiKit.Stretch("Texto", speech, 24f), font, 38, new Color(1f, 0.93f, 0.85f), TextAnchor.MiddleLeft);
     }
 
@@ -654,17 +689,28 @@ public class ArenaFight : MonoBehaviour
 
         if (devil == null)
         {
-            bossName.text = bossState.text = "";
-            UiKit.SetFill(bossFill, 0f);
-            UiKit.SetFill(bossFillLag, 0f);
+            bossName.text = bossState.text = bossTitle.text = bossHp.text = "";
+            bossBarRoot.gameObject.SetActive(false);
             return;
         }
 
         float health = Mathf.Clamp01(devil.Health / devil.MaxHealth);
-        lagHealth = Mathf.MoveTowards(lagHealth, health, dt * 0.25f);
-        if (lagHealth < health) lagHealth = health;
-        UiKit.SetFill(bossFill, health);
-        UiKit.SetFill(bossFillLag, lagHealth);
+        bossBar.Set(health);
+        if (lastBossHealth >= 0f && devil.Health < lastBossHealth - 0.5f) barShake = 1f;
+        lastBossHealth = devil.Health;
+        barShake = Mathf.MoveTowards(barShake, 0f, dt * 4f);
+        bossBarRoot.anchoredPosition = new Vector2(Random.Range(-1f, 1f) * 6f * barShake, -122f + Random.Range(-1f, 1f) * 3f * barShake);
+        bossHp.text = Mathf.CeilToInt(devil.Health).ToString("N0") + " / " + Mathf.RoundToInt(devil.MaxHealth).ToString("N0");
+        bossTitle.text = devil.Fury ? "· FURIA ·" : "· SEÑOR DEL INFIERNO ·";
+        // Brasas que suben de la barra (más en la furia).
+        for (int i = 0; i < bossEmbers.Length; i++)
+        {
+            float ph = Mathf.Repeat(Time.unscaledTime * (0.6f + (i % 5) * 0.15f) + i * 0.37f, 1f);
+            bool on = devil.Fury || i % 3 == 0;
+            RectTransform e = bossEmbers[i];
+            e.anchoredPosition = new Vector2(Mathf.Sin(ph * 6f + i) * 6f, 14f + ph * 46f);
+            e.GetComponent<Image>().color = on ? new Color(1f, 0.45f + 0.4f * (1f - ph), 0.1f, (1f - ph) * 0.9f) : Color.clear;
+        }
 
         switch (devil.State)
         {
@@ -688,8 +734,8 @@ public class ArenaFight : MonoBehaviour
         {
             // Barra en rojo brillante que late.
             float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f);
-            bossFill.GetComponent<Image>().color = Color.Lerp(new Color(1f, 0.1f, 0.05f), new Color(1f, 0.5f, 0.2f), pulse * 0.5f);
-            bossName.color = Color.Lerp(new Color(1f, 0.3f, 0.2f), new Color(1f, 0.85f, 0.4f), pulse * 0.4f);
+            bossBar.SetColor(Color.Lerp(new Color(1f, 0.15f, 0.05f), new Color(1f, 0.55f, 0.15f), pulse * 0.6f));
+            bossName.rectTransform.localScale = Vector3.one * (1f + pulse * 0.04f);
         }
     }
 
