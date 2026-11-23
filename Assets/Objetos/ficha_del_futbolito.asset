@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: ficha_del_futbolito
   displayName: Ficha del Futbolito
-  description: "El primer salto a\xE9reo despu\xE9s de pisar suelo firme dispara una ficha hacia abajo por 60 % del da\xF1o del pogo."
+  description: "Al saltar en el aire: sueltas una ficha que cae y golpea (60 % del da\xF1o del pogo)."
   quote: Una ficha, una patada.
   icon: {fileID: 21300000, guid: 6c7c98373dcd214628e43d49602efb1f, type: 3}
   weight: 1
   rarity: 1
-  maxCopies: 2
+  maxCopies: 0
   active: 0
   cursed: 0

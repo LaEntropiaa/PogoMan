@@ -22,6 +22,8 @@ public class PogoAnimator : MonoBehaviour
     [SerializeField] private Material dustMaterial;
 
     [Header("Aplastar y estirar")]
+    [Tooltip("Desactivado con el PogoMan animado: sus clips ya comprimen el resorte y la escala nunca debe estirar el cuerpo.")]
+    [SerializeField] private bool deformBody = true;
     [SerializeField] private float squashOnBounce = 0.3f;
     [SerializeField] private float stretchPerSpeed = 0.018f;
     [SerializeField] private float maxStretch = 0.2f;
@@ -44,6 +46,19 @@ public class PogoAnimator : MonoBehaviour
     [Tooltip("Se encoge un poco justo antes de tocar el piso.")]
     [SerializeField] private float landingAnticipation = 0.1f;
 
+    [Header("Modelo animado: giros con vida")]
+    [Tooltip("Resorte del giro hacia donde te mueves (con un poquito de rebote al final).")]
+    [SerializeField] private float yawStiffness = 170f;
+    [SerializeField] private float yawDamping = 19f;
+    [Tooltip("Cuánto se inclina hacia adentro de la curva (por grado/s × m/s).")]
+    [SerializeField] private float bankPerTurn = 0.0045f;
+    [SerializeField] private float maxBank = 26f;
+    [Tooltip("Inclinación en el aire según subes o caes.")]
+    [SerializeField] private float airPitchPerSpeed = 0.9f;
+    [SerializeField] private float maxAirPitch = 11f;
+    [SerializeField] private float spinDuration = 0.42f;
+    [SerializeField] private float flipDuration = 0.5f;
+
     [Header("Daño y muerte")]
     [SerializeField] private float hurtShake = 0.07f;
     [SerializeField] private float hurtDuration = 0.35f;
@@ -64,6 +79,25 @@ public class PogoAnimator : MonoBehaviour
     private ParticleSystem dust;
     private bool wasSliding;
     private float roll;
+    private float yawVel, bank, airPitch;
+    // Truco en curso (vuelta sobre el pogo o mortal): eje local, sentido y avance.
+    private Vector3 trickAxis;
+    private float trickSign, trickTime = -1f, trickLength = 1f;
+    private const float TrickPivotHeight = 1f;   // gira alrededor del cuerpo, no de la punta del pogo
+
+    // Vuelta completa sobre el pogo (giro brusco o dash lateral). dir: -1 izquierda, +1 derecha.
+    public void Spin(float dir)
+    {
+        if (deformBody || trickTime >= 0f) return;
+        trickAxis = Vector3.up; trickSign = dir < 0f ? -1f : 1f; trickLength = spinDuration; trickTime = 0f;
+    }
+
+    // Mortal hacia adelante (salto en el aire).
+    public void Flip()
+    {
+        if (deformBody || trickTime >= 0f) return;
+        trickAxis = Vector3.right; trickSign = 1f; trickLength = flipDuration; trickTime = 0f;
+    }
 
     private Renderer[] renderers;
     private readonly List<Color[]> baseColors = new List<Color[]>();
@@ -136,7 +170,15 @@ public class PogoAnimator : MonoBehaviour
         bool diving = !sliding && PogoBridge.IsCtrlHeld(player) && !PogoBridge.IsGrounded(player);
 
         // ---- Mirar hacia donde se mueve ----
-        if (speed > 0.5f)
+        if (!deformBody)
+        {
+            // Resorte: sigue la dirección con algo de inercia y se pasa un poquito antes de asentarse.
+            float targetYaw = speed > 0.5f ? Quaternion.LookRotation(horizontal).eulerAngles.y : yaw;
+            float err = Mathf.DeltaAngle(yaw, targetYaw);
+            yawVel += (err * yawStiffness - yawVel * yawDamping) * dt;
+            yaw += yawVel * dt;
+        }
+        else if (speed > 0.5f)
             yaw = Mathf.LerpAngle(yaw, Quaternion.LookRotation(horizontal).eulerAngles.y, 1f - Mathf.Exp(-turnSpeed * dt));
 
         float targetPitch = sliding ? slideLean
@@ -158,8 +200,20 @@ public class PogoAnimator : MonoBehaviour
         float targetRoll = sliding ? Mathf.Sin(Time.time * 7f) * slideSway * Mathf.Clamp01(speed / 6f) : 0f;
         roll = Mathf.Lerp(roll, targetRoll, 1f - Mathf.Exp(-12f * dt));
 
+        if (!deformBody)
+        {
+            bool airborne = !PogoBridge.IsGrounded(player) && !sliding && !diving;
+            // Se inclina hacia adentro de la curva (gira a la derecha = se ladea a la derecha).
+            float targetBank = Mathf.Clamp(-yawVel * speed * bankPerTurn, -maxBank, maxBank);
+            if (airborne) targetBank += Mathf.Sin(Time.time * 4.3f) * 2.5f;   // vaivén suave en el aire
+            bank = Mathf.Lerp(bank, sliding ? 0f : targetBank, 1f - Mathf.Exp(-9f * dt));
+            // Subiendo se echa un poco atrás; cayendo, hacia adelante.
+            float targetAir = airborne ? Mathf.Clamp(-v.y * airPitchPerSpeed, -maxAirPitch, maxAirPitch) : 0f;
+            airPitch = Mathf.Lerp(airPitch, targetAir, 1f - Mathf.Exp(-6f * dt));
+        }
+
         if (facingRoot != null)
-            facingRoot.rotation = Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(pitch, 0f, roll);
+            facingRoot.rotation = Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(pitch + airPitch, 0f, roll + bank);
 
         // ---- Resorte de aplastar/estirar ----
         float target;
@@ -172,11 +226,14 @@ public class PogoAnimator : MonoBehaviour
         scaleVelocity += accel * dt;
         scaleY = Mathf.Clamp(scaleY + scaleVelocity * dt, 0.55f, 1.4f);
 
-        float side = 1f / Mathf.Sqrt(scaleY);
-        visualRoot.localScale = Vector3.Scale(rootBaseScale, new Vector3(side, scaleY, side));
+        if (deformBody)
+        {
+            float side = 1f / Mathf.Sqrt(scaleY);
+            visualRoot.localScale = Vector3.Scale(rootBaseScale, new Vector3(side, scaleY, side));
 
-        if (body != null)
-            body.localPosition = bodyBasePosition + Vector3.up * (scaleY - 1f) * bodySink;
+            if (body != null)
+                body.localPosition = bodyBasePosition + Vector3.up * (scaleY - 1f) * bodySink;
+        }
 
         // ---- Daño ----
         float health = PogoBridge.Health(player);
@@ -189,10 +246,22 @@ public class PogoAnimator : MonoBehaviour
 
         // Temblor por daño o mientras se carga el salto agachado.
         float charge = jump != null ? jump.CrouchCharge : 0f;
-        float shakeAmount = hurtShake * hurt + 0.025f * charge;
+        // Con el modelo animado el golpe lo hace el clip PM_Golpe: sin temblor encima.
+        float shakeAmount = deformBody ? hurtShake * hurt + 0.025f * charge : 0f;
         Vector3 shake = shakeAmount > 0f ? Random.insideUnitSphere * shakeAmount : Vector3.zero;
-        visualRoot.localPosition = rootBasePosition + shake;
-        visualRoot.localRotation = rootBaseRotation;
+        // Truco (vuelta o mortal): rota alrededor del cuerpo, no de la punta del pogo.
+        Quaternion trick = Quaternion.identity;
+        if (trickTime >= 0f)
+        {
+            trickTime += dt;
+            float k = Mathf.Clamp01(trickTime / trickLength);
+            float ease = 1f - Mathf.Pow(1f - k, 3f);
+            trick = Quaternion.AngleAxis(360f * ease * trickSign, trickAxis);
+            if (k >= 1f) { trickTime = -1f; trick = Quaternion.identity; }
+        }
+        Vector3 pivot = Vector3.up * TrickPivotHeight;
+        visualRoot.localPosition = rootBasePosition + shake + pivot - trick * pivot;
+        visualRoot.localRotation = trick * rootBaseRotation;
 
         Tint(hurt);
         UpdateDust(sliding, speed);

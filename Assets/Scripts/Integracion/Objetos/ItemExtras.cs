@@ -51,49 +51,6 @@ public class SpiritCompanion : MonoBehaviour
     private void OnDestroy() => alive.Remove(this);
 }
 
-// Muela de Rebote: el escupitajo salta a otro enemigo cercano (y a un segundo con 2 copias).
-public class SpitBounce : MonoBehaviour
-{
-    private EnemyTracker target;
-    private float damage, secondDamage;
-    private List<EnemyTracker> visited;
-    private Material fx;
-    private Vector3 vel;
-    private float life = 1.5f;
-
-    public static void Fire(Vector3 from, EnemyTracker target, float damage, float secondDamage, List<EnemyTracker> visited, Material fx)
-    {
-        var go = new GameObject("EscupitajoRebote");
-        go.transform.position = from;
-        var b = go.AddComponent<SpitBounce>();
-        b.target = target; b.damage = damage; b.secondDamage = secondDamage; b.visited = visited; b.fx = fx;
-        b.vel = (target.Center - from).normalized * 14f + Vector3.up * 3f;
-        ItemFx.Trail(go, new Color(0.4f, 0.75f, 1f), 0.22f, 0.25f, fx);
-    }
-
-    private void Update()
-    {
-        life -= Time.deltaTime;
-        if (life <= 0f || target == null || target.IsDead) { Destroy(gameObject); return; }
-        Vector3 to = target.Center - transform.position;
-        if (to.sqrMagnitude < 0.5f * 0.5f)
-        {
-            target.Hit(damage, HitSource.Spit);
-            ItemFx.Burst(transform.position, 10, 0.2f, new Color(0.4f, 0.75f, 1f), fx, 3f, 0.15f, 0.3f);
-            visited.Add(target);
-            if (secondDamage > 0f)
-            {
-                EnemyTracker next = ItemEffects.Nearest(transform.position, 5f, visited);
-                if (next != null) Fire(transform.position, next, secondDamage, 0f, visited, fx);
-            }
-            Destroy(gameObject);
-            return;
-        }
-        vel = Vector3.MoveTowards(vel, to.normalized * 20f, 80f * Time.deltaTime);
-        transform.position += vel * Time.deltaTime;
-    }
-}
-
 // Chiflador de Banqueta: cohete que vuela al frente y explota al tocar a alguien o a los 12 m.
 public class Rocket : MonoBehaviour
 {

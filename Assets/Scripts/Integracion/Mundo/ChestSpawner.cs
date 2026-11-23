@@ -47,7 +47,12 @@ public class ChestSpawner : MonoBehaviour
         foreach (Chest c in FindObjectsByType<Chest>())
             if (template == null || (!c.Opened && template.Opened)) template = c;
         if (template == null) return null;
-        if (!Physics.Raycast(at + Vector3.up * 6f, Vector3.down, out RaycastHit hit, 20f, ~0, QueryTriggerInteraction.Ignore) || hit.rigidbody != null)
+        // El piso más cercano debajo, sin contar demonios ni a Pogoman (el élite que lo suelta sigue ahí).
+        RaycastHit hit = default;
+        bool found = false;
+        foreach (RaycastHit h in Physics.RaycastAll(at + Vector3.up * 6f, Vector3.down, 20f, ~0, QueryTriggerInteraction.Ignore))
+            if (h.rigidbody == null && (!found || h.distance < hit.distance)) { hit = h; found = true; }
+        if (!found)
             return null;
         if (hit.collider.GetComponent<LavaHazard>() != null) return null;
 
@@ -61,7 +66,8 @@ public class ChestSpawner : MonoBehaviour
         foreach (Transform child in copy.GetComponentsInChildren<Transform>(true))
             if (child != copy.transform && (child.GetComponent<Light>() != null || child.GetComponent<ParticleSystem>() != null))
                 DestroyImmediate(child.gameObject);
-        foreach (Renderer r in copy.GetComponentsInChildren<Renderer>(true)) r.SetPropertyBlock(null);
+        foreach (Renderer r in copy.GetComponentsInChildren<Renderer>(true)) { r.SetPropertyBlock(null); r.enabled = true; }
+        foreach (Collider c in copy.GetComponentsInChildren<Collider>(true)) c.enabled = true;   // por si el molde ya estaba abierto
         Chest chest = copy.GetComponent<Chest>();
         chest.Configure(cost);
         copy.transform.SetParent(null, true);

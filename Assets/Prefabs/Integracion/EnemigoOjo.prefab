@@ -1,0 +1,123 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &5671015200327704119
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1340858495610245740, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: radioAlerta
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1340858495610245740, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: capasDano.m_Bits
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2539587396884480969, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: m_Name
+      value: EnemigoOjo
+      objectReference: {fileID: 0}
+    - target: {fileID: 2918714417468933793, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2918714417468933793, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2918714417468933793, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2918714417468933793, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2918714417468933793, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2918714417468933793, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2918714417468933793, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2918714417468933793, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2918714417468933793, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2918714417468933793, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2539587396884480969, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2171066937689369377}
+    - targetCorrespondingSourceObject: {fileID: 2539587396884480969, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5475940946673114725}
+  m_SourcePrefab: {fileID: 100100000, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+--- !u!1 &7893986679009336830 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2539587396884480969, guid: d94359b9877216afe85918c7fac53b34, type: 3}
+  m_PrefabInstance: {fileID: 5671015200327704119}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2171066937689369377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7893986679009336830}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6992ead1c6593d15c827b1e373c7b1ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OjoEnemy
+  target: {fileID: 0}
+  moveSpeed: 4.2
+  maxHealth: 45
+  damage: 8
+  knockback: 6
+  stompReach: 1.1
+  stompBounce: 11
+--- !u!114 &5475940946673114725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7893986679009336830}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60dc3683ca077e178ad6779fcd559dd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyTracker
+  isBoss: 0
+  displayName: OJO ALADO
+  figure: {fileID: 0}
+  deathClip: {fileID: 8300000, guid: 96599021d935b38fbb8fd1418d83e387, type: 3}
+  hitClip: {fileID: 8300000, guid: 19e062c47d6e8e840b9c0de92bf02837, type: 3}
+  groanClip: {fileID: 0}
+  groanInterval: {x: 4, y: 9}
+  coinPrefab: {fileID: 7733439221184182898, guid: 700feaacb5b508f42a70eca99a4a3946, type: 3}
+  coinsMin: 1
+  coinsMax: 3
+  coinChance: 0.6
+  xpValue: 2
+  bossXpValue: 25
+  bigGemChance: 0.05

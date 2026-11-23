@@ -26,6 +26,14 @@ public enum PogoStat
     Regeneration,   // vida por segundo
     Shield,         // escudo máximo (absorbe daño y se recarga)
     XpGain,         // multiplicador de experiencia
+    // ---- Nuevos (van al final: los anteriores no cambian de número) ----
+    SpitBounces,    // rebotes del escupitajo a otro demonio
+    WaveDamage,     // daño de la onda del pogo
+    WaveRate,       // cadencia de la onda (multiplicador; más = más seguido)
+    WaveSize,       // tamaño de la onda (multiplicador)
+    WaveCount,      // ondas por cada caída
+    PogoDamage,     // multiplicador del golpe directo del pogo
+    PogoRadius,     // metros extra del golpe directo
 }
 
 // Stats de Pogoman, experiencia/niveles y estadísticas de la partida.
@@ -46,6 +54,12 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private float spitArea = 1.2f;
     [SerializeField] private float spitSize = 1f;
     [SerializeField] private float projectiles = 1f;
+
+    [Header("Onda del pogo (base)")]
+    [SerializeField] private float waveDamage = 18f;
+    [Tooltip("Segundos entre ondas con cadencia 1.")]
+    [SerializeField] private float waveCooldown = 2f;
+    public float WaveCooldownBase => waveCooldown;
 
     [Header("Movimiento (base)")]
     [SerializeField] private float moveSpeed = 1f;
@@ -99,8 +113,8 @@ public class PlayerStats : MonoBehaviour
 
     // ---- Contrarreloj ----
     [Header("Contrarreloj")]
-    [Tooltip("Segundos para terminar la partida (15 min).")]
-    [SerializeField] private float timeLimit = 900f;
+    [Tooltip("Segundos para terminar la partida (10 min).")]
+    [SerializeField] private float timeLimit = 600f;
     public float TimeLimit => timeLimit;
     public float TimeLeft => Mathf.Max(0f, timeLimit - RunTime);
     // Se dispara una vez cuando el tiempo llega a 0. Por ahora no hace nada.
@@ -149,6 +163,11 @@ public class PlayerStats : MonoBehaviour
             case PogoStat.Regeneration: return regeneration;
             case PogoStat.Shield: return shield;
             case PogoStat.XpGain: return xpGain;
+            case PogoStat.WaveDamage: return waveDamage;
+            case PogoStat.WaveRate: return 1f;
+            case PogoStat.WaveSize: return 1f;
+            case PogoStat.WaveCount: return 1f;
+            case PogoStat.PogoDamage: return 1f;
             default: return 0f;   // MaxHealth es un bono sobre la vida de Pogoman
         }
     }
@@ -168,7 +187,9 @@ public class PlayerStats : MonoBehaviour
         {
             case PogoStat.CritChance: return Mathf.Clamp01(value);
             case PogoStat.AirJumps: return Mathf.Clamp(Mathf.Round(value), 0f, 10f);
-            case PogoStat.Projectiles: return Mathf.Clamp(Mathf.Round(value), 1f, 12f);
+            case PogoStat.Projectiles: return Mathf.Clamp(Mathf.Round(value), 1f, 60f);
+            case PogoStat.SpitBounces: return Mathf.Clamp(Mathf.Round(value), 0f, 40f);
+            case PogoStat.WaveCount: return Mathf.Clamp(Mathf.Round(value), 1f, 30f);
             case PogoStat.DashCooldown: return Mathf.Max(minDashCooldown, value);
             case PogoStat.PickupRadius: return Mathf.Clamp(value, 0f, 8f);   // tope global de recogida
             default: return Mathf.Max(0f, value);

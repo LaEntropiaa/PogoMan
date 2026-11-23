@@ -23,7 +23,12 @@ public class EnemyHealthBars : MonoBehaviour
     {
         public RectTransform rect;
         public RectTransform fill;
+        public Image fillImage;
     }
+
+    private static readonly Color Normal = new Color(0.9f, 0.15f, 0.12f);
+    private static readonly Color EliteColor = new Color(0.8f, 0.3f, 1f);
+    private static readonly Color Low = new Color(1f, 0.55f, 0.1f);
 
     private readonly List<Bar> bars = new List<Bar>();
     private RectTransform root;
@@ -59,12 +64,33 @@ public class EnemyHealthBars : MonoBehaviour
             fillRect.offsetMax = new Vector2(-2, -2);
             fillRect.pivot = new Vector2(0, 0.5f);
 
+            // Brillo arriba y sombra abajo: más volumen sin hacerla más grande.
+            RectTransform hi = FancyBar.Img("Brillo", fillRect, new Color(1f, 1f, 1f, 0.35f)).rectTransform;
+            hi.anchorMin = new Vector2(0f, 0.55f); hi.anchorMax = new Vector2(1f, 0.85f); hi.offsetMin = hi.offsetMax = Vector2.zero;
+            RectTransform sh = FancyBar.Img("Sombra", fillRect, new Color(0f, 0f, 0f, 0.35f)).rectTransform;
+            sh.anchorMin = Vector2.zero; sh.anchorMax = new Vector2(1f, 0.3f); sh.offsetMin = sh.offsetMax = Vector2.zero;
+            frameImage.color = new Color(1f, 0.85f, 0.6f);
+
             frame.SetActive(false);
-            bars.Add(new Bar { rect = rect, fill = fillRect });
+            bars.Add(new Bar { rect = rect, fill = fillRect, fillImage = fillImage });
         }
 
         if (bossGroup != null)
             bossGroup.alpha = 0f;
+        // Barra de los guardianes: brillo, sombra y nombre con fuego.
+        if (bossFill != null)
+        {
+            RectTransform hi = FancyBar.Img("Brillo", bossFill, new Color(1f, 1f, 1f, 0.3f)).rectTransform;
+            hi.anchorMin = new Vector2(0f, 0.6f); hi.anchorMax = new Vector2(1f, 0.85f); hi.offsetMin = hi.offsetMax = Vector2.zero;
+            RectTransform sh = FancyBar.Img("Sombra", bossFill, new Color(0f, 0f, 0f, 0.3f)).rectTransform;
+            sh.anchorMin = Vector2.zero; sh.anchorMax = new Vector2(1f, 0.28f); sh.offsetMin = sh.offsetMax = Vector2.zero;
+        }
+        if (bossName != null && bossName.GetComponent<PixelTextFx>() == null)
+        {
+            var fx = bossName.gameObject.AddComponent<PixelTextFx>();
+            fx.top = new Color(1f, 0.9f, 1f); fx.bottom = new Color(0.8f, 0.4f, 1f);
+            fx.extrudeFront = new Color(0.2f, 0.03f, 0.3f); fx.extrudeBack = new Color(0.05f, 0f, 0.1f); fx.depth = 3; fx.shineEvery = 4f;
+        }
     }
 
     private void LateUpdate()
@@ -111,7 +137,11 @@ public class EnemyHealthBars : MonoBehaviour
             Bar bar = bars[used++];
             RectTransformUtility.ScreenPointToLocalPointInRectangle(root, screen, null, out Vector2 local);
             bar.rect.anchoredPosition = new Vector2(Mathf.Round(local.x), Mathf.Round(local.y));
-            SetFill(bar.fill, e.Health / e.MaxHealth);
+            float pct = e.Health / e.MaxHealth;
+            SetFill(bar.fill, pct);
+            // Élites en morado; con poca vida late en naranja.
+            bar.fillImage.color = e.IsElite ? EliteColor : pct < 0.3f && Mathf.Repeat(Time.time * 4f, 1f) < 0.5f ? Low : Normal;
+            bar.rect.localScale = e.IsElite ? new Vector3(1.3f, 1.2f, 1f) : Vector3.one;
             bar.rect.gameObject.SetActive(true);
         }
 

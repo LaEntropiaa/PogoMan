@@ -57,5 +57,17 @@ public class RunSystems : MonoBehaviour
         if (abilities == null)
             abilities = player.gameObject.AddComponent<PogoAbilities>();
         abilities.Configure(dashClip, airJumpClip, fxMaterial);
+
+        // Onda del pogo, castigo por pararse en la cabeza de un demonio y regreso al mapa si te caes.
+        if (player.GetComponent<PogoShockwave>() == null)
+            player.gameObject.AddComponent<PogoShockwave>();
+        if (player.GetComponent<HeadStandPunish>() == null)
+            player.gameObject.AddComponent<HeadStandPunish>();
+        if (player.GetComponent<PogoDeathFx>() == null)
+            player.gameObject.AddComponent<PogoDeathFx>();
+        if (player.GetComponent<OutOfBoundsGuard>() == null)
+            player.gameObject.AddComponent<OutOfBoundsGuard>();
+        if (DemoGodMode.Enabled && player.GetComponent<DemoGodMode>() == null)
+            player.gameObject.AddComponent<DemoGodMode>();
     }
 }

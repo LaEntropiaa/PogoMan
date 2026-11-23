@@ -32,6 +32,10 @@ public class ArenaFight : MonoBehaviour
     [SerializeField] private Material fxMaterial;
     [SerializeField] private Font font;
     [SerializeField] private AudioClip arenaMusic;
+    [Tooltip("Música de la segunda fase (FURIA).")]
+    [SerializeField] private AudioClip furyMusic;
+    [Tooltip("Música del modo infinito (el infierno quiere eliminarte).")]
+    [SerializeField] private AudioClip endlessMusic;
     [SerializeField] private AudioClip laughClip;
     [SerializeField] private AudioClip castClip;
     [SerializeField] private AudioClip explodeClip;
@@ -57,8 +61,12 @@ public class ArenaFight : MonoBehaviour
     // HUD
     private CanvasGroup hud;
     private Text bossName, bossState, banner, bannerSub;
-    private RectTransform bossFill, bossFillLag;
-    private float bannerTimer, bannerPop, lagHealth = 1f;
+    private RectTransform bossBarRoot;
+    private FancyBar bossBar;
+    private Text bossTitle, bossHp;
+    private RectTransform[] bossEmbers;
+    private float lastBossHealth = -1f, barShake;
+    private float bannerTimer, bannerPop;
 
     private static Vector3 Flat(Vector3 v) { v.y = 0f; return v.sqrMagnitude > 0.0001f ? v.normalized : Vector3.forward; }
 
@@ -93,8 +101,102 @@ public class ArenaFight : MonoBehaviour
         InArena = true;
         BuildHud();
         SpawnDevil();
-        ShowBanner("EL DIABLO TENDERO", "", 3.5f);
+        ShowBanner("EL DIABLO", "SEÑOR DEL INFIERNO", 2.6f);
         Play(laughClip, 1f, 1f);
+        devil.IntroTime = IntroBow + IntroLines.Length * LineTime + 0.6f;
+        StartCoroutine(IntroCinematic());
+    }
+
+    // ---- Intro: hace su reverencia y luego te habla ----
+    private const float IntroBow = 2.6f;
+    private const float LineTime = 2.7f;
+    private static readonly string[] IntroLines =
+    {
+        "Vaya, vaya... el cliente que vendió su alma por un pogo.",
+        "¿Creíste que podías rebotar en MI tiendita sin pagar?",
+        "Aquí no se fía, mijo. Se paga con el alma... ¡y la tuya ya es MÍA!",
+    };
+    private static readonly string[] FuryLines =
+    {
+        "¡JA! ¿Creíste que eso era todo?",
+        "¡La tiendita todavía NO CIERRA!",
+    };
+    private RectTransform barTop, barBottom, speech;
+    private Text speechText, speechName;
+    private CanvasGroup speechGroup;
+    private static AudioClip voiceBlip;
+
+    private IEnumerator IntroCinematic()
+    {
+        yield return Letterbox(true);
+        yield return new WaitForSeconds(IntroBow - 0.4f);
+        // Termina la reverencia: desde aquí lo anima DevilRig (hablando).
+        if (graph.IsValid()) graph.Destroy();
+        if (devil != null && devil.Rig != null) devil.Rig.State = DevilRig.Pose.Talk;
+        yield return Speak(IntroLines, LineTime);
+        StartCoroutine(Letterbox(false));
+    }
+
+    private IEnumerator Speak(string[] lines, float perLine)
+    {
+        speechGroup.alpha = 1f;
+        foreach (string line in lines)
+        {
+            float start = Time.time;
+            int shown = 0;
+            while (Time.time - start < perLine)
+            {
+                int n = Mathf.Min(line.Length, Mathf.FloorToInt((Time.time - start) * 38f));
+                if (n > shown)
+                {
+                    // Un "bla" grave por cada par de letras (voz de diablo).
+                    if (n / 2 != shown / 2 && line[n - 1] != ' ')
+                        PlayVoice(0.55f + Random.value * 0.12f);
+                    shown = n;
+                    speechText.text = line.Substring(0, n);
+                }
+                devil?.Rig?.Talking(n < line.Length);
+                speech.localScale = Vector3.one * (1f + Mathf.Max(0f, 0.08f - (Time.time - start)) * 2f);
+                yield return null;
+            }
+            devil?.Rig?.Talking(false);
+        }
+        for (float a = 1f; a > 0f; a -= Time.deltaTime * 4f) { speechGroup.alpha = a; yield return null; }
+        speechGroup.alpha = 0f;
+    }
+
+    private IEnumerator Letterbox(bool show)
+    {
+        for (float k = 0f; k <= 1f; k += Time.unscaledDeltaTime * 3f)
+        {
+            float e = show ? k : 1f - k;
+            e = e * e * (3f - 2f * e);
+            barTop.sizeDelta = new Vector2(0f, 130f * e);
+            barBottom.sizeDelta = new Vector2(0f, 130f * e);
+            yield return null;
+        }
+        barTop.sizeDelta = barBottom.sizeDelta = new Vector2(0f, show ? 130f : 0f);
+    }
+
+    private void PlayVoice(float pitch)
+    {
+        if (voiceBlip == null)
+        {
+            const int rate = 44100;
+            int n = rate / 14;
+            var data = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)rate;
+                float env = Mathf.Sin(Mathf.PI * i / n);
+                // Vocal "a" gruesa: fundamental + formantes aproximados.
+                data[i] = env * (Mathf.Sin(2f * Mathf.PI * 110f * t) * 0.6f + Mathf.Sin(2f * Mathf.PI * 760f * t) * 0.25f * Mathf.Sin(2f * Mathf.PI * 110f * t)
+                    + Mathf.Sin(2f * Mathf.PI * 1150f * t) * 0.12f) * 0.8f;
+            }
+            voiceBlip = AudioClip.Create("VozDiablo", n, 1, rate, false);
+            voiceBlip.SetData(data, 0);
+        }
+        Play(voiceBlip, pitch * 2f, 0.55f);
     }
 
     private void SpawnDevil()
@@ -162,8 +264,8 @@ public class ArenaFight : MonoBehaviour
             var e = aura.emission;
             var mm = aura.main;
             bool vulnerable = p == DevilBoss.Phase.Vulnerable;
-            e.rateOverTime = vulnerable ? 15f : 30f;
-            mm.startColor = vulnerable ? new Color(1f, 0.9f, 0.3f, 0.8f) : new Color(0.55f, 0.15f, 0.9f, 0.7f);
+            e.rateOverTime = vulnerable ? 15f : devil.Fury ? 70f : 30f;
+            mm.startColor = vulnerable ? new Color(1f, 0.9f, 0.3f, 0.8f) : devil.Fury ? new Color(1f, 0.2f, 0.05f, 0.85f) : new Color(0.55f, 0.15f, 0.9f, 0.7f);
         };
 
         var rig = go.AddComponent<DevilRig>();
@@ -243,14 +345,117 @@ public class ArenaFight : MonoBehaviour
     public void OnSlam(Vector3 at)
     {
         Play(slamClip, 1f, 1f);
-        for (int i = 0; i < 16; i++)
+        CameraShake.Add(0.5f, 0.8f);
+        FxKit.Ring(at, 12f, new Color(1f, 0.8f, 0.4f), new Color(0.9f, 0.3f, 0.1f));
+        FxKit.Crack(at, 5f, new Color(1f, 0.4f, 0.08f));
+        for (int i = 0; i < 8; i++)
         {
-            float a = i / 16f * Mathf.PI * 2f;
-            ItemFx.Burst(at + new Vector3(Mathf.Cos(a), 0.3f, Mathf.Sin(a)) * 3f, 10, 0.4f, new Color(0.45f, 0.25f, 0.2f), fxMaterial, 8f, 0.7f, 0.7f);
+            float a = i / 8f * Mathf.PI * 2f;
+            ItemFx.Burst(at + new Vector3(Mathf.Cos(a), 0.3f, Mathf.Sin(a)) * 6f, 6, 0.6f, new Color(0.45f, 0.25f, 0.2f), fxMaterial, 8f, 0.7f, 0.7f);
         }
     }
 
     public void OnRise() => Play(laughClip, Random.Range(0.95f, 1.05f), 0.8f);
+
+    // ---- Ataques especiales ----
+    public void OnSpecial(int kind)
+    {
+        Play(kind == 2 ? laughClip : castClip, kind == 2 ? 0.8f : 0.7f, 0.9f);
+    }
+
+    // Erupción: columna de fuego sólida + grietas y rocas (antes eran puras luces).
+    public void OnPillarErupt(Vector3 at)
+    {
+        Play(explodeClip, Random.Range(0.8f, 0.95f), 0.5f);
+        AttackFx.Eruption(at, 2.2f, 6f);
+    }
+
+    // El anillo de fuego deja llamas por donde pasa.
+    public void OnRingTick(Vector3 c, float r)
+    {
+        for (int i = 0; i < 7; i++)
+        {
+            float a = Random.value * Mathf.PI * 2f;
+            AttackFx.Flicker(c + new Vector3(Mathf.Cos(a), 0.1f, Mathf.Sin(a)) * r, 0.4f, Color.white);
+        }
+    }
+
+    // Saca un ojo alado en la arena (furia).
+    public bool SummonFlyer(List<Enemy> list)
+    {
+        EnemyDirector director = EnemyDirector.Instance;
+        return director != null && director.FlyingPrefab != null && Summon(director.FlyingPrefab, list, false);
+    }
+
+    // ---- Segunda fase ----
+    private Renderer[] devilRenderers;
+    private Material[] devilMaterials;
+    private Color[] devilBaseColors;
+    private ParticleSystem devilAura;
+
+    public void OnEnrage(DevilBoss boss)
+    {
+        StartCoroutine(EnrageRoutine(boss));
+    }
+
+    private IEnumerator EnrageRoutine(DevilBoss boss)
+    {
+        Play(vulnerableClip, 0.6f, 1f);
+        Play(laughClip, 0.75f, 1f);
+        ShowBanner("¡FURIA!", "SEGUNDA FASE", 3f);
+        if (furyMusic != null) FindAnyObjectByType<GameMusic>()?.SwitchTo(furyMusic, 0.4f);
+        if (PlayerVitals.Instance != null)
+            PlayerVitals.Instance.InvulnerableUntil = Mathf.Max(PlayerVitals.Instance.InvulnerableUntil, Time.time + 3.5f);
+        ItemFx.Burst(boss.transform.position + Vector3.up * 3f, 120, 2.5f, new Color(1f, 0.15f, 0.05f), fxMaterial, 12f, 0.6f, 1f);
+        StartCoroutine(Letterbox(true));
+        yield return Speak(FuryLines, 1.5f);
+        StartCoroutine(Letterbox(false));
+    }
+
+    // Se va poniendo rojo brillante mientras recupera su vida.
+    public void OnEnrageTick(float k)
+    {
+        if (devil == null) return;
+        if (devilMaterials == null)
+        {
+            devilRenderers = devil.GetComponentsInChildren<Renderer>();
+            var mats = new List<Material>();
+            var cols = new List<Color>();
+            foreach (Renderer r in devilRenderers)
+            {
+                if (r is ParticleSystemRenderer) continue;
+                foreach (Material m in r.materials)
+                {
+                    mats.Add(m);
+                    cols.Add(m.HasProperty("_BaseColor") ? m.GetColor("_BaseColor") : Color.white);
+                    m.EnableKeyword("_EMISSION");
+                }
+            }
+            devilMaterials = mats.ToArray();
+            devilBaseColors = cols.ToArray();
+            devilAura = devil.GetComponentInChildren<ParticleSystem>();
+        }
+        for (int i = 0; i < devilMaterials.Length; i++)
+        {
+            Material m = devilMaterials[i];
+            if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Color.Lerp(devilBaseColors[i], new Color(1f, 0.2f, 0.12f), k * 0.75f));
+            if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", new Color(1f, 0.08f, 0.02f) * (k * 2.2f));
+        }
+        if (devilAura != null)
+        {
+            var main = devilAura.main;
+            main.startColor = new Color(1f, 0.2f, 0.05f, 0.85f);
+            var em = devilAura.emission;
+            em.rateOverTime = 30f + 40f * k;
+        }
+        if (Random.value < 0.25f)
+            ItemFx.Burst(devil.transform.position + Vector3.up * Random.Range(1f, 6f) + Random.insideUnitSphere, 12, 0.5f, new Color(1f, 0.25f, 0.05f), fxMaterial, 5f, 0.4f, 0.5f);
+    }
+
+    public void OnSurviveStarted()
+    {
+        ShowBanner("¡SOBREVIVE!", "", 1.6f);
+    }
     public void OnDescend() { }
 
     public void OnVulnerable()
@@ -341,7 +546,7 @@ public class ArenaFight : MonoBehaviour
         }
         if (PlayerVitals.Instance != null) PlayerVitals.Instance.InvulnerableUntil = Time.time + 3f;
         SceneNav.SetGameplayCursor(true);
-        EndlessMode.Begin(font);
+        EndlessMode.Begin(font, endlessMusic);
     }
 
     private IEnumerator Victory(DevilBoss boss)
@@ -394,17 +599,48 @@ public class ArenaFight : MonoBehaviour
         hud.blocksRaycasts = false;
         Transform root = canvas.transform;
 
+        // ---- Barra del jefe final: marco dorado con cuernos, nombre con fuego y número de vida ----
         bossName = UiKit.Text(UiKit.Rect("Nombre", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-            new Vector2(0, -70), new Vector2(900, 44)), font, 38, new Color(1f, 0.75f, 0.55f), TextAnchor.MiddleCenter, "EL DIABLO TENDERO");
-        RectTransform bar = UiKit.Rect("Barra", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-            new Vector2(0, -118), new Vector2(760, 22));
-        UiKit.Image(bar, new Color(0.08f, 0.02f, 0.04f, 0.85f));
-        bossFillLag = UiKit.Rect("Retraso", bar, Vector2.zero, Vector2.one, new Vector2(0f, 0.5f), Vector2.zero, Vector2.zero);
-        UiKit.Image(bossFillLag, new Color(1f, 0.85f, 0.6f));
-        bossFill = UiKit.Rect("Vida", bar, Vector2.zero, Vector2.one, new Vector2(0f, 0.5f), Vector2.zero, Vector2.zero);
-        UiKit.Image(bossFill, new Color(0.75f, 0.08f, 0.15f));
+            new Vector2(0, -38), new Vector2(1000, 64)), font, 54, Color.white, TextAnchor.MiddleCenter, "EL DIABLO");
+        var nameFx = bossName.gameObject.AddComponent<PixelTextFx>();
+        nameFx.top = new Color(1f, 0.92f, 0.55f); nameFx.bottom = new Color(1f, 0.25f, 0.08f);
+        nameFx.depth = 4; nameFx.step = 3f; nameFx.shineEvery = 3f;
+        bossTitle = UiKit.Text(UiKit.Rect("Titulo", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+            new Vector2(0, -92), new Vector2(1000, 28)), font, 22, new Color(1f, 0.7f, 0.45f), TextAnchor.MiddleCenter, "· SEÑOR DEL INFIERNO ·");
+        bossTitle.gameObject.AddComponent<PixelTextFx>().depth = 2;
+
+        bossBarRoot = UiKit.Rect("Barra", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+            new Vector2(0, -122), new Vector2(940, 30));
+        bossBar = FancyBar.Build(bossBarRoot, new Color(0.85f, 0.08f, 0.12f), new Color(1f, 0.85f, 0.5f),
+            new Color(0.95f, 0.72f, 0.25f), new Color(0.25f, 0.03f, 0.03f), 20, 4f, 3f);
+        bossBar.SetLagSpeed(0.25f);
+        bossBar.SetShineEvery(3f);
+        // Cuernos de pixel en las orillas.
+        foreach (float side in new[] { -1f, 1f })
+            for (int i = 0; i < 4; i++)
+            {
+                RectTransform h = FancyBar.Img("Cuerno", bossBarRoot, i == 3 ? new Color(1f, 0.95f, 0.8f) : new Color(0.95f, 0.72f, 0.25f)).rectTransform;
+                h.anchorMin = h.anchorMax = new Vector2(side < 0 ? 0f : 1f, 0.5f);
+                h.sizeDelta = new Vector2(14f - i * 2.5f, 14f - i * 2.5f);
+                h.anchoredPosition = new Vector2(side * (14f + i * 11f), 8f + i * i * 4f);
+            }
+        // Gema central.
+        RectTransform gem = FancyBar.Img("Gema", bossBarRoot, new Color(0.7f, 0.1f, 0.15f)).rectTransform;
+        gem.anchorMin = gem.anchorMax = new Vector2(0.5f, 0f);
+        gem.sizeDelta = new Vector2(16f, 16f); gem.anchoredPosition = new Vector2(0f, -8f); gem.localRotation = Quaternion.Euler(0, 0, 45f);
+        bossHp = UiKit.Text(UiKit.Stretch("Numero", bossBarRoot), font, 20, Color.white, TextAnchor.MiddleCenter);
+        bossHp.gameObject.AddComponent<Outline>().effectDistance = new Vector2(2f, -2f);
+        bossEmbers = new RectTransform[24];
+        for (int i = 0; i < bossEmbers.Length; i++)
+        {
+            bossEmbers[i] = FancyBar.Img("Brasa", bossBarRoot, new Color(1f, 0.5f, 0.1f, 0f)).rectTransform;
+            bossEmbers[i].anchorMin = bossEmbers[i].anchorMax = new Vector2(Random.value, 0.5f);
+            bossEmbers[i].sizeDelta = Vector2.one * (Random.value < 0.3f ? 6f : 4f);
+        }
+
         bossState = UiKit.Text(UiKit.Rect("Estado", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-            new Vector2(0, -146), new Vector2(1100, 36)), font, 28, Color.white, TextAnchor.MiddleCenter);
+            new Vector2(0, -170), new Vector2(1100, 36)), font, 28, Color.white, TextAnchor.MiddleCenter);
+        bossState.gameObject.AddComponent<Outline>().effectDistance = new Vector2(2f, -2f);
 
         banner = UiKit.Text(UiKit.Rect("Aviso", root, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             new Vector2(0, 170), new Vector2(1600, 120)), font, 90, new Color(1f, 0.85f, 0.4f), TextAnchor.MiddleCenter);
@@ -412,6 +648,20 @@ public class ArenaFight : MonoBehaviour
         bannerSub = UiKit.Text(UiKit.Rect("AvisoSub", root, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
             new Vector2(0, 95), new Vector2(1400, 50)), font, 36, new Color(1f, 0.8f, 0.7f), TextAnchor.MiddleCenter);
         bannerSub.gameObject.AddComponent<Outline>().effectDistance = new Vector2(2, -2);
+
+        // Barras de cine y globo de diálogo (intro y furia).
+        barTop = UiKit.Rect("CineArriba", root, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(0f, 0f));
+        UiKit.Image(barTop, Color.black);
+        barBottom = UiKit.Rect("CineAbajo", root, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), Vector2.zero, new Vector2(0f, 0f));
+        UiKit.Image(barBottom, Color.black);
+        speech = UiKit.Rect("Dialogo", root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 150f), new Vector2(1300f, 150f));
+        UiKit.Image(speech, new Color(0.12f, 0.02f, 0.03f, 0.92f));
+        speech.gameObject.AddComponent<Outline>().effectColor = new Color(1f, 0.35f, 0.15f, 0.9f);
+        speechGroup = speech.gameObject.AddComponent<CanvasGroup>();
+        speechGroup.alpha = 0f;
+        speechName = UiKit.Text(UiKit.Rect("Quien", speech, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(24f, -6f), new Vector2(600f, 40f)),
+            font, 30, new Color(1f, 0.55f, 0.25f), TextAnchor.LowerLeft, "EL DIABLO");
+        speechText = UiKit.Text(UiKit.Stretch("Texto", speech, 24f), font, 38, new Color(1f, 0.93f, 0.85f), TextAnchor.MiddleLeft);
     }
 
     private void ShowBanner(string title, string sub, float seconds)
@@ -439,27 +689,53 @@ public class ArenaFight : MonoBehaviour
 
         if (devil == null)
         {
-            bossName.text = bossState.text = "";
-            UiKit.SetFill(bossFill, 0f);
-            UiKit.SetFill(bossFillLag, 0f);
+            bossName.text = bossState.text = bossTitle.text = bossHp.text = "";
+            bossBarRoot.gameObject.SetActive(false);
             return;
         }
 
         float health = Mathf.Clamp01(devil.Health / devil.MaxHealth);
-        lagHealth = Mathf.MoveTowards(lagHealth, health, dt * 0.25f);
-        if (lagHealth < health) lagHealth = health;
-        UiKit.SetFill(bossFill, health);
-        UiKit.SetFill(bossFillLag, lagHealth);
+        bossBar.Set(health);
+        if (lastBossHealth >= 0f && devil.Health < lastBossHealth - 0.5f) barShake = 1f;
+        lastBossHealth = devil.Health;
+        barShake = Mathf.MoveTowards(barShake, 0f, dt * 4f);
+        bossBarRoot.anchoredPosition = new Vector2(Random.Range(-1f, 1f) * 6f * barShake, -122f + Random.Range(-1f, 1f) * 3f * barShake);
+        bossHp.text = Mathf.CeilToInt(devil.Health).ToString("N0") + " / " + Mathf.RoundToInt(devil.MaxHealth).ToString("N0");
+        bossTitle.text = devil.Fury ? "· FURIA ·" : "· SEÑOR DEL INFIERNO ·";
+        // Brasas que suben de la barra (más en la furia).
+        for (int i = 0; i < bossEmbers.Length; i++)
+        {
+            float ph = Mathf.Repeat(Time.unscaledTime * (0.6f + (i % 5) * 0.15f) + i * 0.37f, 1f);
+            bool on = devil.Fury || i % 3 == 0;
+            RectTransform e = bossEmbers[i];
+            e.anchoredPosition = new Vector2(Mathf.Sin(ph * 6f + i) * 6f, 14f + ph * 46f);
+            e.GetComponent<Image>().color = on ? new Color(1f, 0.45f + 0.4f * (1f - ph), 0.1f, (1f - ph) * 0.9f) : Color.clear;
+        }
 
         switch (devil.State)
         {
+            case DevilBoss.Phase.Flying when devil.Fury:
+                bossState.text = "¡SOBREVIVE!  " + Mathf.CeilToInt(devil.SurviveLeft);
+                bossState.color = new Color(1f, 0.45f, 0.3f);
+                break;
             case DevilBoss.Phase.Flying:
                 bossState.text = "QUEDAN " + devil.WaveRemaining;
                 bossState.color = new Color(0.85f, 0.7f, 1f);
                 break;
+            case DevilBoss.Phase.Vulnerable:
+                bossState.text = "¡PÉGALE CON EL POGO!";
+                bossState.color = new Color(1f, 0.9f, 0.4f);
+                break;
             default:
                 bossState.text = "";
                 break;
+        }
+        if (devil.Fury)
+        {
+            // Barra en rojo brillante que late.
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f);
+            bossBar.SetColor(Color.Lerp(new Color(1f, 0.15f, 0.05f), new Color(1f, 0.55f, 0.15f), pulse * 0.6f));
+            bossName.rectTransform.localScale = Vector3.one * (1f + pulse * 0.04f);
         }
     }
 

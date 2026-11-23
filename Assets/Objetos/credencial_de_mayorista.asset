@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: credencial_de_mayorista
   displayName: Credencial de Mayorista
-  description: "Los enemigos dejan 50 % m\xE1s monedas de compra. El cofre de 50 ahora cuesta 65."
+  description: "Pacto: los demonios sueltan 50 % m\xE1s monedas, pero los cofres cuestan 65 en vez de 50."
   quote: "Ahorr\xF3 tanto que sali\xF3 debiendo."
   icon: {fileID: 21300000, guid: 813987882231acb1495d77eb6eaa7614, type: 3}
   weight: 1

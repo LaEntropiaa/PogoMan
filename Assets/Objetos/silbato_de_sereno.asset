@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: silbato_de_sereno
   displayName: Silbato de Sereno
-  description: "Suma 5 puntos porcentuales a la probabilidad de cr\xEDtico del escupitajo."
+  description: "Siempre: +5 % de probabilidad de cr\xEDtico del escupitajo."
   quote: A las tres, todo mal.
   icon: {fileID: 21300000, guid: 0e361d929eee749c58350e79fc470fd4, type: 3}
   weight: 1
   rarity: 0
-  maxCopies: 4
+  maxCopies: 0
   active: 0
   cursed: 0

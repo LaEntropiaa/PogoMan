@@ -51,8 +51,38 @@ public class EstigiaGameHooks : MonoBehaviour
     private System.Collections.IEnumerator Start()
     {
         yield return null;
+        SetupGeyserFx();
+        FloatingRocks.Decorate(this);
+        yield return null;   // los cofres del mapa ya están convertidos
+        SecretChest.Create(transform);
         foreach (BossPillar pillar in FindObjectsByType<BossPillar>())
             StandUp(pillar.transform);
+    }
+
+    // Efectos nuevos de los géiseres: cada uno toma su cráter y esconde su "Surtidor" (el chorro viejo).
+    private void SetupGeyserFx()
+    {
+        Material fx = ItemEffects.Instance != null ? ItemEffects.Instance.FxMaterial : hazardSparks;
+        var jets = new System.Collections.Generic.List<Renderer>();
+        foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            if (t.name.StartsWith("Surtidor_") && t.GetComponent<Renderer>() != null)
+                jets.Add(t.GetComponent<Renderer>());
+        foreach (EstigiaGeyser geyser in GetComponentsInChildren<EstigiaGeyser>(true))
+        {
+            Renderer crater = geyser.GetComponent<Renderer>();
+            if (crater == null) crater = geyser.GetComponentInChildren<Renderer>();
+            Vector3 p = crater != null ? crater.bounds.center : geyser.transform.position;
+            Renderer jet = null;
+            float best = 6f;
+            foreach (Renderer j in jets)
+            {
+                Vector3 d = j.bounds.center - p; d.y = 0f;
+                if (d.magnitude < best) { best = d.magnitude; jet = j; }
+            }
+            var fxComp = geyser.gameObject.AddComponent<GeyserFx>();
+            fxComp.Setup(fx, crater, jet);
+            geyser.onLaunch.AddListener(_ => fxComp.Erupt());
+        }
     }
 
     private static void StandUp(Transform t)

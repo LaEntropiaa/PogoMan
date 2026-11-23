@@ -86,13 +86,39 @@ public class Guardian : Enemy
         {
             anim.applyRootMotion = false;
             model = anim.transform;
+            modelScale = model.localScale * SizeFactor;
+            model.localScale = modelScale;
         }
         body = GetComponent<Collider>();
+        SetLayer(transform, GuardianLayer);
+        if (!layersSet)
+        {
+            layersSet = true;
+            Physics.IgnoreLayerCollision(DemonLayer, GuardianLayer, true);
+        }
         voice = gameObject.AddComponent<AudioSource>();
         voice.playOnAwake = false;
         voice.spatialBlend = 0.6f;
         voice.minDistance = 6f;
         voice.maxDistance = 50f;
+    }
+
+    // Capas: los demonios (30) no chocan con los guardianes (31), así no los empujan.
+    public const int DemonLayer = 30, GuardianLayer = 31;
+    private static bool layersSet;
+
+    private static void SetLayer(Transform t, int layer)
+    {
+        t.gameObject.layer = layer;
+        foreach (Transform c in t) SetLayer(c, layer);
+    }
+
+    // Modo infinito: más vida y daño (se llama antes de su Start).
+    private float damageScale = 1f;
+    public void Empower(float scale)
+    {
+        maxHealth *= scale;
+        damageScale = scale;
     }
 
     private void OnEnable() => Alive.Add(this);
@@ -204,7 +230,86 @@ public class Guardian : Enemy
         if (state != State.Emerge && state != State.Defeat)
             CheckStomp();
         Bob();
+        Juice(dt);
         wasGrounded = pogo != null && PogoBridge.IsGrounded(pogo);
+    }
+
+    // ---- Animación extra encima de los clips (más peso y personalidad) ----
+    // Un poquito más grandes que el modelo original.
+    private const float SizeFactor = 1.18f;
+    private Vector3 modelScale = Vector3.one;
+    private float juiceTime, hitShake;
+    private Quaternion juiceRot = Quaternion.identity;
+
+    private void Juice(float dt)
+    {
+        if (model == null) return;
+        juiceTime += dt;
+        float sx = 1f, sy = 1f, pitch = 0f, roll = 0f;
+        float breathe = Mathf.Sin(juiceTime * 2.4f);
+        sy += breathe * 0.025f; sx -= breathe * 0.012f;
+
+        switch (state)
+        {
+            case State.Chase:
+                // Camina echado para adelante y se bambolea.
+                pitch += 7f;
+                roll += Mathf.Sin(juiceTime * 7f) * 3.5f;
+                sy += Mathf.Abs(Mathf.Sin(juiceTime * 7f)) * 0.04f;
+                break;
+            case State.Attack:
+            {
+                float active = Spec.activeTime;
+                float t = attackTime;
+                if (t < active)
+                {
+                    // Anticipación: se agacha, se ensancha y se echa para atrás, temblando al final.
+                    float k = Mathf.SmoothStep(0f, 1f, t / active);
+                    sy -= 0.14f * k; sx += 0.09f * k;
+                    pitch -= 12f * k;
+                    roll += Mathf.Sin(juiceTime * 45f) * 2.5f * k * k;
+                }
+                else
+                {
+                    // Golpe: se estira hacia adelante y regresa con rebote.
+                    float k = Mathf.Clamp01((t - active) / 0.35f);
+                    float snap = Mathf.Sin(k * Mathf.PI) * (1f - k * 0.5f);
+                    sy += 0.16f * snap; sx -= 0.08f * snap;
+                    pitch += 18f * snap;
+                }
+                break;
+            }
+            case State.Recover:
+                pitch -= 4f * (1f - Mathf.Clamp01(stateTime / recoverTime));
+                sy -= 0.05f * (1f - Mathf.Clamp01(stateTime / recoverTime));
+                break;
+            case State.Flinch:
+                hitShake = Mathf.Max(hitShake, 1f - stateTime / 0.45f);
+                break;
+            case State.Emerge:
+            {
+                // Sale como resorte.
+                float k = Mathf.Clamp01(stateTime / EmergeTime);
+                float pop = k > 0.75f ? Mathf.Sin((k - 0.75f) / 0.25f * Mathf.PI) : 0f;
+                sy += pop * 0.2f; sx -= pop * 0.1f;
+                break;
+            }
+        }
+        // Cada golpe que recibe (aunque no se interrumpa) lo hace temblar y aplastarse.
+        hitShake = Mathf.MoveTowards(hitShake, 0f, dt * 3f);
+        if (hitShake > 0f)
+        {
+            roll += Mathf.Sin(juiceTime * 50f) * 6f * hitShake;
+            sy -= 0.1f * hitShake; sx += 0.06f * hitShake;
+        }
+
+        model.localScale = new Vector3(modelScale.x * sx, modelScale.y * sy, modelScale.z * sx);
+        if (state != State.Emerge && state != State.Defeat)
+        {
+            Quaternion target = Quaternion.Euler(pitch, 0f, roll);
+            juiceRot = Quaternion.Slerp(juiceRot, target, 1f - Mathf.Exp(-14f * dt));
+            model.localRotation = juiceRot;
+        }
     }
 
     // Sale del suelo girando.
@@ -246,9 +351,23 @@ public class Guardian : Enemy
         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(d.normalized), k);
     }
 
+    // Cada guardián lanza su orbe (de su color) cada pocos segundos mientras te persigue.
+    private float orbTimer = 2.5f;
+
+    private void UpdateOrb(float dt, float dist)
+    {
+        orbTimer -= dt;
+        if (orbTimer > 0f || dist > 30f || !LineOfSight()) return;
+        orbTimer = Random.Range(3f, 4.5f);
+        float dmg = (attacks != null && attacks.Length > 0 ? attacks[0].damage : 15f) * 0.6f * damageScale;
+        GuardianOrb.Fire(transform.position + Vector3.up * 2.4f + transform.forward * 0.8f, player, dmg, GuardianOrb.ColorFor(kind));
+        Kit?.Windup(this, kind, 0);
+    }
+
     private void UpdateChase(float dt)
     {
         float dist = ToPlayer.magnitude;
+        UpdateOrb(dt, dist);
         int choice = ChooseAttack(dist);
         if (choice >= 0)
         {
@@ -309,26 +428,48 @@ public class Guardian : Enemy
 
     // ------------------------------------------------------------------ ataques
     // Elige una habilidad lista que tenga sentido a esta distancia.
+    // Alcance: sus ataques llegan 15 METROS más lejos (abanicos, arcos, líneas y la onda del Fundidor).
+    // Los golpes chicos (sellos del Recaudador) solo crecen un poco.
+    private const float RangeBonus = 15f;
+    private const float RangeScale = 1.5f;
+    private const float WaveSpeed = 20f;   // m/s de la onda del Fundidor
+    private const float LineSpeed = 25f;   // m/s de las líneas de la Viuda
+    private float WaveTime => (8f + RangeBonus) / WaveSpeed;
+    private float LineTime => (9f + RangeBonus) / LineSpeed;
+
+    // Cuánto dura el ataque en curso (las ondas y líneas largas necesitan más tiempo para recorrer).
+    private float Duration
+    {
+        get
+        {
+            float d = Spec.duration;
+            if (kind == GuardianKind.Fundidor && attackIndex == 1) d = Mathf.Max(d, Spec.activeTime + WaveTime + 0.2f);
+            if (kind == GuardianKind.Viuda && attackIndex == 1) d = Mathf.Max(d, Spec.activeTime + LineTime + 0.2f);
+            return d;
+        }
+    }
+
     private int ChooseAttack(float d)
     {
         bool a = cooldownLeft[0] <= 0f, b = cooldownLeft[1] <= 0f;
+        float far = Mathf.Max(0f, d - RangeBonus);   // con el alcance extra, atacan desde más lejos
         switch (kind)
         {
             case GuardianKind.Fundidor:
-                if (a && d < 3.8f) return 0;
-                if (b && d >= 3.8f && d <= 9f) return 1;
+                if (a && far < 3.8f) return 0;
+                if (b && far <= 9f) return 1;
                 break;
             case GuardianKind.Viuda:
-                if (a && d >= 2f && d <= 5f) return 0;
-                if (b && d <= 9f) return 1;
+                if (a && far <= 5f) return 0;
+                if (b && far <= 9f) return 1;
                 break;
             case GuardianKind.Recaudador:
-                if (a && d < 3f) return 0;
-                if (b && d >= 3f && d <= 9f) return 1;
+                if (a && d < 3f * RangeScale) return 0;
+                if (b && far <= 9f) return 1;
                 break;
             case GuardianKind.Barquero:
-                if (a && d < 4f) return 0;
-                if (b && d >= 4f && d <= 12f) return 1;
+                if (a && far < 4f) return 0;
+                if (b && far <= 12f) return 1;
                 break;
         }
         return -1;
@@ -355,28 +496,28 @@ public class Guardian : Enemy
         switch (kind)
         {
             case GuardianKind.Fundidor when i == 0:
-                signs.Add(Telegraph.Fan(c, lockedForward, 80f, 0.4f, 3.8f).SetColor(danger));
+                signs.Add(Telegraph.Fan(c, lockedForward, 80f, 0.4f, 3.8f + RangeBonus).SetColor(danger));
                 break;
             case GuardianKind.Fundidor:
-                signs.Add(Telegraph.Ring(c, 1f, 8f).SetColor(new Color(1f, 0.85f, 0.3f, 0.14f)));
+                signs.Add(Telegraph.Ring(c, 1f, 8f + RangeBonus).SetColor(new Color(1f, 0.85f, 0.3f, 0.14f)));
                 furnace = new GameObject("Horno").AddComponent<Light>();
                 furnace.transform.SetParent(transform, false);
                 furnace.transform.localPosition = new Vector3(0f, 1.8f, 0.6f);
                 furnace.type = LightType.Point; furnace.color = new Color(1f, 0.45f, 0.1f); furnace.range = 8f; furnace.shadows = LightShadows.None;
                 break;
             case GuardianKind.Viuda when i == 0:
-                signs.Add(Telegraph.Fan(c, lockedForward, 120f, 0.5f, 4.8f).SetColor(new Color(0.85f, 0.4f, 1f, 0.7f)));
+                signs.Add(Telegraph.Fan(c, lockedForward, 120f, 0.5f, 4.8f + RangeBonus).SetColor(new Color(0.85f, 0.4f, 1f, 0.7f)));
                 break;
             case GuardianKind.Viuda:
                 float baseAngle = Random.value * 120f;
                 for (int k = 0; k < 3; k++)
                 {
                     lineAngles[k] = baseAngle + k * 120f;
-                    signs.Add(Telegraph.Strip(c, Quaternion.Euler(0f, lineAngles[k], 0f) * Vector3.forward, 9f, 0.8f).SetColor(new Color(0.85f, 0.4f, 1f, 0.7f)));
+                    signs.Add(Telegraph.Strip(c, Quaternion.Euler(0f, lineAngles[k], 0f) * Vector3.forward, 9f + RangeBonus, 0.8f * RangeScale).SetColor(new Color(0.85f, 0.4f, 1f, 0.7f)));
                 }
                 break;
             case GuardianKind.Recaudador when i == 0:
-                signs.Add(Telegraph.Disc(c + lockedForward * 1.1f, 1.55f).SetColor(new Color(1f, 0.88f, 0.3f, 0.7f)));
+                signs.Add(Telegraph.Disc(c + lockedForward * 1.1f * RangeScale, 1.55f * RangeScale).SetColor(new Color(1f, 0.88f, 0.3f, 0.7f)));
                 break;
             case GuardianKind.Recaudador:
             {
@@ -384,13 +525,13 @@ public class Guardian : Enemy
                 Vector3 p = new Vector3(player.position.x, 0f, player.position.z);
                 Vector3 dir = ToPlayer.normalized;
                 Vector3 side = Vector3.Cross(Vector3.up, dir);
-                points[0] = p - side * 1.9f - dir * 0.6f;
+                points[0] = p - side * 1.9f * RangeScale - dir * 0.6f;
                 points[1] = p;
-                points[2] = p + side * 1.9f - dir * 0.6f;
+                points[2] = p + side * 1.9f * RangeScale - dir * 0.6f;
                 for (int k = 0; k < 3; k++)
                 {
                     points[k].y = GroundY(points[k] + Vector3.up * player.position.y);
-                    signs.Add(Telegraph.Disc(points[k], 1.1f).SetColor(new Color(1f, 0.88f, 0.3f, 0.65f)));
+                    signs.Add(Telegraph.Disc(points[k], 1.1f * RangeScale).SetColor(new Color(1f, 0.88f, 0.3f, 0.65f)));
                 }
                 break;
             }
@@ -398,7 +539,7 @@ public class Guardian : Enemy
             {
                 bool fromLeft = Random.value < 0.5f;
                 points[0] = new Vector3(fromLeft ? 1f : 0f, 0f, 0f);
-                signs.Add(Telegraph.Fan(c, lockedForward, 130f, 0.5f, 3.8f).SetColor(new Color(0.35f, 1f, 0.9f, 0.7f)));
+                signs.Add(Telegraph.Fan(c, lockedForward, 130f, 0.5f, 3.8f + RangeBonus).SetColor(new Color(0.35f, 1f, 0.9f, 0.7f)));
                 // Espuma aqua del lado por donde va a pasar el remo.
                 Vector3 sideDir = Quaternion.Euler(0f, fromLeft ? -65f : 65f, 0f) * lockedForward;
                 Kit?.Foam(c + sideDir * 2.5f);
@@ -434,24 +575,38 @@ public class Guardian : Enemy
                 {
                     // Sigue al jugador hasta 0.25 s antes del contacto.
                     if (t < active - 0.25f) { FacePlayer(1f - Mathf.Exp(-8f * dt)); lockedForward = transform.forward; signs[0].SetForward(lockedForward); }
-                    if (Step(0, t >= active)) HitFan(80f, 0f, 3.8f, 0f, 1.3f, Spec.damage, true);
+                    if (Step(0, t >= active)) HitFan(80f, 0f, 3.8f + RangeBonus, 0f, 1.3f, Spec.damage, true);
                 }
                 else
                 {
                     if (furnace != null) furnace.intensity = Mathf.Lerp(0f, 6f, prep) * (0.8f + 0.2f * Mathf.Sin(t * 30f));
-                    if (Step(0, t >= active)) { Kit?.Play(kind, 1, transform.position); if (furnace != null) Destroy(furnace.gameObject); }
+                    if (Step(0, t >= active))
+                    {
+                        Kit?.Play(kind, 1, transform.position);
+                        ShockRing.SpawnVisual(Feet + Vector3.up * 0.1f, 8f + RangeBonus, WaveTime, new Color(1f, 0.85f, 0.4f), new Color(1f, 0.35f, 0.08f));
+                        if (furnace != null) Destroy(furnace.gameObject);
+                        EnemyTracker.HitArea(Feet, 8f + RangeBonus, Spec.damage * DemonDamageFactor, HitSource.Other, true, 2f, this, true);
+                    }
                     if (firedSteps > 0)
                     {
                         // Onda que sale de 1 a 8 m en 1.1 s, banda de 0.65 m.
-                        float k = Mathf.Clamp01((t - active) / 1.1f);
-                        float r = Mathf.Lerp(1f, 8f, k);
-                        signs[0].SetRadii(Mathf.Max(0.5f, r - 0.325f), r + 0.325f);
+                        float k = Mathf.Clamp01((t - active) / WaveTime);
+                        float r = Mathf.Lerp(1f, 8f + RangeBonus, k);
+                        if (k < 1f)
+                            for (int f = 0; f < 6; f++)
+                            {
+                                float ang = Random.value * Mathf.PI * 2f;
+                                Vector3 at = Feet + new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * r;
+                                at.y = Telegraph.GroundY(at, Feet.y);
+                                AttackFx.Flicker(at, 0.3f, Color.white);
+                            }
+                        signs[0].SetRadii(Mathf.Max(0.5f, r - 0.5f), r + 0.5f);
                         signs[0].SetColor(new Color(1f, 0.95f, 0.6f, 0.95f));
                         if (k < 1f && !hitPlayerThisAttack)
                         {
                             Vector3 d = PlayerFeet - Feet; float h = PlayerHeight;
                             float flat = new Vector2(d.x, d.z).magnitude;
-                            if (Mathf.Abs(flat - r) <= 0.325f + PlayerRadius && h <= 0.75f && LineOfSight())
+                            if (Mathf.Abs(flat - r) <= 0.5f + PlayerRadius && h <= 0.75f && LineOfSight())
                                 HurtPlayer(Spec.damage, false);
                         }
                     }
@@ -470,7 +625,7 @@ public class Guardian : Enemy
                         float swept = -60f + 120f * Mathf.Clamp01((t - active) / 0.38f);
                         float a = SignedAngleToPlayer();
                         if (a >= -60f && a <= swept)
-                            TryHitArc(4.8f, 0.4f, 1.6f, Spec.damage);
+                            TryHitArc(4.8f + RangeBonus, 0.4f, 1.6f, Spec.damage);
                     }
                 }
                 else
@@ -486,15 +641,15 @@ public class Guardian : Enemy
                     if (Step(0, t >= active)) Kit?.Play(kind, 1, transform.position);
                     if (firedSteps > 0 && !hitPlayerThisAttack)
                     {
-                        float k = Mathf.Clamp01((t - active) / 0.65f);
-                        float front = 9f * k;
+                        float k = Mathf.Clamp01((t - active) / LineTime);
+                        float front = (9f + RangeBonus) * k;
                         for (int s = 0; s < 3; s++)
                         {
                             Vector3 dir = Quaternion.Euler(0f, lineAngles[s], 0f) * Vector3.forward;
                             Vector3 d = PlayerFeet - Feet; d.y = 0f;
                             float along = Vector3.Dot(d, dir);
                             float lateral = Mathf.Abs(Vector3.Dot(d, Vector3.Cross(Vector3.up, dir)));
-                            if (along > 0f && along <= front && along >= front - 1.2f && lateral <= 0.4f + PlayerRadius && PlayerHeight < 1.2f && k < 1f)
+                            if (along > 0f && along <= front && along >= front - 1.8f && lateral <= 0.6f + PlayerRadius && PlayerHeight < 1.2f && k < 1f)
                                 HurtPlayer(Spec.damage, false);
                         }
                         if (k < 1f)
@@ -510,10 +665,12 @@ public class Guardian : Enemy
                     if (Step(0, t >= active))
                     {
                         Kit?.Play(kind, 0, transform.position);
-                        Vector3 c = Feet + lockedForward * 1.1f;
-                        Kit?.Dust(c, 1.55f);
+                        Vector3 c = Feet + lockedForward * 1.1f * RangeScale;
+                        Kit?.Dust(c, 1.55f * RangeScale);
+                        AttackFx.Magic(c + Vector3.up * 0.5f, 1.5f, new Color(1f, 0.82f, 0.2f));
+                        EnemyTracker.HitArea(c, 1.8f * RangeScale, Spec.damage * DemonDamageFactor, HitSource.Other, true, 3f, this, true);
                         Vector3 d = PlayerFeet - c;
-                        if (new Vector2(d.x, d.z).magnitude <= 1.55f + PlayerRadius && PlayerHeight <= 1f)
+                        if (new Vector2(d.x, d.z).magnitude <= 1.55f * RangeScale + PlayerRadius && PlayerHeight <= 1f)
                             HurtPlayer(Spec.damage, true);
                     }
                 }
@@ -524,10 +681,12 @@ public class Guardian : Enemy
                         if (Step(k, t >= active + 0.3f * k))
                         {
                             Kit?.Play(kind, 1, points[k]);
-                            Kit?.Dust(points[k], 1.1f);
+                            Kit?.Dust(points[k], 1.1f * RangeScale);
+                            AttackFx.Magic(points[k] + Vector3.up * 0.5f, 1.2f, new Color(1f, 0.82f, 0.2f));
+                            EnemyTracker.HitArea(points[k], 1.5f * RangeScale, Spec.damage * DemonDamageFactor, HitSource.Other, true, 3f, this, true);
                             if (signs.Count > k && signs[k] != null) { Destroy(signs[k].gameObject); }
                             Vector3 d = PlayerFeet - points[k];
-                            if (!hitPlayerThisAttack && new Vector2(d.x, d.z).magnitude <= 1.1f + PlayerRadius && PlayerHeight <= 1f)
+                            if (!hitPlayerThisAttack && new Vector2(d.x, d.z).magnitude <= 1.1f * RangeScale + PlayerRadius && PlayerHeight <= 1f)
                                 HurtPlayer(Spec.damage, true);
                         }
                 }
@@ -542,10 +701,14 @@ public class Guardian : Enemy
                     if (firedSteps > 0 && t <= active + 0.35f && !hitPlayerThisAttack)
                     {
                         float p = Mathf.Clamp01((t - active) / 0.35f);
+                        float ang = fromLeft ? -65f + 130f * p : 65f - 130f * p;
+                        Vector3 oarDir = Quaternion.Euler(0f, ang, 0f) * lockedForward;
+                        for (int w = 0; w < 4; w++)
+                            AttackFx.Wisp(Feet + oarDir * Random.Range(1f, 3.8f + RangeBonus) + Vector3.up * 0.5f, new Color(0.35f, 1f, 0.9f), 0.8f);
                         float a = SignedAngleToPlayer();
                         bool swept = fromLeft ? a >= -65f && a <= -65f + 130f * p : a <= 65f && a >= 65f - 130f * p;
                         if (swept)
-                            TryHitArc(3.8f, 0f, 1.5f, Spec.damage);
+                            TryHitArc(3.8f + RangeBonus, 0f, 1.5f, Spec.damage);
                     }
                 }
                 else
@@ -566,7 +729,7 @@ public class Guardian : Enemy
                 break;
         }
 
-        if (t >= Spec.duration)
+        if (t >= Duration)
             EndAttack(true);
     }
 
@@ -623,6 +786,29 @@ public class Guardian : Enemy
         float flat = d.magnitude;
         if (Mathf.Abs(SignedAngleToPlayer()) <= angle / 2f && flat <= rMax + PlayerRadius && flat >= rMin && PlayerHeight >= hMin - 0.1f && PlayerHeight <= hMax)
             HurtPlayer(damage, knock);
+        HurtDemons(rMax, damage, angle, rMin);
+    }
+
+    // Los golpes del guardián también aplastan a los demonios que estén en medio (sin experiencia ni monedas).
+    public const float DemonDamageFactor = 3f;
+    private static readonly List<EnemyTracker> demonBuffer = new List<EnemyTracker>();
+
+    private void HurtDemons(float reach, float damage, float angle = 360f, float rMin = 0f)
+    {
+        demonBuffer.Clear();
+        foreach (EnemyTracker e in EnemyTracker.All)
+        {
+            if (e == null || e.IsDead || e.IsBoss || e.Enemy == this || e.GetComponent<Guardian>() != null) continue;
+            Vector3 d = e.Center - Feet;
+            if (d.y < -1f || d.y > 4f) continue;
+            d.y = 0f;
+            float m = d.magnitude;
+            if (m > reach + 0.4f || m < rMin) continue;
+            if (angle < 359f && m > 0.1f && Mathf.Abs(Vector3.SignedAngle(lockedForward, d, Vector3.up)) > angle / 2f) continue;
+            demonBuffer.Add(e);
+        }
+        foreach (EnemyTracker e in demonBuffer)
+            e.HitNoReward(damage * DemonDamageFactor, HitSource.Other);
     }
 
     private void TryHitArc(float reach, float hMin, float hMax, float damage)
@@ -631,6 +817,7 @@ public class Guardian : Enemy
         // El cuerpo del jugador mide ~2 m: lo toca si sus pies están por debajo de la franja alta.
         if (d.magnitude <= reach + PlayerRadius && PlayerHeight < hMax && PlayerHeight + 2f > hMin)
             HurtPlayer(damage, true);
+        HurtDemons(reach, damage);
     }
 
     private bool LineOfSight()
@@ -647,7 +834,7 @@ public class Guardian : Enemy
         if (hitPlayerThisAttack || isDead) return;
         hitPlayerThisAttack = true;
         if (!GuardianKit.TryHitPlayer()) return;   // respiro global entre golpes de guardián
-        PlayerVitals.Damage(pogo, damage);
+        PlayerVitals.Damage(pogo, damage * damageScale);
         if (knock)
         {
             var prb = pogo.GetComponent<Rigidbody>();
@@ -673,6 +860,7 @@ public class Guardian : Enemy
     {
         if (isDead || state == State.Emerge || damage <= 0f) return;
         currentHealth -= damage;
+        hitShake = Mathf.Max(hitShake, 0.6f);
         if (currentHealth <= 0f)
         {
             currentHealth = 0f;
