@@ -14,9 +14,34 @@ public class EndlessMode : MonoBehaviour
     public static bool Active { get; private set; }
     public static int Level { get; private set; }
     public static float Minutes => instance != null ? instance.elapsed / 60f : 0f;
-    // Multiplicador de vida y daño: el primer minuto ×1, luego ×3, ×6, ×9, ×12... (sube 3 cada minuto).
-    public static float Scale => Active ? (Level == 0 ? 1f : 3f * Level) : 1f;
-    public const float EliteChestChance = 0.25f;   // 30 % normal − 5 %
+    // Escalones de dificultad (vida y daño):
+    //   1:00 ×2 · 2:00 ×5 · 2:30 ×6 · 3:00 ×10 (riff y anuncio diabólico) · 4:00 ×15 · 5:00 ×20
+    //   6:00 ×30 y desde ahí +10 cada minuto.
+    private static readonly float[] StepTimes = { 60f, 120f, 150f, 180f, 240f, 300f, 360f };
+    private static readonly float[] StepScales = { 2f, 5f, 6f, 10f, 15f, 20f, 30f };
+    public const float DiabolicTime = 180f;
+
+    public static int StepAt(float t)
+    {
+        int n = 0;
+        foreach (float s in StepTimes) if (t >= s) n++;
+        if (t >= 420f) n += Mathf.FloorToInt((t - 360f) / 60f);
+        return n;
+    }
+
+    public static float ScaleAt(float t)
+    {
+        if (t < StepTimes[0]) return 1f;
+        if (t >= 420f) return StepScales[StepScales.Length - 1] + 10f * Mathf.FloorToInt((t - 360f) / 60f);
+        float v = 1f;
+        for (int i = 0; i < StepTimes.Length; i++) if (t >= StepTimes[i]) v = StepScales[i];
+        return v;
+    }
+
+    public static float Scale => Active && instance != null ? ScaleAt(instance.elapsed) : 1f;
+    // Los demonios se vuelven rapidísimos (hasta ×5).
+    public static float SpeedScale => Active ? Mathf.Min(5f, 1f + 0.2f * (Scale - 1f)) : 1f;
+    public const float EliteChestChance = 0.002f;   // 0.2 %
 
     private static readonly string[] Threats =
     {
@@ -97,13 +122,14 @@ public class EndlessMode : MonoBehaviour
     {
         if (TimeStop.Active || (PlayerStats.Instance != null && PlayerStats.Instance.RunEnded)) return;
         elapsed += Time.deltaTime;
-        int lvl = Mathf.FloorToInt(elapsed / 60f);
+        int lvl = StepAt(elapsed);
         if (lvl != Level)
         {
             Level = lvl;
             pop = 1f;
             EnemyTracker.CoinChanceBonus = Mathf.Min(0.5f, 0.05f * Level);   // más monedas
-            StartCoroutine(Wrath(false));
+            bool diabolic = lvl == 4;   // el escalón de las 3:00 (×10)
+            StartCoroutine(Wrath(false, diabolic));
         }
 
         // Cofres nuevos cada vez más seguido (de 45 s hasta 20 s).
@@ -127,14 +153,21 @@ public class EndlessMode : MonoBehaviour
     private static string FormatScale(float s) => s >= 1e6f ? (s / 1e6f).ToString("0.#") + "M" : s >= 1e3f ? (s / 1e3f).ToString("0.#") + "K" : s.ToString("0");
 
     // ---- La ira del averno (cada minuto) ----
-    private IEnumerator Wrath(bool first)
+    private static readonly string[] DiabolicThreats =
+    {
+        "SATANÁS EN PERSONA QUIERE TU ALMA",
+        "EL INFIERNO DESPIERTA DE VERDAD",
+    };
+
+    private IEnumerator Wrath(bool first, bool diabolic = false)
     {
         PogoPlayer p = FindAnyObjectByType<PogoPlayer>();
         if (p == null) yield break;
 
         if (bag.Count == 0) bag.AddRange(Threats);
-        string text = first ? Threats[0] : bag[Random.Range(0, bag.Count)];
+        string text = first ? Threats[0] : diabolic ? DiabolicThreats[Random.Range(0, DiabolicThreats.Length)] : bag[Random.Range(0, bag.Count)];
         bag.Remove(text);
+        if (diabolic) StartCoroutine(Diabolic(p.transform));
 
         CameraShake.Add(2.2f, 1.4f);
         if (thunder == null) thunder = MakeThunder();
@@ -246,6 +279,116 @@ public class EndlessMode : MonoBehaviour
         if (e is Guardian guardian) guardian.Empower(Scale);
         e.SetTarget(FindAnyObjectByType<PogoPlayer>()?.transform);
     }
+
+    // ---- Minuto 3: anuncio diabólico (riff de guitarra, flamas por toda la pantalla, columnas de fuego) ----
+    private static AudioClip riff;
+
+    private IEnumerator Diabolic(Transform player)
+    {
+        if (riff == null) riff = MakeRiff();
+        audioSource.PlayOneShot(riff, 1.1f * GameSettings.SfxVolume);
+        threat.fontSize = 92;
+        CameraShake.Add(3.5f, 1.8f);
+
+        // Flamas de pixel que suben por abajo y por los lados.
+        Transform root = flash.transform.parent;
+        var flames = new List<(RectTransform r, Image img, float x, float phase, int layer)>();
+        Color[] colors = { new Color(0.75f, 0.05f, 0.02f, 0.85f), new Color(1f, 0.4f, 0.05f, 0.85f), new Color(1f, 0.85f, 0.3f, 0.9f) };
+        for (int layer = 0; layer < 3; layer++)
+            for (int i = 0; i < 40; i++)
+            {
+                float x = (i + 0.5f) / 40f;
+                Image img = UiKit.Image(UiKit.Rect("Flama", root, new Vector2(x, 0f), new Vector2(x, 0f), new Vector2(0.5f, 0f), Vector2.zero, new Vector2(54f, 10f)), colors[layer]);
+                img.raycastTarget = false;
+                flames.Add((img.rectTransform, img, x, Random.value * 10f, layer));
+            }
+        threat.transform.SetAsLastSibling();
+        // Columnas de fuego alrededor de Pogoman.
+        Material fx = ItemEffects.Instance != null ? ItemEffects.Instance.FxMaterial : null;
+        for (int i = 0; i < 10; i++)
+        {
+            float a = i / 10f * Mathf.PI * 2f;
+            Vector3 at = player.position + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * 9f;
+            for (int k = 0; k < 5; k++)
+                ItemFx.Burst(at + Vector3.up * k * 1.4f, 20, 0.8f, k % 2 == 0 ? new Color(1f, 0.35f, 0.05f) : new Color(1f, 0.8f, 0.2f), fx, 6f, 0.7f, 0.9f);
+        }
+
+        for (float t = 0f; t < 5f; t += Time.unscaledDeltaTime)
+        {
+            float fade = Mathf.Clamp01(t / 0.4f) * Mathf.Clamp01((5f - t) / 1f);
+            foreach (var f in flames)
+            {
+                float n = Mathf.PerlinNoise(f.x * 6f + Time.unscaledTime * (2.5f + f.layer), f.phase);
+                float edge = 1f + 1.2f * Mathf.Pow(Mathf.Abs(f.x - 0.5f) * 2f, 3f);   // más altas en las orillas
+                float h = (120f - f.layer * 35f) * (0.4f + n) * edge * fade;
+                f.r.sizeDelta = new Vector2(54f, Mathf.Round(h / 6f) * 6f);
+                Color c = f.img.color; c.a = (0.85f + 0.1f * f.layer) * fade; f.img.color = c;
+            }
+            threat.color = Color.Lerp(new Color(1f, 0.15f, 0.05f), new Color(1f, 0.8f, 0.2f), 0.5f + 0.5f * Mathf.Sin(t * 12f));
+            yield return null;
+        }
+        foreach (var f in flames) Destroy(f.r.gameObject);
+        threat.fontSize = 72;
+        threat.color = new Color(1f, 0.25f, 0.15f);
+    }
+
+    // Riff de metal: chugs en Mi con palm mute, acentos y un acorde final que se queda sonando.
+    private static AudioClip MakeRiff()
+    {
+        const int rate = 44100;
+        float bpm = 190f, s16 = 60f / bpm / 4f;
+        // (inicio en semicorcheas, duración, nota MIDI raíz, palm mute)
+        var notes = new List<(float at, float dur, int root, bool mute)>();
+        int[] chug = { 0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14 };
+        foreach (int k in chug) notes.Add((k, 0.9f, 40, true));
+        notes.Add((3, 1f, 43, false)); notes.Add((7, 1f, 45, false)); notes.Add((11, 1f, 46, false)); notes.Add((15, 1f, 45, false));
+        foreach (int k in chug) notes.Add((16 + k, 0.9f, 40, true));
+        notes.Add((19, 1f, 48, false)); notes.Add((23, 1f, 47, false)); notes.Add((27, 2f, 46, false));
+        notes.Add((32, 18f, 40, false));   // acorde final
+        int n = (int)(rate * (s16 * 50f));
+        var d = new float[n];
+        foreach (var nt in notes)
+        {
+            int start = (int)(nt.at * s16 * rate);
+            float dur = nt.dur * s16;
+            int len = Mathf.Min(n - start, (int)(rate * (dur + (nt.mute ? 0.02f : 0.6f))));
+            float[] fs = { Mtof(nt.root), Mtof(nt.root + 7), Mtof(nt.root + 12) };
+            for (int i = 0; i < len; i++)
+            {
+                float t = i / (float)rate;
+                float env = nt.mute ? Mathf.Exp(-t * 26f) : Mathf.Exp(-t * (nt.dur > 10f ? 0.9f : 2.5f));
+                float x = 0f;
+                for (int j = 0; j < 3; j++)
+                {
+                    float f = fs[j] * (j == 1 ? 1.003f : 1f);
+                    x += (2f * Mathf.Repeat(f * t, 1f) - 1f) * (j == 2 ? 0.6f : 1f);
+                    x += (2f * Mathf.Repeat(f * 1.004f * t, 1f) - 1f) * 0.7f;   // segunda toma
+                }
+                d[start + i] += x * env * 0.25f;
+            }
+            if (!nt.mute || ((int)nt.at) % 4 == 0)
+                for (int i = 0; i < Mathf.Min(len, rate / 4); i++)   // bombo
+                {
+                    float t = i / (float)rate;
+                    d[start + i] += Mathf.Sin(2f * Mathf.PI * (50f + 120f * Mathf.Exp(-t * 30f)) * t) * Mathf.Exp(-t * 9f) * 0.6f;
+                }
+        }
+        // Distorsión + "gabinete" (pasabajos y pasaaltos de un polo).
+        float lp = 0f, hp = 0f, prev = 0f;
+        for (int i = 0; i < n; i++)
+        {
+            float y = (float)System.Math.Tanh(d[i] * 7f);
+            lp += (y - lp) * 0.32f;
+            hp = 0.995f * (hp + lp - prev);
+            prev = lp;
+            d[i] = Mathf.Clamp(hp * 0.85f, -1f, 1f);
+        }
+        AudioClip c = AudioClip.Create("RiffInfernal", n, 1, rate, false);
+        c.SetData(d, 0);
+        return c;
+    }
+
+    private static float Mtof(int m) => 440f * Mathf.Pow(2f, (m - 69) / 12f);
 
     private static AudioClip boom;
     private Image redPulse;
