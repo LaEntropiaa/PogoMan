@@ -99,8 +99,8 @@ public class EndlessMode : MonoBehaviour
         audioSource = UiKit.UiAudio(gameObject);
         Canvas canvas = UiKit.MakeCanvas("HUDInfinito", 30);
         canvas.transform.SetParent(transform, false);
-        label = UiKit.Text(UiKit.Rect("Infinito", canvas.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-24f, -150f), new Vector2(760f, 40f)),
-            font, 28, new Color(1f, 0.4f, 0.3f), TextAnchor.MiddleRight);
+        label = UiKit.Text(UiKit.Rect("Infinito", canvas.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-24f, -205f), new Vector2(760f, 36f)),
+            font, 24, new Color(1f, 0.4f, 0.3f), TextAnchor.MiddleRight);
         label.gameObject.AddComponent<Outline>().effectDistance = new Vector2(2, -2);
 
         flash = UiKit.Image(UiKit.Stretch("Relampago", canvas.transform), new Color(1f, 0.9f, 1f, 0f));
@@ -290,18 +290,9 @@ public class EndlessMode : MonoBehaviour
         threat.fontSize = 92;
         CameraShake.Add(3.5f, 1.8f);
 
-        // Flamas de pixel que suben por abajo y por los lados.
+        // Fuego de pixel animado (estilo DOOM) que sube desde abajo.
         Transform root = flash.transform.parent;
-        var flames = new List<(RectTransform r, Image img, float x, float phase, int layer)>();
-        Color[] colors = { new Color(0.75f, 0.05f, 0.02f, 0.85f), new Color(1f, 0.4f, 0.05f, 0.85f), new Color(1f, 0.85f, 0.3f, 0.9f) };
-        for (int layer = 0; layer < 3; layer++)
-            for (int i = 0; i < 40; i++)
-            {
-                float x = (i + 0.5f) / 40f;
-                Image img = UiKit.Image(UiKit.Rect("Flama", root, new Vector2(x, 0f), new Vector2(x, 0f), new Vector2(0.5f, 0f), Vector2.zero, new Vector2(54f, 10f)), colors[layer]);
-                img.raycastTarget = false;
-                flames.Add((img.rectTransform, img, x, Random.value * 10f, layer));
-            }
+        DoomFire fire = DoomFire.Create(root, Vector2.zero, new Vector2(1f, 0.5f));
         threat.transform.SetAsLastSibling();
         // Columnas de fuego alrededor de Pogoman.
         Material fx = ItemEffects.Instance != null ? ItemEffects.Instance.FxMaterial : null;
@@ -313,21 +304,13 @@ public class EndlessMode : MonoBehaviour
                 ItemFx.Burst(at + Vector3.up * k * 1.4f, 20, 0.8f, k % 2 == 0 ? new Color(1f, 0.35f, 0.05f) : new Color(1f, 0.8f, 0.2f), fx, 6f, 0.7f, 0.9f);
         }
 
-        for (float t = 0f; t < 5f; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < 6.5f; t += Time.unscaledDeltaTime)
         {
-            float fade = Mathf.Clamp01(t / 0.4f) * Mathf.Clamp01((5f - t) / 1f);
-            foreach (var f in flames)
-            {
-                float n = Mathf.PerlinNoise(f.x * 6f + Time.unscaledTime * (2.5f + f.layer), f.phase);
-                float edge = 1f + 1.2f * Mathf.Pow(Mathf.Abs(f.x - 0.5f) * 2f, 3f);   // más altas en las orillas
-                float h = (120f - f.layer * 35f) * (0.4f + n) * edge * fade;
-                f.r.sizeDelta = new Vector2(54f, Mathf.Round(h / 6f) * 6f);
-                Color c = f.img.color; c.a = (0.85f + 0.1f * f.layer) * fade; f.img.color = c;
-            }
+            fire.Intensity = t < 4.5f ? Mathf.Clamp01(t / 0.3f) : 0f;   // arde 4.5 s y se apaga sola
             threat.color = Color.Lerp(new Color(1f, 0.15f, 0.05f), new Color(1f, 0.8f, 0.2f), 0.5f + 0.5f * Mathf.Sin(t * 12f));
             yield return null;
         }
-        foreach (var f in flames) Destroy(f.r.gameObject);
+        Destroy(fire.gameObject);
         threat.fontSize = 72;
         threat.color = new Color(1f, 0.25f, 0.15f);
     }

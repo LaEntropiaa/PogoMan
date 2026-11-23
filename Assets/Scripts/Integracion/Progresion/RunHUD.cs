@@ -118,8 +118,9 @@ public class RunHUD : MonoBehaviour
         UiKit.Image(xpBar, new Color(0.05f, 0.02f, 0.08f, 0.75f));
         xpFill = UiKit.Rect("Relleno", xpBar, Vector2.zero, new Vector2(0, 1), new Vector2(0, 0.5f), Vector2.zero, Vector2.zero);
         UiKit.Image(xpFill, new Color(0.35f, 0.75f, 1f));
-        levelText = UiKit.Text(UiKit.Rect("Nivel", root, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -18), new Vector2(300, 44)), font, 34, new Color(0.6f, 0.85f, 1f), TextAnchor.UpperCenter, "NV 1");
+        // El nivel va junto a la barra de vida (arriba al centro chocaba con el nombre de los jefes).
+        levelText = UiKit.Text(UiKit.Rect("Nivel", root, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1),
+            new Vector2(318, -12), new Vector2(240, 44)), font, 30, new Color(0.6f, 0.85f, 1f), TextAnchor.UpperLeft, "NV 1");
 
         // ---- Horda ----
         hordeTitle = UiKit.Text(UiKit.Rect("Horda", root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f),
