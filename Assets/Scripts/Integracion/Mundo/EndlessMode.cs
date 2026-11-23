@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 // Modo infinito: aceptaste la oferta del Diablo y regresaste al infierno... que ahora quiere eliminarte
 // por haber vencido a su jefe. Cada minuto:
-//  - La dificultad se multiplica ×3 (vida y daño de los demonios, guardianes y élites).
+//  - La dificultad sube: ×3, ×6, ×9... (vida y daño de los demonios, guardianes y élites).
 //  - El averno te lo recuerda: tiembla la pantalla, caen rayos y aparece un mensaje.
 //  - Sale un guardián de los pilares a cazarte (hasta 3 a la vez).
 //  - Salen más élites (sus cofres son un poco menos probables).
@@ -14,8 +14,8 @@ public class EndlessMode : MonoBehaviour
     public static bool Active { get; private set; }
     public static int Level { get; private set; }
     public static float Minutes => instance != null ? instance.elapsed / 60f : 0f;
-    // Multiplicador de vida y daño: ×3 por cada minuto.
-    public static float Scale => Active ? Mathf.Pow(3f, Level) : 1f;
+    // Multiplicador de vida y daño: el primer minuto ×1, luego ×3, ×6, ×9, ×12... (sube 3 cada minuto).
+    public static float Scale => Active ? (Level == 0 ? 1f : 3f * Level) : 1f;
     public const float EliteChestChance = 0.25f;   // 30 % normal − 5 %
 
     private static readonly string[] Threats =
@@ -25,7 +25,7 @@ public class EndlessMode : MonoBehaviour
         "EL INFIERNO TE COBRA LA CUENTA",
         "NO HAY SALIDA. SOLO HAY MÁS DEMONIOS",
         "LAS ÁNIMAS PIDEN TU CABEZA",
-        "EL TENDERO TENÍA AMIGOS",
+        "EL DIABLO TENÍA AMIGOS",
         "AQUÍ NADIE SALE VIVO",
         "EL FUEGO SE ALIMENTA DE TI",
         "TU ALMA YA TIENE PRECIO",
@@ -136,21 +136,28 @@ public class EndlessMode : MonoBehaviour
         string text = first ? Threats[0] : bag[Random.Range(0, bag.Count)];
         bag.Remove(text);
 
-        CameraShake.Add(1.6f, 1f);
+        CameraShake.Add(2.2f, 1.4f);
         if (thunder == null) thunder = MakeThunder();
+        if (boom == null) boom = MakeBoom();
         audioSource.PlayOneShot(thunder, GameSettings.SfxVolume);
+        audioSource.PlayOneShot(boom, GameSettings.SfxVolume);
+        StartCoroutine(HitStop());
+        StartCoroutine(RedPulse());
         StartCoroutine(Lightning(p.transform));
         if (!first) SpawnGuardian(p.transform.position);
 
-        // Mensaje: entra de golpe, se escribe y tiembla.
-        threat.text = "";
+        // Mensaje: cae ENORME de golpe sobre la pantalla (con el nivel nuevo) y tiembla.
+        threat.text = text + (first ? "" : "\n<size=46>DIFICULTAD ×" + FormatScale(Scale) + "</size>");
         threatGroup.alpha = 1f;
-        for (int n = 1; n <= text.Length; n++)
+        for (float t = 0f; t < 0.22f; t += Time.unscaledDeltaTime)
         {
-            threat.text = text.Substring(0, n);
-            threat.rectTransform.anchoredPosition = new Vector2(Random.Range(-6f, 6f), 230f + Random.Range(-4f, 4f));
-            yield return new WaitForSeconds(0.03f);
+            float k = t / 0.22f;
+            threat.rectTransform.localScale = Vector3.one * Mathf.Lerp(3.2f, 1f, k * k);
+            threatGroup.alpha = k;
+            yield return null;
         }
+        threat.rectTransform.localScale = Vector3.one;
+        CameraShake.Add(0.6f, 2f);   // el golpe del texto
         for (float t = 0f; t < 2.6f; t += Time.deltaTime)
         {
             threat.rectTransform.anchoredPosition = new Vector2(Random.Range(-3f, 3f), 230f + Random.Range(-2f, 2f));
@@ -240,6 +247,59 @@ public class EndlessMode : MonoBehaviour
         e.SetTarget(FindAnyObjectByType<PogoPlayer>()?.transform);
     }
 
+    private static AudioClip boom;
+    private Image redPulse;
+
+    // Un instante de cámara lenta: se siente el golpe.
+    private IEnumerator HitStop()
+    {
+        if (Time.timeScale <= 0f) yield break;
+        Time.timeScale = 0.15f;
+        yield return new WaitForSecondsRealtime(0.18f);
+        if (Time.timeScale > 0f) Time.timeScale = 1f;
+    }
+
+    // La pantalla late en rojo sangre tres veces.
+    private IEnumerator RedPulse()
+    {
+        if (redPulse == null)
+        {
+            redPulse = UiKit.Image(UiKit.Stretch("PulsoRojo", flash.transform.parent), new Color(0.6f, 0f, 0f, 0f));
+            redPulse.raycastTarget = false;
+            redPulse.transform.SetSiblingIndex(flash.transform.GetSiblingIndex());
+        }
+        for (int i = 0; i < 3; i++)
+            for (float t = 0f; t < 0.4f; t += Time.unscaledDeltaTime)
+            {
+                redPulse.color = new Color(0.6f, 0f, 0f, 0.45f * Mathf.Sin(t / 0.4f * Mathf.PI) * (1f - i * 0.25f));
+                yield return null;
+            }
+        redPulse.color = new Color(0.6f, 0f, 0f, 0f);
+    }
+
+    // Golpe grave tipo trailer: bombo enorme + ruido sucio.
+    private static AudioClip MakeBoom()
+    {
+        const int rate = 22050;
+        int n = (int)(rate * 2.2f);
+        var d = new float[n];
+        var rng = new System.Random(21);
+        float lp = 0f;
+        for (int i = 0; i < n; i++)
+        {
+            float t = i / (float)rate;
+            float f = Mathf.Lerp(70f, 28f, Mathf.Clamp01(t / 0.8f));
+            float sub = Mathf.Sin(2f * Mathf.PI * f * t) * Mathf.Exp(-t * 1.6f);
+            float w = (float)rng.NextDouble() * 2f - 1f;
+            lp += (w - lp) * 0.08f;
+            float dirt = lp * 4f * Mathf.Exp(-t * 3f);
+            d[i] = Mathf.Clamp((float)System.Math.Tanh((sub * 1.4f + dirt) * 2.2f) * 0.9f, -1f, 1f);
+        }
+        AudioClip c = AudioClip.Create("GolpeAverno", n, 1, rate, false);
+        c.SetData(d, 0);
+        return c;
+    }
+
     private static AudioClip MakeThunder()
     {
         const int rate = 22050;
@@ -298,10 +358,16 @@ public class CameraShake : MonoBehaviour
         instance.strength = Mathf.Max(instance.strength, amount);
     }
 
+    // Antes de que PogoCamera calcule (Update va antes que cualquier LateUpdate) se quita el temblor
+    // del frame anterior: así la cámara nunca "hereda" el desplazamiento y no se va acumulando.
+    private void Update()
+    {
+        transform.position -= applied;
+        applied = Vector3.zero;
+    }
+
     private void LateUpdate()
     {
-        // PogoCamera recoloca la cámara cada frame desde su propia posición: el temblor no se acumula.
-        applied = Vector3.zero;
         if (time <= 0f) return;
         time -= Time.deltaTime;
         float k = Mathf.Clamp01(time / 0.6f) * strength;
