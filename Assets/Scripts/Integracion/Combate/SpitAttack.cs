@@ -132,7 +132,7 @@ public class SpitAttack : MonoBehaviour
         if (best == null)
             return;
         int perVolley = stats != null ? Mathf.RoundToInt(stats.Get(PogoStat.Projectiles)) : 1;
-        burstCount = Mathf.Clamp(perVolley * volleys, 1, 12);
+        burstCount = Mathf.Clamp(perVolley * volleys, 1, 60);
         Fire(mouth, best, stats, range * 1.3f);
         burstCount = 0;
     }
@@ -147,6 +147,7 @@ public class SpitAttack : MonoBehaviour
         float speed = stats != null ? stats.Get(PogoStat.ProjectileSpeed) : 22f;
         float area = stats != null ? stats.Get(PogoStat.SpitArea) : 0f;
         float size = stats != null ? Mathf.Max(0.3f, stats.Get(PogoStat.SpitSize)) : 1f;
+        int bounces = stats != null ? Mathf.RoundToInt(stats.Get(PogoStat.SpitBounces)) : 0;
         int count = burstCount > 0 ? burstCount : stats != null ? Mathf.RoundToInt(stats.Get(PogoStat.Projectiles)) : 1;
         SpitProjectile central = null;
 
@@ -157,6 +158,7 @@ public class SpitAttack : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
+            if (SpitProjectile.AliveCount > 220) break;   // tope de escupitajos en el aire
             EnemyTracker t = targets[i % targets.Count];
             int round = i / targets.Count;
             float spread = round == 0 ? 0f : (round % 2 == 1 ? 1f : -1f) * (8f + 6f * ((round - 1) / 2));
@@ -171,6 +173,7 @@ public class SpitAttack : MonoBehaviour
             SpitProjectile projectile = Instantiate(projectilePrefab, mouth, rotation);
             projectile.Launch(t, damage, crit, speed, range * 1.6f / speed + 0.5f, transform, hitClip, critClip);
             projectile.SetUpgrades(area, size, rotation * Vector3.forward);
+            projectile.Bounces = bounces;
             if (i == 0)
             {
                 central = projectile;

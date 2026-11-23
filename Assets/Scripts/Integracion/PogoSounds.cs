@@ -58,7 +58,7 @@ public class PogoSounds : MonoBehaviour
             if (vy >= geyserVelocity && (PogoJump.Instance == null || PogoJump.Instance.GeyserAscent))
                 Play(geyserClip, geyserVolume);
             else
-                Play(bounceClip, bounceVolume);
+                Play(bounceClip, bounceVolume * (vy < 6f ? 0.45f : 1f));   // los brinquitos solos suenan más suave
         }
 
         lastVerticalSpeed = vy;

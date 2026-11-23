@@ -17,8 +17,29 @@ public class Coin : MonoBehaviour
     private Vector3 velocity;
     private float age;
 
+    // Moneda con más detalle (sin partículas): canto oscuro y un rombo brillante en cada cara.
+    private void Decorate()
+    {
+        Transform disc = transform.childCount > 0 ? transform.GetChild(0) : null;
+        foreach (Transform t in GetComponentsInChildren<Transform>()) if (t.name == "Disco") disc = t;
+        if (disc == null || ItemEffects.Instance == null) return;
+        GameObject Part(PrimitiveType type, Vector3 pos, Vector3 scale, Quaternion rot, Color c, float glow)
+        {
+            GameObject g = GameObject.CreatePrimitive(type);
+            Destroy(g.GetComponent<Collider>());
+            g.transform.SetParent(disc, false);
+            g.transform.localPosition = pos; g.transform.localScale = scale; g.transform.localRotation = rot;
+            ItemFx.Paint(g, c, glow);
+            return g;
+        }
+        Part(PrimitiveType.Cylinder, Vector3.zero, new Vector3(1.12f, 0.75f, 1.12f), Quaternion.identity, new Color(0.7f, 0.42f, 0.08f), 0.2f);
+        foreach (float side in new[] { 1f, -1f })
+            Part(PrimitiveType.Cube, new Vector3(0f, side * 0.55f, 0f), new Vector3(0.42f, 0.12f, 0.42f), Quaternion.Euler(0f, 45f, 0f), new Color(1f, 0.95f, 0.55f), 1.2f);
+    }
+
     private void Start()
     {
+        Decorate();
         velocity = new Vector3(Random.Range(-3f, 3f), Random.Range(4f, 7f), Random.Range(-3f, 3f));
 
         if (player == null)

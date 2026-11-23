@@ -131,11 +131,18 @@ public class MagicOrb : MonoBehaviour
     private Material fx;
     private AudioClip impact;
 
-    public static void Launch(Vector3 from, Vector3 velocity, Transform target, float damage, Material orbMat, Material fxMat, AudioClip impact)
+    // scale: tamaño y alcance del golpe (el Diablo los lanza al doble). victim: a quién le pega aunque no lo persiga.
+    private float scale = 1f;
+    private Transform victim;
+
+    public static void Launch(Vector3 from, Vector3 velocity, Transform target, float damage, Material orbMat, Material fxMat, AudioClip impact,
+        float scale = 1f, Transform victim = null)
     {
         var go = new GameObject("OrbeMorado");
         go.transform.position = from;
         var o = go.AddComponent<MagicOrb>();
+        o.scale = scale;
+        o.victim = victim != null ? victim : target;
         o.velocity = velocity;
         o.target = target;
         o.damage = damage;
@@ -145,7 +152,7 @@ public class MagicOrb : MonoBehaviour
         var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         Destroy(sphere.GetComponent<Collider>());
         sphere.transform.SetParent(go.transform, false);
-        sphere.transform.localScale = Vector3.one * 0.45f;
+        sphere.transform.localScale = Vector3.one * 0.45f * scale;
         var r = sphere.GetComponent<Renderer>();
         if (orbMat != null) r.sharedMaterial = orbMat;
         r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -174,9 +181,10 @@ public class MagicOrb : MonoBehaviour
         Vector3 next = transform.position + velocity * dt;
 
         // Golpea a Pogoman
-        if (target != null && (target.position + Vector3.up * 0.8f - next).sqrMagnitude < 0.8f * 0.8f)
+        float reach = 0.8f * scale;
+        if (victim != null && (victim.position + Vector3.up * 0.8f - next).sqrMagnitude < reach * reach)
         {
-            var p = target.GetComponent<PogoPlayer>();
+            var p = victim.GetComponent<PogoPlayer>();
             if (p != null && !PogoBridge.IsDead(p))
                 PlayerVitals.Damage(p, damage);
             Explode(next);
@@ -197,7 +205,7 @@ public class MagicOrb : MonoBehaviour
 
     private void Explode(Vector3 at)
     {
-        ItemFx.Burst(at, 22, 0.3f, new Color(0.75f, 0.3f, 1f), fx, 5f, 0.3f, 0.45f);
+        ItemFx.Burst(at, Mathf.RoundToInt(22 * scale), 0.3f * scale, new Color(0.75f, 0.3f, 1f), fx, 5f * scale, 0.3f * scale, 0.45f);
         if (impact != null)
             AudioSource.PlayClipAtPoint(impact, at, 0.7f * GameSettings.SfxVolume);
         Destroy(gameObject);

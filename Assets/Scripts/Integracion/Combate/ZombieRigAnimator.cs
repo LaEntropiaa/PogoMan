@@ -121,7 +121,81 @@ public class ZombieRigAnimator : MonoBehaviour, IDemonRig
         phase += speed * dt * stepsPerMeter * Mathf.PI * 2f;
 
         float attackProgress = attack != null ? attack.AttackProgress : 0f;
-        ApplyPose(phase, moveBlend, attackProgress, Time.time + timeOffset);
+        if (attackProgress <= 0.001f && Bake())
+            ApplyBaked(phase, moveBlend, Time.time + timeOffset);
+        else
+            ApplyPose(phase, moveBlend, attackProgress, Time.time + timeOffset);
+        ApplyReactions();
+    }
+
+    // ---- Caminata "horneada" ----
+    // El ciclo de caminar se calcula UNA vez (32 cuadros, compartido por todos los zombies) y luego
+    // cada zombie solo mezcla dos cuadros guardados: con cientos de demonios sale mucho más barato.
+    private const int BakedFrames = 32;
+    private static Quaternion[][] bakedWalk;
+    private static Quaternion[] bakedIdle;
+
+    private bool Bake()
+    {
+        if (bakedWalk != null)
+            return true;
+        Init();
+        foreach (Transform b in bones)
+            if (b == null) return false;
+        ApplyPose(0f, 0f, 0f, 0f);
+        bakedIdle = new Quaternion[bones.Length];
+        for (int i = 0; i < bones.Length; i++)
+            bakedIdle[i] = Quaternion.Inverse(restLocal[i]) * bones[i].localRotation;
+        bakedWalk = new Quaternion[BakedFrames][];
+        for (int f = 0; f < BakedFrames; f++)
+        {
+            ApplyPose(f / (float)BakedFrames * Mathf.PI * 2f, 1f, 0f, 0f);
+            bakedWalk[f] = new Quaternion[bones.Length];
+            for (int i = 0; i < bones.Length; i++)
+                bakedWalk[f][i] = Quaternion.Inverse(restLocal[i]) * bones[i].localRotation;   // relativo al reposo
+        }
+        return true;
+    }
+
+    private void ApplyBaked(float phase, float moveBlend, float time)
+    {
+        float p = Mathf.Repeat(phase / (Mathf.PI * 2f), 1f) * BakedFrames;
+        int a = (int)p % BakedFrames, b = (a + 1) % BakedFrames;
+        float k = p - (int)p;
+        for (int i = 0; i < bones.Length; i++)
+        {
+            Quaternion walk = Quaternion.Slerp(bakedWalk[a][i], bakedWalk[b][i], k);
+            bones[i].localRotation = restLocal[i] * Quaternion.Slerp(bakedIdle[i], walk, moveBlend);
+        }
+        float breathe = Mathf.Sin(time * 1.8f);
+        Rotate(spine, breathe * 1.5f, 0f);
+        Rotate(head, breathe * 2f, Mathf.Sin(time * 0.7f) * 6f * (1f - moveBlend));   // voltea a los lados quieto
+    }
+
+    // Se echa para atrás al recibir daño y se zarandea al quitarte de su cabeza.
+    private EnemyTracker tracker;
+    private void ApplyReactions()
+    {
+        if (tracker == null) tracker = body.GetComponent<EnemyTracker>();
+        if (tracker == null) return;
+        float since = Time.time - tracker.LastDamageTime;
+        float flinch = since < 0.4f ? Mathf.Sin(Mathf.Clamp01(since / 0.4f) * Mathf.PI) : 0f;
+        if (flinch > 0f)
+        {
+            Rotate(spine, -14f * flinch, 0f);
+            Rotate(head, -12f * flinch, 0f);
+            Rotate(armLeft, 25f * flinch, 0f);
+            Rotate(armRight, 25f * flinch, 0f);
+        }
+        float punish = tracker.Punish;
+        if (punish > 0f)
+        {
+            float w = Mathf.Sin(Time.time * 38f) * punish;
+            Rotate(spine, 0f, w * 20f);
+            Rotate(head, -25f * punish, w * 25f);
+            Rotate(armLeft, -120f * punish, 0f);   // brazos arriba: te sacude
+            Rotate(armRight, -120f * punish, 0f);
+        }
     }
 
     // attackProgress: 0 = nada, 0..0.85 = preparando el golpe, 1 = golpe.
