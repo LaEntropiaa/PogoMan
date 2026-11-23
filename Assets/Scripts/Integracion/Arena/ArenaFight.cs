@@ -345,10 +345,11 @@ public class ArenaFight : MonoBehaviour
     public void OnSlam(Vector3 at)
     {
         Play(slamClip, 1f, 1f);
-        for (int i = 0; i < 16; i++)
+        CameraShake.Add(0.5f, 0.8f);
+        for (int i = 0; i < 24; i++)
         {
-            float a = i / 16f * Mathf.PI * 2f;
-            ItemFx.Burst(at + new Vector3(Mathf.Cos(a), 0.3f, Mathf.Sin(a)) * 3f, 10, 0.4f, new Color(0.45f, 0.25f, 0.2f), fxMaterial, 8f, 0.7f, 0.7f);
+            float a = i / 24f * Mathf.PI * 2f;
+            ItemFx.Burst(at + new Vector3(Mathf.Cos(a), 0.3f, Mathf.Sin(a)) * 6f, 10, 0.6f, new Color(0.45f, 0.25f, 0.2f), fxMaterial, 8f, 0.7f, 0.7f);
         }
     }
 
@@ -364,7 +365,7 @@ public class ArenaFight : MonoBehaviour
     {
         Play(explodeClip, Random.Range(0.8f, 0.95f), 0.6f);
         for (int i = 0; i < 6; i++)
-            ItemFx.Burst(at + Vector3.up * (i * 0.8f), 18, 0.6f, i % 2 == 0 ? new Color(1f, 0.45f, 0.05f) : new Color(1f, 0.85f, 0.3f), fxMaterial, 4f + i, 0.5f, 0.6f);
+            ItemFx.Burst(at + Vector3.up * (i * 1.1f), 28, 1.6f, i % 2 == 0 ? new Color(1f, 0.45f, 0.05f) : new Color(1f, 0.85f, 0.3f), fxMaterial, 4f + i, 0.5f, 0.6f);
     }
 
     private float ringFx;

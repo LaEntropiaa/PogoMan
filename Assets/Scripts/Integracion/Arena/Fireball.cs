@@ -40,7 +40,7 @@ public class Fireball : MonoBehaviour
         var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         Destroy(sphere.GetComponent<Collider>());
         sphere.transform.SetParent(transform, false);
-        sphere.transform.localScale = Vector3.one * 0.9f;
+        sphere.transform.localScale = Vector3.one * 0.9f * Mathf.Clamp(radius / 2.4f, 0.5f, 2.5f);   // más área = bola más grande
         var r = sphere.GetComponent<Renderer>();
         if (ballMaterial != null)
             r.sharedMaterial = ballMaterial;
@@ -121,7 +121,7 @@ public class Fireball : MonoBehaviour
 
     private void Explode(Vector3 at)
     {
-        ItemFx.Burst(at + Vector3.up * 0.4f, 50, radius * 0.5f, new Color(1f, 0.5f, 0.1f), fxMaterial, 9f, 0.7f, 0.6f);
+        ItemFx.Burst(at + Vector3.up * 0.4f, Mathf.RoundToInt(25f * radius / 2.4f + 25f), radius * 0.5f, new Color(1f, 0.5f, 0.1f), fxMaterial, 9f * Mathf.Max(1f, radius / 2.4f), 0.7f, 0.6f);
         ItemFx.Burst(at + Vector3.up * 0.2f, 25, radius * 0.3f, new Color(0.3f, 0.2f, 0.2f), fxMaterial, 4f, 0.9f, 0.9f);
         if (explodeClip != null)
             AudioSource.PlayClipAtPoint(explodeClip, at, 0.9f * GameSettings.SfxVolume);

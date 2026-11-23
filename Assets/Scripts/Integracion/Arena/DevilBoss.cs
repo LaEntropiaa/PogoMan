@@ -10,9 +10,9 @@ public class DevilBoss : Enemy
     public enum Phase { Intro, Rising, Flying, Descending, Vulnerable, Dying, Enraging }
 
     [Header("Vida")]
-    [SerializeField] private float maxHealth = 13000f;   // ×5
+    [SerializeField] private float maxHealth = 10000f;   // fase 1: 10k
     [Tooltip("Vida extra por cada nivel de Pogoman (si llegas muy cheto, aguanta más).")]
-    [SerializeField] private float healthPerLevel = 700f;
+    [SerializeField] private float healthPerLevel = 0f;   // vida fija (10k / 5k)
 
     [Header("Fases")]
     [SerializeField] private float introTime = 4.5f;
@@ -34,8 +34,8 @@ public class DevilBoss : Enemy
     [SerializeField] private int miniBossesPerHorde = 1;
 
     [Header("Bolas de fuego")]
-    [SerializeField] private float fireballInterval = 1.7f;
-    [SerializeField] private float enragedFireballInterval = 1.0f;
+    [SerializeField] private float fireballInterval = 1.45f;
+    [SerializeField] private float enragedFireballInterval = 0.85f;
     [SerializeField] private float fireballDamage = 20f;
 
     [Header("Lluvia de magia (cada pocas bolas)")]
@@ -44,10 +44,10 @@ public class DevilBoss : Enemy
     [SerializeField] private float rainDamage = 12f;
 
     [Header("Golpe al aterrizar")]
-    [SerializeField] private float slamRadius = 6f;
+    [SerializeField] private float slamRadius = 12f;
     [SerializeField] private float slamDamage = 22f;
-    [SerializeField] private float fireballRadius = 2.4f;
-    [SerializeField] private float fireballFlight = 0.95f;
+    [SerializeField] private float fireballRadius = 4.8f;
+    [SerializeField] private float fireballFlight = 0.85f;
 
     [Header("Golpe del pogo")]
     [Tooltip("Qué tan cerca (horizontal) tienes que caer para que el pisotón le pegue.")]
@@ -58,7 +58,7 @@ public class DevilBoss : Enemy
     [SerializeField] private float kneelColliderHeight = 0.55f;
 
     [Header("Ataques especiales")]
-    [SerializeField] private float specialInterval = 3.8f;
+    [SerializeField] private float specialInterval = 3.2f;
     [SerializeField] private float pillarDamage = 24f;
     [SerializeField] private float ringDamage = 20f;
     [SerializeField] private float diveDamage = 30f;
@@ -418,7 +418,7 @@ public class DevilBoss : Enemy
             Vector2 c = Random.insideUnitCircle * 7f;
             Vector3 from = player.position + new Vector3(c.x, 14f + Random.value * 4f, c.y);
             Vector3 v = Vector3.down * Random.Range(6f, 9f) + new Vector3(-c.x, 0f, -c.y) * 0.15f;
-            MagicOrb.Launch(from, v, i % 3 == 0 ? player : null, rainDamage * Dmg, BossCaster.OrbMaterial, fight.FxMaterial, BossCaster.ImpactClip);
+            MagicOrb.Launch(from, v * 1.15f, i % 3 == 0 ? player : null, rainDamage * Dmg, BossCaster.OrbMaterial, fight.FxMaterial, BossCaster.ImpactClip, 2f, player);
         }
     }
 
@@ -438,10 +438,11 @@ public class DevilBoss : Enemy
     }
 
     // ---- Segunda fase ----
-    private const float FuryHealth = 1.6f;
+    private const float FuryMaxHealth = 5000f;   // fase 2: 5k
     private const float FuryDamage = 1.6f;
     // Daño de sus ataques (en la furia pegan más).
-    private float Dmg => Fury ? FuryDamage : 1f;
+    // +20 % en ambas fases (y la furia encima pega más).
+    private float Dmg => 1.2f * (Fury ? FuryDamage : 1f);
 
     // ---- Ataques nuevos de la furia ----
     // Tormenta de meteoros: 14 meteoros con aviso caen por la arena, uno tras otro, persiguiéndote.
@@ -455,10 +456,10 @@ public class DevilBoss : Enemy
         {
             Vector2 r = Random.insideUnitCircle * (i % 3 == 0 ? 1.5f : 9f);
             Vector3 g = fight.GroundAt(player.position + new Vector3(r.x, 0f, r.y), player.position);
-            Telegraph t = Telegraph.Disc(g, 2.6f).SetColor(new Color(1f, 0.2f, 0.05f, 0.5f));
+            Telegraph t = Telegraph.Disc(g, 5.2f).SetColor(new Color(1f, 0.2f, 0.05f, 0.5f));
             signs.Add(t);
-            falling.Add((g, Time.time + 0.75f, t));
-            Fireball.Launch(g + Vector3.up * 35f + Random.insideUnitSphere * 4f, g, 0.75f, 0f, 0.1f, fight.FireballMaterial, fight.FxMaterial, null);
+            falling.Add((g, Time.time + 0.65f, t));
+            Fireball.Launch(g + Vector3.up * 35f + Random.insideUnitSphere * 4f, g, 0.65f, 0f, 0.1f, fight.FireballMaterial, fight.FxMaterial, null);
             yield return new WaitForSeconds(0.16f);
             UpdateFalling(falling);
             if (isDead) yield break;
@@ -471,12 +472,12 @@ public class DevilBoss : Enemy
         for (int i = list.Count - 1; i >= 0; i--)
         {
             var m = list[i];
-            if (m.sign != null) m.sign.SetFill(1f - (m.hitTime - Time.time) / 0.75f);
+            if (m.sign != null) m.sign.SetFill(1f - (m.hitTime - Time.time) / 0.65f);
             if (Time.time < m.hitTime) continue;
             signs.Remove(m.sign);
             if (m.sign != null) Destroy(m.sign.gameObject);
             fight.OnPillarErupt(m.at);
-            if (PlayerNear(player.position, m.at, 2.6f, 4f))
+            if (PlayerNear(player.position, m.at, 5.2f, 4f))
             {
                 PlayerVitals.Damage(pogo, pillarDamage * 0.8f * Dmg);
                 Vector3 d = player.position - m.at; d.y = 0f;
@@ -507,11 +508,11 @@ public class DevilBoss : Enemy
             if (fight.FxMaterial != null) lr.sharedMaterial = fight.FxMaterial;
             lines.Add(lr);
         }
-        float warn = 0.7f, sweep = 3.2f;
+        float warn = 0.6f, sweep = 2.8f;
         bool hit = false;
         for (float t = 0f; t < warn + sweep && !isDead; t += Time.deltaTime)
         {
-            float spin = t < warn ? 0f : (t - warn) * 75f;   // grados por segundo
+            float spin = t < warn ? 0f : (t - warn) * 88f;   // grados por segundo
             for (int i = 0; i < 2; i++)
             {
                 Vector3 dir = Quaternion.Euler(0f, -(angle + spin + i * 180f), 0f) * Vector3.right;
@@ -520,14 +521,14 @@ public class DevilBoss : Enemy
                 Vector3 from = transform.position + Vector3.up * 4f;
                 lines[i].SetPosition(0, from);
                 lines[i].SetPosition(1, c + dir * 30f + Vector3.up * 0.4f);
-                lines[i].widthMultiplier = t < warn ? 0.08f : 0.9f + Mathf.Sin(t * 40f) * 0.15f;
+                lines[i].widthMultiplier = t < warn ? 0.15f : 1.8f + Mathf.Sin(t * 40f) * 0.3f;
                 if (t >= warn && !hit)
                 {
                     Vector3 d = player.position - c; d.y = 0f;
                     float along = Vector3.Dot(d, dir);
                     float lateral = Mathf.Abs(Vector3.Dot(d, Vector3.Cross(Vector3.up, dir)));
                     float height = player.position.y - 1f - Telegraph.GroundY(player.position, c.y);
-                    if (along > 0f && along < 30f && lateral < 1.1f && height < 1.3f)
+                    if (along > 0f && along < 30f && lateral < 2.2f && height < 1.3f)
                     {
                         hit = true;
                         PlayerVitals.Damage(pogo, ringDamage * 1.3f * Dmg);
@@ -555,7 +556,7 @@ public class DevilBoss : Enemy
             for (int i = 0; i < 4; i++)
             {
                 Vector3 dir = Quaternion.Euler(0f, baseAngle + round * 45f + i * 90f, 0f) * Vector3.forward;
-                Telegraph t = Telegraph.Strip(c, dir, 28f, 3f).SetColor(new Color(1f, 0.4f, 0.05f, 0.45f));
+                Telegraph t = Telegraph.Strip(c, dir, 28f, 6f).SetColor(new Color(1f, 0.4f, 0.05f, 0.45f));
                 signs.Add(t);
                 strips.Add((t, dir));
             }
@@ -573,7 +574,7 @@ public class DevilBoss : Enemy
                 Vector3 d = player.position - c; d.y = 0f;
                 float along = Vector3.Dot(d, s.dir);
                 float lateral = Mathf.Abs(Vector3.Dot(d, Vector3.Cross(Vector3.up, s.dir)));
-                if (!hit && along > 0f && along < 28f && lateral < 1.9f)
+                if (!hit && along > 0f && along < 28f && lateral < 3.8f)
                 {
                     hit = true;
                     PlayerVitals.Damage(pogo, pillarDamage * Dmg);
@@ -587,7 +588,7 @@ public class DevilBoss : Enemy
     private void StartFury()
     {
         Fury = true;
-        maxHealth *= FuryHealth;   // la furia aguanta todavía más
+        maxHealth = FuryMaxHealth;
         currentHealth = 0.01f;
         diveT = -1f;
         ClearSigns();
@@ -659,7 +660,7 @@ public class DevilBoss : Enemy
         Rig?.Summon();
         fight.OnSpecial(0);
         int count = Fury ? 7 : 4;
-        float warn = Fury ? 0.6f : 0.8f;
+        float warn = Fury ? 0.52f : 0.68f;
         var spots = new List<Vector3>();
         Vector3 vel = pogo.GetComponent<Rigidbody>().linearVelocity; vel.y = 0f;
         for (int i = 0; i < count; i++)
@@ -669,7 +670,7 @@ public class DevilBoss : Enemy
             Vector3 c = i == 0 ? player.position : i == 1 ? player.position + vel * warn : player.position + new Vector3(r.x, 0f, r.y);
             Vector3 g = fight.GroundAt(c, player.position);
             spots.Add(g);
-            Telegraph t = Telegraph.Disc(g, 1.9f).SetColor(new Color(1f, 0.35f, 0.05f, 0.45f));
+            Telegraph t = Telegraph.Disc(g, 3.8f).SetColor(new Color(1f, 0.35f, 0.05f, 0.45f));
             signs.Add(t);
         }
         for (float k = 0f; k < warn; k += Time.deltaTime)
@@ -683,7 +684,7 @@ public class DevilBoss : Enemy
         foreach (Vector3 g in spots)
         {
             fight.OnPillarErupt(g);
-            if (!hitDone && PlayerNear(player.position, g, 1.9f, 6f))
+            if (!hitDone && PlayerNear(player.position, g, 3.8f, 6f))
             {
                 hitDone = true;
                 PlayerVitals.Damage(pogo, pillarDamage * Dmg);
@@ -699,9 +700,9 @@ public class DevilBoss : Enemy
         Rig?.Cast();
         fight.OnSpecial(1);
         Vector3 c = fight.GroundAt(center, groundPoint);
-        Telegraph t = Telegraph.Ring(c, 0.5f, 1.3f).SetColor(new Color(1f, 0.25f, 0.05f, 0.6f));
+        Telegraph t = Telegraph.Ring(c, 0.5f, 2.6f).SetColor(new Color(1f, 0.25f, 0.05f, 0.6f));
         signs.Add(t);
-        float speed = Fury ? 16f : 12f;
+        float speed = Fury ? 18f : 14f;
         float maxR = 30f;
         int rings = Fury ? 2 : 1;
         for (int n = 0; n < rings; n++)
@@ -710,13 +711,13 @@ public class DevilBoss : Enemy
             for (float r = 1f; r < maxR; r += speed * Time.deltaTime)
             {
                 if (isDead || t == null) yield break;
-                t.SetRadii(Mathf.Max(0f, r - 0.6f), r + 0.6f);
+                t.SetRadii(Mathf.Max(0f, r - 1.2f), r + 1.2f);
                 t.SetFill(1f);
                 fight.OnRingTick(c, r);
                 Vector3 d = player.position - c;
                 float flat = new Vector2(d.x, d.z).magnitude;
                 float height = player.position.y - 1f - Telegraph.GroundY(player.position, c.y);
-                if (!hit && Mathf.Abs(flat - r) < 0.9f && height < 1.1f)
+                if (!hit && Mathf.Abs(flat - r) < 1.8f && height < 1.1f)
                 {
                     hit = true;
                     PlayerVitals.Damage(pogo, ringDamage * Dmg);
@@ -744,7 +745,7 @@ public class DevilBoss : Enemy
         diveSlammed = false;
         diveFrom = transform.position;
         diveTo = fight.GroundAt(player.position, groundPoint);
-        diveSign = Telegraph.Disc(diveTo, 4f).SetColor(new Color(0.85f, 0.1f, 0.25f, 0.45f));
+        diveSign = Telegraph.Disc(diveTo, 8f).SetColor(new Color(0.85f, 0.1f, 0.25f, 0.45f));
         signs.Add(diveSign);
         Rig?.Laugh();
         fight.OnSpecial(2);
@@ -756,7 +757,7 @@ public class DevilBoss : Enemy
         if (diveT < 0f)
             return false;
         diveT += dt;
-        float warn = Fury ? 0.55f : 0.75f, down = 0.3f, stay = 0.35f, up = 0.9f;
+        float warn = Fury ? 0.47f : 0.64f, down = 0.26f, stay = 0.35f, up = 0.9f;
         if (diveT < warn)
         {
             // Sigue un poquito a Pogoman mientras avisa.
@@ -781,7 +782,7 @@ public class DevilBoss : Enemy
                 signs.Remove(diveSign);
                 if (diveSign != null) Destroy(diveSign.gameObject);
                 fight.OnSlam(diveTo);
-                if (PlayerNear(player.position, diveTo, 4f, 3.5f))
+                if (PlayerNear(player.position, diveTo, 8f, 3.5f))
                 {
                     PlayerVitals.Damage(pogo, diveDamage * Dmg);
                     Vector3 d = player.position - diveTo; d.y = 0f;
