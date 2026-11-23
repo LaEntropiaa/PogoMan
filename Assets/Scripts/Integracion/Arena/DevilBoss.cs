@@ -34,8 +34,8 @@ public class DevilBoss : Enemy
     [SerializeField] private int miniBossesPerHorde = 1;
 
     [Header("Bolas de fuego")]
-    [SerializeField] private float fireballInterval = 1.45f;
-    [SerializeField] private float enragedFireballInterval = 0.85f;
+    [SerializeField] private float fireballInterval = 0.75f;   // ataca al doble de ritmo
+    [SerializeField] private float enragedFireballInterval = 0.45f;
     [SerializeField] private float fireballDamage = 20f;
 
     [Header("Lluvia de magia (cada pocas bolas)")]
@@ -58,7 +58,7 @@ public class DevilBoss : Enemy
     [SerializeField] private float kneelColliderHeight = 0.55f;
 
     [Header("Ataques especiales")]
-    [SerializeField] private float specialInterval = 3.2f;
+    [SerializeField] private float specialInterval = 1.7f;
     [SerializeField] private float pillarDamage = 24f;
     [SerializeField] private float ringDamage = 20f;
     [SerializeField] private float diveDamage = 30f;
@@ -441,8 +441,8 @@ public class DevilBoss : Enemy
     private const float FuryMaxHealth = 5000f;   // fase 2: 5k
     private const float FuryDamage = 1.6f;
     // Daño de sus ataques (en la furia pegan más).
-    // +20 % en ambas fases (y la furia encima pega más).
-    private float Dmg => 1.2f * (Fury ? FuryDamage : 1f);
+    // Doble de daño en ambas fases (×2.4 base) y la furia encima pega más.
+    private float Dmg => 2.4f * (Fury ? FuryDamage : 1f);
 
     // ---- Ataques nuevos de la furia ----
     // Tormenta de meteoros: 14 meteoros con aviso caen por la arena, uno tras otro, persiguiéndote.
