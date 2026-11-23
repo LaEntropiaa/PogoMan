@@ -127,6 +127,8 @@ public class PlayerVitals : MonoBehaviour
         PlayerVitals v = Instance;
         if (v != null && target == v.player)
         {
+            if (DemoGodMode.Active)
+                return;
             if (Time.time < v.InvulnerableUntil || TimeStop.Active)
                 return;
 

@@ -68,7 +68,7 @@ public class DevilBoss : Enemy
     [SerializeField] private float surviveTime = 10f;
     [SerializeField] private float enrageTime = 3.2f;
     [Tooltip("En la furia todo va más rápido (multiplica las recargas).")]
-    [SerializeField] private float furyCooldownFactor = 0.55f;
+    [SerializeField] private float furyCooldownFactor = 1.1f;   // furia: ataca a la mitad de ritmo que antes (0.55)
     [SerializeField] private int furyFlyers = 4;
 
     // ---- Estado público (HUD) ----

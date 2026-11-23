@@ -67,5 +67,7 @@ public class RunSystems : MonoBehaviour
             player.gameObject.AddComponent<PogoDeathFx>();
         if (player.GetComponent<OutOfBoundsGuard>() == null)
             player.gameObject.AddComponent<OutOfBoundsGuard>();
+        if (DemoGodMode.Enabled && player.GetComponent<DemoGodMode>() == null)
+            player.gameObject.AddComponent<DemoGodMode>();
     }
 }

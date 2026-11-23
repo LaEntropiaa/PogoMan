@@ -129,7 +129,7 @@ public static class RunRecords
     // Guarda la partida actual. Regresa su lugar en la tabla (1 = arriba) o 0 si no entró.
     public static int RecordCurrentRun(string result)
     {
-        if (PlayerStats.Instance == null || savedFor == PlayerStats.Instance)
+        if (PlayerStats.Instance == null || savedFor == PlayerStats.Instance || DemoGodMode.Enabled)
             return LastRank;
         savedFor = PlayerStats.Instance;
         PlayerStats s = PlayerStats.Instance;

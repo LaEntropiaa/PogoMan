@@ -19,6 +19,7 @@ public static class PogoBuild
             scenes = scenes,
             locationPathName = System.IO.Path.Combine(dir, "PogoMan"),
             target = BuildTarget.StandaloneLinux64,
+            extraScriptingDefines = ExtraDefines(),
         });
         Debug.Log("POGO_BUILD_RESULT " + report.summary.result + " " + dir);
         if (Application.isBatchMode)
@@ -40,10 +41,15 @@ public static class PogoBuild
             locationPathName = System.IO.Path.Combine(dir, (System.Environment.GetEnvironmentVariable("POGO_NAME") ?? "PogoMan") + ".exe"),
             target = BuildTarget.StandaloneWindows64,
             options = BuildOptions.None,
+            extraScriptingDefines = ExtraDefines(),
         };
         var report = BuildPipeline.BuildPlayer(options);
         Debug.Log("POGO_BUILD_RESULT " + report.summary.result + " " + dir);
         if (Application.isBatchMode)
             EditorApplication.Exit(report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded ? 0 : 1);
     }
+
+    // POGO_GOD=1 compila la DEMO FINAL GOD MODE (ver DemoGodMode.cs).
+    private static string[] ExtraDefines() =>
+        System.Environment.GetEnvironmentVariable("POGO_GOD") == "1" ? new[] { "POGO_GODMODE" } : new string[0];
 }
