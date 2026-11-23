@@ -231,6 +231,7 @@ public class EnemyTracker : MonoBehaviour
         if (!deathHandled && IsDead)
         {
             deathHandled = true;
+            if (!(Enemy is DevilBoss)) Vanish();   // el Diablo sí tiene su escena al morir
             if (!NoReward)
             {
                 Killed?.Invoke(this, lastSource);
@@ -245,6 +246,17 @@ public class EnemyTracker : MonoBehaviour
 
         AnimateFigure();
         ApplyFlash();
+    }
+
+    // Sin animación de muerte: desaparece al instante (con un "puf" chiquito). Menos trabajo con cientos de demonios.
+    private void Vanish()
+    {
+        ItemFx.Burst(Center, 8, 0.4f, new Color(0.35f, 0.12f, 0.12f), ItemEffects.Instance != null ? ItemEffects.Instance.FxMaterial : null, 3f, 0.3f, 0.35f);
+        foreach (Renderer r in GetComponentsInChildren<Renderer>())
+            if (!(r is ParticleSystemRenderer)) r.enabled = false;
+        foreach (Collider c in GetComponentsInChildren<Collider>())
+            c.enabled = false;
+        if (voice != null && deathClip == null) voice.enabled = false;
     }
 
     private void DropCoins()
@@ -286,14 +298,7 @@ public class EnemyTracker : MonoBehaviour
         punish = Mathf.MoveTowards(punish, 0f, Time.deltaTime * 2.2f);
 
         if (deathHandled)
-        {
-            // Se encoge y se hunde (el enemigo se destruye al segundo).
-            deathTimer += Time.deltaTime;
-            float k = Mathf.Clamp01(deathTimer / 0.8f);
-            figure.localScale = figureBaseScale * (1f - k * k);
-            figure.localRotation *= Quaternion.Euler(0f, 720f * Time.deltaTime, 0f);
-            return;
-        }
+            return;   // ya desapareció (ver Vanish)
 
         Vector3 moved = transform.position - lastPosition;
         lastPosition = transform.position;

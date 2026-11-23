@@ -178,16 +178,12 @@ public class Chest : MonoBehaviour
                 if (m != null)
                     m.SetColor("_EmissionColor", Color.black);
 
-        // Un cofre abierto se ve más apagado.
-        var block = new MaterialPropertyBlock();
+        // Un cofre abierto desaparece con un "puf" dorado (ya no se queda gris).
+        ItemFx.Burst(Center, 24, 0.5f, AutoOpen ? new Color(0.85f, 0.4f, 1f) : new Color(1f, 0.85f, 0.4f), SparkleMaterial, 4f, 0.2f, 0.5f);
         foreach (Renderer r in renderers)
-        {
-            if (r == null)
-                continue;   // p. ej. chispas que ya se borraron
-            r.GetPropertyBlock(block);
-            block.SetColor("_BaseColor", new Color(0.45f, 0.4f, 0.4f));
-            r.SetPropertyBlock(block);
-        }
+            if (r != null) r.enabled = false;
+        foreach (Collider c in GetComponentsInChildren<Collider>())
+            if (!c.isTrigger) c.enabled = false;
     }
 
     private void OnDisable()

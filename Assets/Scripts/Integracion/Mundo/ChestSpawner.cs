@@ -66,7 +66,8 @@ public class ChestSpawner : MonoBehaviour
         foreach (Transform child in copy.GetComponentsInChildren<Transform>(true))
             if (child != copy.transform && (child.GetComponent<Light>() != null || child.GetComponent<ParticleSystem>() != null))
                 DestroyImmediate(child.gameObject);
-        foreach (Renderer r in copy.GetComponentsInChildren<Renderer>(true)) r.SetPropertyBlock(null);
+        foreach (Renderer r in copy.GetComponentsInChildren<Renderer>(true)) { r.SetPropertyBlock(null); r.enabled = true; }
+        foreach (Collider c in copy.GetComponentsInChildren<Collider>(true)) c.enabled = true;   // por si el molde ya estaba abierto
         Chest chest = copy.GetComponent<Chest>();
         chest.Configure(cost);
         copy.transform.SetParent(null, true);

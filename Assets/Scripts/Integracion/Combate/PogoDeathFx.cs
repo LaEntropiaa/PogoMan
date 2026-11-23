@@ -181,7 +181,7 @@ public class PogoDeathFx : MonoBehaviour
     // ---- Efectos ----
     private void Blood(Vector3 at, int count, float speed)
     {
-        ParticleSystem ps = ItemFx.Burst(at, count, 0.3f, new Color(0.55f, 0.02f, 0.02f), fx, speed, 0.2f, 1.1f);
+        ParticleSystem ps = ItemFx.BurstUnique(at, count, 0.3f, new Color(0.55f, 0.02f, 0.02f), fx, speed, 0.2f, 1.1f);
         var main = ps.main;
         main.gravityModifier = 2.2f;
         main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.75f, 0.03f, 0.03f), new Color(0.35f, 0f, 0f));

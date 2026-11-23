@@ -158,6 +158,7 @@ public class SpitAttack : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
+            if (SpitProjectile.AliveCount > 220) break;   // tope de escupitajos en el aire
             EnemyTracker t = targets[i % targets.Count];
             int round = i / targets.Count;
             float spread = round == 0 ? 0f : (round % 2 == 1 ? 1f : -1f) * (8f + 6f * ((round - 1) / 2));

@@ -152,7 +152,7 @@ public class PogoShockwave : MonoBehaviour
 // Un aro de la onda: se expande por el suelo, daña a cada demonio una vez al alcanzarlo y se desvanece.
 public class ShockRing : MonoBehaviour
 {
-    private const int Segments = 72;
+    private const int Segments = 40;
     private Color Inner = new Color(1f, 0.85f, 0.45f);
     private Color Outer = new Color(1f, 0.45f, 0.15f);
     private bool noReward;
@@ -173,6 +173,17 @@ public class ShockRing : MonoBehaviour
         r.noReward = true;
         r.ring.widthMultiplier = 0.6f;
     }
+
+    // Solo visual (efectos de jefes): no daña ni empuja.
+    public static void SpawnVisual(Vector3 at, float radius, float expandTime, Color inner, Color outer)
+    {
+        ShockRing r = Spawn(at, radius, 0f, expandTime);
+        r.Inner = inner;
+        r.Outer = outer;
+        r.visualOnly = true;
+    }
+
+    private bool visualOnly;
 
     public static ShockRing Spawn(Vector3 at, float radius, float damage, float expandTime)
     {
@@ -215,7 +226,7 @@ public class ShockRing : MonoBehaviour
     private void SetRadius(LineRenderer lr, float r, float lift)
     {
         Vector3 c = transform.position;
-        bool resample = Mathf.Abs(r - lastGroundR) > 0.4f;
+        bool resample = Mathf.Abs(r - lastGroundR) > 1f;
         for (int i = 0; i < Segments; i++)
         {
             float a = i / (float)Segments * Mathf.PI * 2f;
@@ -244,7 +255,7 @@ public class ShockRing : MonoBehaviour
         ring.startColor = ring.endColor = new Color(Inner.r, Inner.g, Inner.b, 0.95f * fade);
         glow.startColor = glow.endColor = new Color(Outer.r, Outer.g, Outer.b, 0.45f * fade);
 
-        if (age <= expand + 0.02f)
+        if (age <= expand + 0.02f && !visualOnly)
             DamageInside(r);
 
         if (fade <= 0f)

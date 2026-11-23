@@ -78,7 +78,7 @@ public class EliteEnemy : MonoBehaviour
         main.gravityModifier = -0.2f;
         main.maxParticles = 40;
         var em = aura.emission;
-        em.rateOverTime = 14f;
+        em.rateOverTime = EndlessMode.Active ? 0f : 5f;   // en el infinito hay muchos élites: sin aura
         var shape = aura.shape;
         shape.shapeType = ParticleSystemShapeType.Sphere;
         shape.radius = 0.6f;

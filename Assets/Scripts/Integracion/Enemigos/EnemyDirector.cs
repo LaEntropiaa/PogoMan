@@ -192,7 +192,8 @@ public class EnemyDirector : MonoBehaviour
             rate = spawnRateAtEnd * 0.6f * (1f + 0.15f * EndlessMode.Level);
         }
 
-        targetAlive = Mathf.Min(targetAlive, maxEnemies);
+        // En el modo infinito los demonios ya son muy fuertes y rápidos: menos cantidad para que no se caiga el FPS.
+        targetAlive = Mathf.Min(targetAlive, EndlessMode.Active ? 320f : maxEnemies);
 
         spawnBudget = Mathf.Min(spawnBudget + rate * Time.deltaTime, maxSpawnsPerFrame * 2f);
         int spawned = 0;
@@ -292,6 +293,9 @@ public class EnemyDirector : MonoBehaviour
         float minutes = Minutes + (EndlessMode.Active ? EndlessMode.Minutes * 1.5f : 0f);
         float infinite = InfiniteScale * EndlessMode.Scale;   // modo infinito: ×3 cada minuto
         EnemyTracker tracker = enemy.GetComponent<EnemyTracker>();
+        // Demonios en su propia capa: no chocan (ni empujan) a los guardianes de los pilares.
+        if (tracker != null && !tracker.IsBoss && enemy.GetComponent<Guardian>() == null)
+            SetLayer(enemy.transform, Guardian.DemonLayer);
         // En el modo infinito salen más élites (cada vez más seguido).
         int every = EndlessMode.Active ? Mathf.Max(6, 30 - 4 * EndlessMode.Level) : eliteEvery;
         bool elite = every > 0 && (tracker == null || !tracker.IsBoss) && ++spawnCounter % every == 0;
@@ -322,6 +326,12 @@ public class EnemyDirector : MonoBehaviour
     }
 
     public Enemy RandomDemonPrefab() => PickPrefab();
+
+    private static void SetLayer(Transform t, int layer)
+    {
+        t.gameObject.layer = layer;
+        foreach (Transform c in t) SetLayer(c, layer);
+    }
     public Enemy FlyingPrefab => flyingPrefabs != null && flyingPrefabs.Length > 0 ? flyingPrefabs[UnityEngine.Random.Range(0, flyingPrefabs.Length)] : null;
 
     private Enemy PickSpawnPrefab()
