@@ -60,8 +60,33 @@ public class XpGem : MonoBehaviour
         transform.localScale = Vector3.one * (1f + tier * 0.35f);
     }
 
+    // Gema con facetas (una copia girada) y un núcleo que brilla, del color de su valor. Sin partículas.
+    private void Decorate()
+    {
+        if (meshRenderer == null) return;
+        MeshFilter mf = meshRenderer.GetComponent<MeshFilter>();
+        if (mf == null) return;
+        Transform model = meshRenderer.transform;
+        var facets = new GameObject("Facetas");
+        facets.transform.SetParent(model, false);
+        facets.transform.localRotation = Quaternion.Euler(0f, 45f, 0f);
+        facets.transform.localScale = new Vector3(0.85f, 1.1f, 0.85f);
+        facets.AddComponent<MeshFilter>().sharedMesh = mf.sharedMesh;
+        var fr = facets.AddComponent<MeshRenderer>();
+        fr.sharedMaterial = meshRenderer.sharedMaterial;
+        fr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        Color c = meshRenderer.sharedMaterial != null && meshRenderer.sharedMaterial.HasProperty("_BaseColor") ? meshRenderer.sharedMaterial.GetColor("_BaseColor") : Color.cyan;
+        var core = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        Destroy(core.GetComponent<Collider>());
+        core.transform.SetParent(model, false);
+        core.transform.localScale = Vector3.one * 0.32f;
+        core.transform.localRotation = Quaternion.Euler(45f, 0f, 45f);
+        ItemFx.Paint(core, Color.Lerp(c, Color.white, 0.6f), 2.5f);
+    }
+
     private void Start()
     {
+        Decorate();
         velocity = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(4f, 6f), Random.Range(-2.5f, 2.5f));
         bobOffset = Random.value * 10f;
 
