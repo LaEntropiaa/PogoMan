@@ -106,7 +106,7 @@ public class VictoryScreen : MonoBehaviour
         group.alpha = 1f;
         if (EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(creditsButton.gameObject);
-        if (RunRecords.LastRank > 0)
+        if (RunRecords.LastRank > 0 && RunRecords.NeedsName)
             RecordNamePrompt.Show(font);
     }
 }

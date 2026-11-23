@@ -40,7 +40,7 @@ public class Fireball : MonoBehaviour
         var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         Destroy(sphere.GetComponent<Collider>());
         sphere.transform.SetParent(transform, false);
-        sphere.transform.localScale = Vector3.one * 0.9f;
+        sphere.transform.localScale = Vector3.one * 0.9f * Mathf.Clamp(radius / 2.4f, 0.5f, 2.5f);   // más área = bola más grande
         var r = sphere.GetComponent<Renderer>();
         if (ballMaterial != null)
             r.sharedMaterial = ballMaterial;
@@ -69,7 +69,8 @@ public class Fireball : MonoBehaviour
         shape.shapeType = ParticleSystemShapeType.Sphere;
         shape.radius = 0.35f;
         ItemFx.FadeOut(ps);
-        ItemFx.Apply(ps, fxMaterial);
+        Material softMat = AttackFx.SoftAdditive;
+        ItemFx.Apply(ps, softMat != null ? softMat : fxMaterial);
         ps.Play();
 
         // Aviso en el suelo: un anillo de chispas rojas donde va a caer.
@@ -121,13 +122,21 @@ public class Fireball : MonoBehaviour
 
     private void Explode(Vector3 at)
     {
-        ItemFx.Burst(at + Vector3.up * 0.4f, 50, radius * 0.5f, new Color(1f, 0.5f, 0.1f), fxMaterial, 9f, 0.7f, 0.6f);
+        ItemFx.Burst(at + Vector3.up * 0.4f, Mathf.RoundToInt(25f * radius / 2.4f + 25f), radius * 0.5f, new Color(1f, 0.5f, 0.1f), fxMaterial, 9f * Mathf.Max(1f, radius / 2.4f), 0.7f, 0.6f);
         ItemFx.Burst(at + Vector3.up * 0.2f, 25, radius * 0.3f, new Color(0.3f, 0.2f, 0.2f), fxMaterial, 4f, 0.9f, 0.9f);
         if (explodeClip != null)
             AudioSource.PlayClipAtPoint(explodeClip, at, 0.9f * GameSettings.SfxVolume);
+        if (damage > 0f)
+        {
+            FxKit.Ring(at, radius, new Color(1f, 0.85f, 0.45f), new Color(1f, 0.35f, 0.08f));
+            FxKit.Crack(at, radius * 0.6f, new Color(1f, 0.45f, 0.1f));
+        }
+        else
+            AttackFx.Eruption(at, 1.8f, 4f);
+        if (damage > 0f) AttackFx.Eruption(at, radius * 0.45f, 3.5f);
 
         PogoPlayer player = ArenaFight.Player;
-        if (player != null && !PogoBridge.IsDead(player))
+        if (damage > 0f && player != null && !PogoBridge.IsDead(player))   // los meteoros de adorno no pegan
         {
             Vector3 d = player.transform.position - at;
             if (d.magnitude <= radius + 0.6f)

@@ -6,7 +6,12 @@ using UnityEngine;
 // risa, aturdido (encorvado) y muerte. Cada frame parte de la pose de reposo y suma giros.
 public class DevilRig : MonoBehaviour
 {
-    public enum Pose { Intro, Fly, Stunned, Dying }
+    public enum Pose { Intro, Fly, Stunned, Dying, Talk }
+
+    // Mientras habla (intro y furia) mueve la cabeza y manotea.
+    private float talk;
+    private bool talking;
+    public void Talking(bool on) => talking = on;
 
     public Pose State { get; set; } = Pose.Intro;
     public Transform LookTarget { get; set; }
@@ -82,8 +87,27 @@ public class DevilRig : MonoBehaviour
         Vector3 R = Vector3.right, U = Vector3.up, Fw = Vector3.forward;
         float s = armRaiseSign, l = legBendSign;
 
+        talk = Mathf.MoveTowards(talk, talking ? 1f : 0f, dt * 6f);
+
         switch (State)
         {
+            case Pose.Talk:
+            {
+                // De pie, presumido: una mano en la cintura y con la otra señala a Pogoman.
+                float g = Mathf.Sin(time * 3.1f);
+                Rot(chest, R, -8f * pb);
+                Rot(spine, U, 10f * Mathf.Sin(time * 1.3f) * pb);
+                Rot(upperL, Fw, -s * 28f * pb);
+                Rot(foreL, U, 70f * pb);
+                Rot(upperR, R, -(45f + g * 18f * talk) * pb);
+                Rot(upperR, Fw, s * 12f * pb);
+                Rot(foreR, R, -(25f + Mathf.Sin(time * 7f) * 15f * talk) * pb);
+                Rot(head, R, Mathf.Sin(time * 11f) * 7f * talk);
+                Rot(head, Fw, Mathf.Sin(time * 2.3f) * 6f * pb);
+                Rot(thighL, R, l * 4f * pb);
+                Rot(thighR, R, -l * 4f * pb);
+                break;
+            }
             case Pose.Fly:
             {
                 float sway = Mathf.Sin(time * 1.6f);
