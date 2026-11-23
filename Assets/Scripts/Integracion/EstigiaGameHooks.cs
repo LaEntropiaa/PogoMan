@@ -53,6 +53,8 @@ public class EstigiaGameHooks : MonoBehaviour
         yield return null;
         SetupGeyserFx();
         FloatingRocks.Decorate(this);
+        yield return null;   // los cofres del mapa ya están convertidos
+        SecretChest.Create(transform);
         foreach (BossPillar pillar in FindObjectsByType<BossPillar>())
             StandUp(pillar.transform);
     }
