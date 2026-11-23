@@ -22,6 +22,8 @@ public class Telegraph : MonoBehaviour
     private MaterialPropertyBlock block;
     private bool dirty = true;
     private int segments = 32;
+    private LineRenderer border;
+    private readonly System.Collections.Generic.List<Vector3> borderPts = new System.Collections.Generic.List<Vector3>();
 
     private static Telegraph Make(string name)
     {
@@ -35,6 +37,16 @@ public class Telegraph : MonoBehaviour
         t.mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         t.mr.receiveShadows = false;
         t.block = new MaterialPropertyBlock();
+        // Borde brillante (el relleno ahora es tenue: así se ve el aviso sin tapar el piso).
+        var edgeGo = new GameObject("Borde");
+        edgeGo.transform.SetParent(go.transform, false);
+        t.border = edgeGo.AddComponent<LineRenderer>();
+        t.border.useWorldSpace = true;
+        t.border.widthMultiplier = 0.18f;
+        t.border.numCornerVertices = 0;
+        t.border.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        Material soft = AttackFx.SoftAdditive;
+        if (soft != null) t.border.sharedMaterial = soft;
         return t;
     }
 
@@ -133,6 +145,27 @@ public class Telegraph : MonoBehaviour
                 }
             }
         }
+        // Contorno: el borde exterior (y en franjas, el rectángulo).
+        borderPts.Clear();
+        if (shape == Shape.Strip)
+        {
+            Vector3 right = Vector3.Cross(Vector3.up, forward);
+            borderPts.Add(OnGround(center - right * width * 0.5f));
+            borderPts.Add(OnGround(center + forward * length - right * width * 0.5f));
+            borderPts.Add(OnGround(center + forward * length + right * width * 0.5f));
+            borderPts.Add(OnGround(center + right * width * 0.5f));
+            border.loop = true;
+        }
+        else
+        {
+            for (int i = 2; i < verts.Count; i += 3) borderPts.Add(verts[i] + transform.position);
+            border.loop = shape != Shape.Fan;
+            if (shape == Shape.Fan) { borderPts.Insert(0, OnGround(center)); borderPts.Add(OnGround(center)); }
+        }
+        for (int i = 0; i < borderPts.Count; i++) borderPts[i] += Vector3.up * 0.06f;
+        border.positionCount = borderPts.Count;
+        border.SetPositions(borderPts.ToArray());
+
         mesh.Clear();
         mesh.SetVertices(verts);
         mesh.SetColors(cols);
@@ -150,9 +183,16 @@ public class Telegraph : MonoBehaviour
         // Pulsa más rápido y se vuelve más opaco al acercarse el golpe.
         float pulse = 0.85f + 0.15f * Mathf.Sin(Time.time * (8f + fill * 18f));
         Color c = color;
-        c.a = Mathf.Clamp01(color.a * (0.6f + 0.6f * fill) * pulse);
+        c.a = Mathf.Clamp01(color.a * 0.32f * (0.5f + 0.7f * fill) * pulse);   // relleno tenue
         block.SetColor("_BaseColor", c);
         mr.SetPropertyBlock(block);
+        if (border != null)
+        {
+            Color e = Color.Lerp(color, Color.white, 0.35f);
+            e.a = Mathf.Clamp01(0.55f + 0.45f * fill) * pulse;
+            border.startColor = border.endColor = e;
+            border.widthMultiplier = 0.14f + 0.12f * fill;
+        }
     }
 
     private void OnDestroy()
