@@ -367,20 +367,17 @@ public class ArenaFight : MonoBehaviour
     public void OnPillarErupt(Vector3 at)
     {
         Play(explodeClip, Random.Range(0.8f, 0.95f), 0.5f);
-        FxKit.FlameColumn(at, 1.6f, 5.5f, new Color(0.85f, 0.12f, 0.03f), new Color(1f, 0.5f, 0.08f), new Color(1f, 0.92f, 0.55f));
-        ItemFx.Burst(at + Vector3.up * 1.5f, 8, 0.8f, new Color(1f, 0.6f, 0.15f), fxMaterial, 6f, 0.4f, 0.6f);
+        AttackFx.Eruption(at, 2.2f, 6f);
     }
 
     private float ringFx;
+    // El anillo de fuego deja llamas por donde pasa.
     public void OnRingTick(Vector3 c, float r)
     {
-        ringFx -= Time.deltaTime;
-        if (ringFx > 0f) return;
-        ringFx = 0.05f;
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 7; i++)
         {
             float a = Random.value * Mathf.PI * 2f;
-            ItemFx.Burst(c + new Vector3(Mathf.Cos(a), 0.2f, Mathf.Sin(a)) * r, 6, 0.3f, new Color(1f, 0.4f, 0.05f), fxMaterial, 3f, 0.35f, 0.35f);
+            AttackFx.Flicker(c + new Vector3(Mathf.Cos(a), 0.1f, Mathf.Sin(a)) * r, 0.4f, Color.white);
         }
     }
 

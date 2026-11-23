@@ -533,8 +533,13 @@ public class DevilBoss : Enemy
                 halos[i].SetPosition(0, from);
                 halos[i].SetPosition(1, c + dir * 30f + Vector3.up * 0.4f);
                 halos[i].widthMultiplier = t < warn ? 0f : 4.5f + Mathf.Sin(t * 25f) * 0.6f;
-                if (t >= warn && Random.value < 0.08f)
-                    FxKit.FlameColumn(c + dir * Random.Range(4f, 28f), 0.9f, 2.5f, new Color(0.8f, 0.05f, 0.2f), new Color(1f, 0.3f, 0.45f), new Color(1f, 0.85f, 0.9f));
+                if (t >= warn)
+                    for (int f = 0; f < 3; f++)
+                    {
+                        Vector3 at = c + dir * Random.Range(2f, 30f);
+                        AttackFx.Flicker(at, 0.6f, new Color(1f, 0.45f, 0.6f));
+                        if (f == 0) AttackFx.Wisp(Vector3.Lerp(from, at, Random.value), new Color(1f, 0.3f, 0.5f), 0.8f);
+                    }
                 if (t >= warn && !hit)
                 {
                     Vector3 d = player.position - c; d.y = 0f;
@@ -549,7 +554,6 @@ public class DevilBoss : Enemy
                     }
                 }
             }
-            if (t >= warn && Random.value < 0.3f) fight.OnRingTick(c, Random.Range(2f, 28f));
             yield return null;
         }
         foreach (Telegraph t in beams) { signs.Remove(t); if (t != null) Destroy(t.gameObject); }
@@ -583,7 +587,7 @@ public class DevilBoss : Enemy
             {
                 signs.Remove(s.t);
                 if (s.t != null) Destroy(s.t.gameObject);
-                for (int j = 1; j <= 7; j++) fight.OnPillarErupt(c + s.dir * j * 4f);
+                for (int j = 1; j <= 7; j += 2) fight.OnPillarErupt(c + s.dir * j * 4f);
                 Vector3 d = player.position - c; d.y = 0f;
                 float along = Vector3.Dot(d, s.dir);
                 float lateral = Mathf.Abs(Vector3.Dot(d, Vector3.Cross(Vector3.up, s.dir)));

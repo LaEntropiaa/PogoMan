@@ -69,7 +69,8 @@ public class Fireball : MonoBehaviour
         shape.shapeType = ParticleSystemShapeType.Sphere;
         shape.radius = 0.35f;
         ItemFx.FadeOut(ps);
-        ItemFx.Apply(ps, fxMaterial);
+        Material softMat = AttackFx.SoftAdditive;
+        ItemFx.Apply(ps, softMat != null ? softMat : fxMaterial);
         ps.Play();
 
         // Aviso en el suelo: un anillo de chispas rojas donde va a caer.
@@ -131,7 +132,8 @@ public class Fireball : MonoBehaviour
             FxKit.Crack(at, radius * 0.6f, new Color(1f, 0.45f, 0.1f));
         }
         else
-            FxKit.FlameColumn(at, 1.4f, 4f, new Color(0.85f, 0.12f, 0.03f), new Color(1f, 0.5f, 0.08f), new Color(1f, 0.92f, 0.55f));
+            AttackFx.Eruption(at, 1.8f, 4f);
+        if (damage > 0f) AttackFx.Eruption(at, radius * 0.45f, 3.5f);
 
         PogoPlayer player = ArenaFight.Player;
         if (damage > 0f && player != null && !PogoBridge.IsDead(player))   // los meteoros de adorno no pegan

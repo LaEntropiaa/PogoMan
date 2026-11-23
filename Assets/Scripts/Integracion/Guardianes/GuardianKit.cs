@@ -93,27 +93,25 @@ public class GuardianKit : MonoBehaviour
 
     public void EmergeFx(Vector3 ground)
     {
-        ItemFx.Burst(ground + Vector3.up * 0.3f, 50, 1.6f, new Color(0.65f, 0.2f, 1f), fxMaterial, 7f, 0.5f, 1f);
+        AttackFx.Magic(ground + Vector3.up * 1f, 2.5f, new Color(0.65f, 0.2f, 1f));
         Dust(ground, 2f);
     }
 
     // Golpe al piso: grietas con rocas, onda y un poco de polvo.
     public void Dust(Vector3 at, float radius)
     {
-        ItemFx.Burst(at + Vector3.up * 0.2f, 8, radius * 0.6f, new Color(0.35f, 0.18f, 0.14f), fxMaterial, 3.5f, 0.45f, 0.7f);
-        FxKit.Crack(at, radius, new Color(1f, 0.55f, 0.2f));
+        FxKit.Crack(at, radius, new Color(1f, 0.6f, 0.25f));
         FxKit.Ring(at, radius * 1.3f, new Color(1f, 0.9f, 0.6f), new Color(0.8f, 0.45f, 0.2f));
     }
 
-    public void Foam(Vector3 at) =>
-        ItemFx.Burst(at + Vector3.up * 0.3f, 30, 0.8f, new Color(0.4f, 1f, 0.9f), fxMaterial, 2.5f, 0.35f, 1.1f);
+    public void Foam(Vector3 at) => AttackFx.Magic(at + Vector3.up * 0.4f, 1.2f, new Color(0.35f, 1f, 0.9f));
 
     public void Pulse(Vector3 at)
     {
-        if (Time.time - lastPulseFx < 0.12f) return;
+        if (Time.time - lastPulseFx < 0.05f) return;
         lastPulseFx = Time.time;
-        // Púas moradas que brotan del suelo por donde avanza la línea.
-        FxKit.FlameColumn(at, 0.45f, 1.8f, new Color(0.45f, 0.1f, 0.65f), new Color(0.75f, 0.35f, 1f), new Color(0.95f, 0.85f, 1f));
+        // Llamas moradas de alma por donde avanza la línea.
+        for (int i = 0; i < 3; i++) AttackFx.Wisp(at + Vector3.up * 0.3f, i == 0 ? new Color(0.95f, 0.8f, 1f) : new Color(0.7f, 0.25f, 1f), 0.7f);
     }
 
     public void Windup(Guardian g, GuardianKind k, int attack)
@@ -123,6 +121,8 @@ public class GuardianKit : MonoBehaviour
 
     public void Play(GuardianKind k, int attack, Vector3 at)
     {
+        // Destello de su color al soltar el golpe.
+        AttackFx.Magic(at + Vector3.up * 1.6f, 1.2f, GuardianOrb.ColorFor(k));
         int i = (int)k * 2 + Mathf.Clamp(attack, 0, 1);
         if (attackClips != null && i < attackClips.Length && attackClips[i] != null)
             PlayAt(attackClips[i], at, 1f);

@@ -71,7 +71,9 @@ public static class ItemFx
         var shape = ps.shape;
         shape.enabled = false;
         FadeOut(ps);
-        Apply(ps, material);
+        // El material de efectos general era un cuadro: se usa la textura redonda suave (ya no se ven cuadritos).
+        Material soft = ItemEffects.Instance != null && material == ItemEffects.Instance.FxMaterial ? AttackFx.SoftAdditive : null;
+        Apply(ps, soft != null ? soft : material);
         ps.Play();
         if (material == null) nullPool = ps; else pools[material] = ps;
         return ps;
