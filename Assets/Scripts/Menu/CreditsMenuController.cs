@@ -116,12 +116,7 @@ public class CreditsMenuController : MonoBehaviour
             if (offset >= MaxOffset)
                 waitTimer = endPause;
         }
-        else
-        {
-            // Llegó al final: espera y vuelve a empezar.
-            offset = 0f;
-            waitTimer = startDelay;
-        }
+        // Al llegar al final se queda ahí (ya no vuelve a empezar solo); el jugador decide qué hacer.
 
         offset = Mathf.Clamp(offset, 0f, MaxOffset);
         ApplyOffset();
