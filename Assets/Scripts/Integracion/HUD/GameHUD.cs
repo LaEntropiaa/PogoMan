@@ -111,10 +111,21 @@ public class GameHUD : MonoBehaviour
             if (timeText != null)
             {
                 // Contrarreloj: en el último minuto se pone rojo y palpita.
-                int seconds = Mathf.CeilToInt(stats.TimeLeft);
-                timeText.text = (seconds / 60).ToString("00") + ":" + (seconds % 60).ToString("00");
-                bool urgent = seconds <= 60;
-                timeText.color = urgent ? Color.Lerp(new Color(1f, 0.3f, 0.2f), Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f)) : new Color(0.86f, 0.76f, 0.66f);
+                // Al acabarse sigue en NEGATIVO (tiempo de más en la horda infinita), en rojo fijo.
+                float over = stats.RunTime - stats.TimeLimit;
+                if (over > 0f)
+                {
+                    int extra = Mathf.FloorToInt(over);
+                    timeText.text = "-" + (extra / 60).ToString("00") + ":" + (extra % 60).ToString("00");
+                    timeText.color = Color.Lerp(new Color(1f, 0.15f, 0.1f), new Color(1f, 0.45f, 0.2f), 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 3f));
+                }
+                else
+                {
+                    int seconds = Mathf.CeilToInt(stats.TimeLeft);
+                    timeText.text = (seconds / 60).ToString("00") + ":" + (seconds % 60).ToString("00");
+                    bool urgent = seconds <= 60;
+                    timeText.color = urgent ? Color.Lerp(new Color(1f, 0.3f, 0.2f), Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f)) : new Color(0.86f, 0.76f, 0.66f);
+                }
             }
             if (killsText != null)
                 killsText.text = "x " + stats.Kills;

@@ -82,22 +82,23 @@ public class EnemyDirector : MonoBehaviour
     [Tooltip("Cada cuántos segundos la horda infinita sube de fuerza.")]
     [SerializeField] private float infiniteStepSeconds = 60f;
     [Tooltip("En la horda infinita, cada cuántos segundos se multiplica la vida y el daño de los demonios.")]
-    [SerializeField] private float infiniteMultiplyEvery = 180f;
-    [SerializeField] private float infiniteMultiplier = 1.6f;
+    [SerializeField] private float infiniteMultiplyEvery = 60f;
+    [Tooltip("Exponencial: ×2 cada minuto (×2, ×4, ×8...).")]
+    [SerializeField] private float infiniteMultiplier = 2f;
     [Tooltip("Velocidad extra de los demonios en la horda infinita.")]
     [SerializeField] private float infiniteSpeedBonus = 0.15f;
 
     private int spawnCounter;
     public int SpawnedTotal => spawnCounter;
 
-    // Multiplicador de vida y daño de la horda infinita (×1.6 cada 3 minutos, acumulado).
+    // Multiplicador de vida y daño de la horda infinita: ×2 al empezar y se duplica cada minuto.
     public float InfiniteScale
     {
         get
         {
             float limit = PlayerStats.Instance != null ? PlayerStats.Instance.TimeLimit : 600f;
             if (!InfiniteHorde || RunTime < limit) return 1f;
-            return Mathf.Pow(infiniteMultiplier, Mathf.FloorToInt((RunTime - limit) / infiniteMultiplyEvery));
+            return Mathf.Pow(infiniteMultiplier, 1 + Mathf.FloorToInt((RunTime - limit) / infiniteMultiplyEvery));
         }
     }
 
@@ -299,7 +300,8 @@ public class EnemyDirector : MonoBehaviour
         PogoBridge.SetFloat(enemy, "currentHealth", health);
 
         float speed = Mathf.Min(maxSpeedMultiplier, 1f + speedPerMinute * minutes) * UnityEngine.Random.Range(0.88f, 1.12f)
-            * (InfiniteHorde ? 1f + infiniteSpeedBonus : 1f);
+            * (InfiniteHorde ? 1f + infiniteSpeedBonus : 1f)
+            * EndlessMode.SpeedScale;   // después del Diablo: rapidísimos
         PogoBridge.SetFloat(enemy, "moveSpeed", PogoBridge.GetFloat(enemy, "moveSpeed", 3f) * speed);
 
         float damageMult = (1f + damagePerMinute * minutes) * infinite * (elite ? EliteEnemy.DamageFactor : 1f);
