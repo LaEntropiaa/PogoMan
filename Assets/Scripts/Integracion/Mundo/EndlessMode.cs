@@ -41,7 +41,7 @@ public class EndlessMode : MonoBehaviour
     public static float Scale => Active && instance != null ? ScaleAt(instance.elapsed) : 1f;
     // Los demonios se vuelven rapidísimos (hasta ×5).
     public static float SpeedScale => Active ? Mathf.Min(5f, 1f + 0.2f * (Scale - 1f)) : 1f;
-    public const float EliteChestChance = 0.002f;   // 0.2 %
+    public const float EliteChestChance = 0.0005f;   // 0.05 %
 
     private static readonly string[] Threats =
     {

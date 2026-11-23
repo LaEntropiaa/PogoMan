@@ -36,11 +36,11 @@ public static class RunRecords
     private static readonly Entry[] House =
     {
         H(Champion, 100000, 3725, 61, "INFIERNO INFINITO NV 47"),
+        H("TLBZ|Gedgar", 99999, 3710, 60, "INFIERNO INFINITO NV 46"),
         H("Alonso", 27450, 1980, 34, "INFIERNO INFINITO NV 18"),
         H("Ruben", 18900, 1610, 29, "VICTORIA"),
         H("PablitoGamerxX", 12340, 1322, 25, "VICTORIA"),
         H("JoSeJoSe", 9870, 1104, 22, "MURIÓ"),
-        H("Gedgar", 8120, 1046, 21, "CAYÓ AL LIMBO"),
         H("Patrichocle", 7340, 1012, 20, "MURIÓ (INJUSTO)"),
         H("ElPogoDeTuPrima", 6666, 960, 19, "VICTORIA"),
         H("DonChuyRebotes", 4200, 845, 17, "MURIÓ"),

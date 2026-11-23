@@ -357,7 +357,7 @@ public class Guardian : Enemy
     private void UpdateOrb(float dt, float dist)
     {
         orbTimer -= dt;
-        if (orbTimer > 0f || dist > 28f || !LineOfSight()) return;
+        if (orbTimer > 0f || dist > 50f || !LineOfSight()) return;
         orbTimer = Random.Range(3f, 4.5f);
         float dmg = (attacks != null && attacks.Length > 0 ? attacks[0].damage : 15f) * 0.6f * damageScale;
         GuardianOrb.Fire(transform.position + Vector3.up * 2.4f + transform.forward * 0.8f, player, dmg, GuardianOrb.ColorFor(kind));
@@ -428,30 +428,48 @@ public class Guardian : Enemy
 
     // ------------------------------------------------------------------ ataques
     // Elige una habilidad lista que tenga sentido a esta distancia.
-    // Alcance de todos los ataques (+50 %).
+    // Alcance: sus ataques llegan 50 METROS más lejos (abanicos, arcos, líneas y la onda del Fundidor).
+    // Los golpes chicos (sellos del Recaudador) solo crecen un poco.
+    private const float RangeBonus = 50f;
     private const float RangeScale = 1.5f;
+    private const float WaveSpeed = 20f;   // m/s de la onda del Fundidor
+    private const float LineSpeed = 25f;   // m/s de las líneas de la Viuda
+    private float WaveTime => (8f + RangeBonus) / WaveSpeed;
+    private float LineTime => (9f + RangeBonus) / LineSpeed;
+
+    // Cuánto dura el ataque en curso (las ondas y líneas largas necesitan más tiempo para recorrer).
+    private float Duration
+    {
+        get
+        {
+            float d = Spec.duration;
+            if (kind == GuardianKind.Fundidor && attackIndex == 1) d = Mathf.Max(d, Spec.activeTime + WaveTime + 0.2f);
+            if (kind == GuardianKind.Viuda && attackIndex == 1) d = Mathf.Max(d, Spec.activeTime + LineTime + 0.2f);
+            return d;
+        }
+    }
 
     private int ChooseAttack(float d)
     {
-        d /= RangeScale;   // los ataques llegan más lejos: los elige desde más lejos
         bool a = cooldownLeft[0] <= 0f, b = cooldownLeft[1] <= 0f;
+        float far = Mathf.Max(0f, d - RangeBonus);   // con el alcance extra, atacan desde 50 m más lejos
         switch (kind)
         {
             case GuardianKind.Fundidor:
-                if (a && d < 3.8f) return 0;
-                if (b && d >= 3.8f && d <= 9f) return 1;
+                if (a && far < 3.8f) return 0;
+                if (b && far <= 9f) return 1;
                 break;
             case GuardianKind.Viuda:
-                if (a && d >= 2f && d <= 5f) return 0;
-                if (b && d <= 9f) return 1;
+                if (a && far <= 5f) return 0;
+                if (b && far <= 9f) return 1;
                 break;
             case GuardianKind.Recaudador:
-                if (a && d < 3f) return 0;
-                if (b && d >= 3f && d <= 9f) return 1;
+                if (a && d < 3f * RangeScale) return 0;
+                if (b && far <= 9f) return 1;
                 break;
             case GuardianKind.Barquero:
-                if (a && d < 4f) return 0;
-                if (b && d >= 4f && d <= 12f) return 1;
+                if (a && far < 4f) return 0;
+                if (b && far <= 12f) return 1;
                 break;
         }
         return -1;
@@ -478,24 +496,24 @@ public class Guardian : Enemy
         switch (kind)
         {
             case GuardianKind.Fundidor when i == 0:
-                signs.Add(Telegraph.Fan(c, lockedForward, 80f, 0.4f, 3.8f * RangeScale).SetColor(danger));
+                signs.Add(Telegraph.Fan(c, lockedForward, 80f, 0.4f, 3.8f + RangeBonus).SetColor(danger));
                 break;
             case GuardianKind.Fundidor:
-                signs.Add(Telegraph.Ring(c, 1f, 8f * RangeScale).SetColor(new Color(1f, 0.85f, 0.3f, 0.14f)));
+                signs.Add(Telegraph.Ring(c, 1f, 8f + RangeBonus).SetColor(new Color(1f, 0.85f, 0.3f, 0.14f)));
                 furnace = new GameObject("Horno").AddComponent<Light>();
                 furnace.transform.SetParent(transform, false);
                 furnace.transform.localPosition = new Vector3(0f, 1.8f, 0.6f);
                 furnace.type = LightType.Point; furnace.color = new Color(1f, 0.45f, 0.1f); furnace.range = 8f; furnace.shadows = LightShadows.None;
                 break;
             case GuardianKind.Viuda when i == 0:
-                signs.Add(Telegraph.Fan(c, lockedForward, 120f, 0.5f, 4.8f * RangeScale).SetColor(new Color(0.85f, 0.4f, 1f, 0.7f)));
+                signs.Add(Telegraph.Fan(c, lockedForward, 120f, 0.5f, 4.8f + RangeBonus).SetColor(new Color(0.85f, 0.4f, 1f, 0.7f)));
                 break;
             case GuardianKind.Viuda:
                 float baseAngle = Random.value * 120f;
                 for (int k = 0; k < 3; k++)
                 {
                     lineAngles[k] = baseAngle + k * 120f;
-                    signs.Add(Telegraph.Strip(c, Quaternion.Euler(0f, lineAngles[k], 0f) * Vector3.forward, 9f * RangeScale, 0.8f * RangeScale).SetColor(new Color(0.85f, 0.4f, 1f, 0.7f)));
+                    signs.Add(Telegraph.Strip(c, Quaternion.Euler(0f, lineAngles[k], 0f) * Vector3.forward, 9f + RangeBonus, 0.8f * RangeScale).SetColor(new Color(0.85f, 0.4f, 1f, 0.7f)));
                 }
                 break;
             case GuardianKind.Recaudador when i == 0:
@@ -521,7 +539,7 @@ public class Guardian : Enemy
             {
                 bool fromLeft = Random.value < 0.5f;
                 points[0] = new Vector3(fromLeft ? 1f : 0f, 0f, 0f);
-                signs.Add(Telegraph.Fan(c, lockedForward, 130f, 0.5f, 3.8f * RangeScale).SetColor(new Color(0.35f, 1f, 0.9f, 0.7f)));
+                signs.Add(Telegraph.Fan(c, lockedForward, 130f, 0.5f, 3.8f + RangeBonus).SetColor(new Color(0.35f, 1f, 0.9f, 0.7f)));
                 // Espuma aqua del lado por donde va a pasar el remo.
                 Vector3 sideDir = Quaternion.Euler(0f, fromLeft ? -65f : 65f, 0f) * lockedForward;
                 Kit?.Foam(c + sideDir * 2.5f);
@@ -557,7 +575,7 @@ public class Guardian : Enemy
                 {
                     // Sigue al jugador hasta 0.25 s antes del contacto.
                     if (t < active - 0.25f) { FacePlayer(1f - Mathf.Exp(-8f * dt)); lockedForward = transform.forward; signs[0].SetForward(lockedForward); }
-                    if (Step(0, t >= active)) HitFan(80f, 0f, 3.8f * RangeScale, 0f, 1.3f, Spec.damage, true);
+                    if (Step(0, t >= active)) HitFan(80f, 0f, 3.8f + RangeBonus, 0f, 1.3f, Spec.damage, true);
                 }
                 else
                 {
@@ -565,15 +583,15 @@ public class Guardian : Enemy
                     if (Step(0, t >= active))
                     {
                         Kit?.Play(kind, 1, transform.position);
-                        ShockRing.SpawnVisual(Feet + Vector3.up * 0.1f, 8f * RangeScale, 1.1f, new Color(1f, 0.85f, 0.4f), new Color(1f, 0.35f, 0.08f));
+                        ShockRing.SpawnVisual(Feet + Vector3.up * 0.1f, 8f + RangeBonus, WaveTime, new Color(1f, 0.85f, 0.4f), new Color(1f, 0.35f, 0.08f));
                         if (furnace != null) Destroy(furnace.gameObject);
-                        EnemyTracker.HitArea(Feet, 8f * RangeScale, Spec.damage * DemonDamageFactor, HitSource.Other, true, 2f, this, true);
+                        EnemyTracker.HitArea(Feet, 8f + RangeBonus, Spec.damage * DemonDamageFactor, HitSource.Other, true, 2f, this, true);
                     }
                     if (firedSteps > 0)
                     {
                         // Onda que sale de 1 a 8 m en 1.1 s, banda de 0.65 m.
-                        float k = Mathf.Clamp01((t - active) / 1.1f);
-                        float r = Mathf.Lerp(1f, 8f * RangeScale, k);
+                        float k = Mathf.Clamp01((t - active) / WaveTime);
+                        float r = Mathf.Lerp(1f, 8f + RangeBonus, k);
                         signs[0].SetRadii(Mathf.Max(0.5f, r - 0.5f), r + 0.5f);
                         signs[0].SetColor(new Color(1f, 0.95f, 0.6f, 0.95f));
                         if (k < 1f && !hitPlayerThisAttack)
@@ -599,7 +617,7 @@ public class Guardian : Enemy
                         float swept = -60f + 120f * Mathf.Clamp01((t - active) / 0.38f);
                         float a = SignedAngleToPlayer();
                         if (a >= -60f && a <= swept)
-                            TryHitArc(4.8f * RangeScale, 0.4f, 1.6f, Spec.damage);
+                            TryHitArc(4.8f + RangeBonus, 0.4f, 1.6f, Spec.damage);
                     }
                 }
                 else
@@ -615,8 +633,8 @@ public class Guardian : Enemy
                     if (Step(0, t >= active)) Kit?.Play(kind, 1, transform.position);
                     if (firedSteps > 0 && !hitPlayerThisAttack)
                     {
-                        float k = Mathf.Clamp01((t - active) / 0.65f);
-                        float front = 9f * RangeScale * k;
+                        float k = Mathf.Clamp01((t - active) / LineTime);
+                        float front = (9f + RangeBonus) * k;
                         for (int s = 0; s < 3; s++)
                         {
                             Vector3 dir = Quaternion.Euler(0f, lineAngles[s], 0f) * Vector3.forward;
@@ -676,7 +694,7 @@ public class Guardian : Enemy
                         float a = SignedAngleToPlayer();
                         bool swept = fromLeft ? a >= -65f && a <= -65f + 130f * p : a <= 65f && a >= 65f - 130f * p;
                         if (swept)
-                            TryHitArc(3.8f * RangeScale, 0f, 1.5f, Spec.damage);
+                            TryHitArc(3.8f + RangeBonus, 0f, 1.5f, Spec.damage);
                     }
                 }
                 else
@@ -697,7 +715,7 @@ public class Guardian : Enemy
                 break;
         }
 
-        if (t >= Spec.duration)
+        if (t >= Duration)
             EndAttack(true);
     }
 
