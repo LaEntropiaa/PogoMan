@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: alcancia_de_cochinito
   displayName: "Alcanc\xEDa de Cochinito"
-  description: Cada octava baja directa con el escupitajo deja 3 monedas de compra adicionales.
+  description: "Al matar con el escupitajo: cada 8 bajas ganas 3 monedas."
   quote: Hasta muerto deja propina.
   icon: {fileID: 21300000, guid: a78def4a116ae9e65abfe999fd687742, type: 3}
   weight: 1
   rarity: 1
-  maxCopies: 2
+  maxCopies: 0
   active: 0
   cursed: 0

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: estampita_de_san_pogo
   displayName: Estampita de San Pogo
-  description: "Al recibir un golpe que te matar\xEDa, en vez de morir detienes el tiempo durante 8 segundos: los demonios se paralizan y no recibes da\xF1o. Se pierde al usarse."
+  description: "Al recibir un golpe mortal: no mueres y el tiempo se detiene 8 s. Se gasta al usarse."
   quote: "Se rumora que perteneci\xF3 a un vampiro hermoso de hace m\xE1s de 100 a\xF1os."
   icon: {fileID: 21300000, guid: 75c6a65aa8ece64baa663baa76333627, type: 3}
   weight: 1

@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: balero_de_diablito
   displayName: Balero de Diablito
-  description: Cada rebote con espacio gana 0.25 de impulso adicional.
+  description: "Al rebotar con Espacio: ganas un poco m\xE1s de velocidad en cada rebote."
   quote: "Bajada sin garant\xEDa."
   icon: {fileID: 21300000, guid: 327b8167fd93d2dec84b0038dcb99db1, type: 3}
   weight: 1
   rarity: 0
-  maxCopies: 3
+  maxCopies: 0
   active: 0
   cursed: 0

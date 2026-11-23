@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: bolillo_del_susto
   displayName: Bolillo del Susto
-  description: "Aumenta 12 tu vida m\xE1xima y recupera 12 de vida al tomarlo."
+  description: "Siempre: +12 de vida m\xE1xima. Al tomarlo te cura 12."
   quote: "Para el susto que s\xED te alcanz\xF3."
   icon: {fileID: 21300000, guid: a369bc8ad31acac20b0da8aaf113a5d7, type: 3}
   weight: 1
   rarity: 0
-  maxCopies: 4
+  maxCopies: 0
   active: 0
   cursed: 0

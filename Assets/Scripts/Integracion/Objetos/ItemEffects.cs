@@ -60,8 +60,7 @@ public class ItemEffects : MonoBehaviour
     [Header("Compresor de los Lamentos")]
     [SerializeField] private float chargedJumpHeightPerItem = 0.25f;
 
-    [Header("Rendimiento decreciente (Manubrio, Empuñaduras)")]
-    [SerializeField, Range(0f, 1f)] private float diminishingFactor = 0.6f;
+    [Header("Manubrio y Empuñaduras (cada copia suma)")]
     [SerializeField] private float airControlPerItem = 0.25f;
     [SerializeField] private float pogoDamagePerItem = 0.15f;
 
@@ -71,7 +70,6 @@ public class ItemEffects : MonoBehaviour
     [Header("Agua Bendita de Garrafón")]
     [SerializeField] private float healEverySeconds = 3f;
     [SerializeField] private float spitDamagePercent = 0.2f;
-    [SerializeField] private float spitAreaBonus = 0.4f;
 
     [Header("Escapulario")]
     [SerializeField] private float blockRecharge = 40f;
@@ -136,7 +134,6 @@ public class ItemEffects : MonoBehaviour
 
     // Estado de objetos
     private bool wasGrounded = true;
-    private bool tokenArmed;
     private float chifladorReady;
     private float taponUntil = -1f;
     private int stompKills, spitKills;
@@ -144,14 +141,11 @@ public class ItemEffects : MonoBehaviour
     private float lastOllaCharge = -10f;
     private float seguroReady;
     public bool TimbreSlam { get; set; }
-    private readonly List<Vector3> triangle = new List<Vector3>();
-    private readonly List<float> triangleTimes = new List<float>();
-    private readonly List<Telegraph> triangleLines = new List<Telegraph>();
-    private float triangleCooldown;
+    private int landings;
     private int volleyCounter;
 
     // ---- Daño del pogo ----
-    public float PogoDamage => (basePogoDamage + 5f * Mathf.Min(Count(Rondana), 4)) * (1f + Diminishing(pogoDamagePerItem, Count(Empunaduras)));
+    public float PogoDamage => (basePogoDamage + 5f * Count(Rondana)) * (1f + pogoDamagePerItem * Count(Empunaduras));
     public float DirectPogoDamage
     {
         get
@@ -160,12 +154,19 @@ public class ItemEffects : MonoBehaviour
             float d = PogoDamage;
             if (Count(Contrato) > 0) d *= 2f;
             if (Count(Taximetro) > 0 && PogoJump.Instance != null)
-                d *= 1f + 0.4f * Mathf.Clamp01((PogoJump.Instance.HorizontalSpeed - 12f) / 20f);
+                d *= 1f + 0.4f * Count(Taximetro) * Mathf.Clamp01((PogoJump.Instance.HorizontalSpeed - 12f) / 20f);
             if (TaponCharged) d *= 1.3f;
+            if (PlayerStats.Instance != null) d *= PlayerStats.Instance.Get(PogoStat.PogoDamage);
             return d;
         }
     }
     public bool TaponCharged => Time.time < taponUntil;
+    // El golpe directo ya no es tan masivo: su área es menor (la onda del pogo cubre lo de alrededor).
+    [Tooltip("Fracción del radio original del pisotón que queda como golpe directo.")]
+    [SerializeField] private float directRadiusFactor = 0.6f;
+    public float BaseStompRadius => baseStompRadius * directRadiusFactor;
+    public float StompRadius => BaseStompRadius + 0.2f * Count(Plantilla) + (TaponCharged ? 1.5f * Count(Tapon) : 0f)
+        + (PlayerStats.Instance != null ? PlayerStats.Instance.Get(PogoStat.PogoRadius) : 0f);
     public Transform Player => player != null ? player.transform : null;
     public PogoPlayer Pogo => player;
 
@@ -174,6 +175,7 @@ public class ItemEffects : MonoBehaviour
         Instance = this;
         audioSource = UiKit.UiAudio(gameObject);
         Chest.PriceMultiplier = 1f;   // estado de la partida anterior
+        Chest.PaidOpened = 0;
     }
 
     private void OnDestroy()
@@ -183,7 +185,6 @@ public class ItemEffects : MonoBehaviour
         EnemyTracker.StompHit -= OnStompHit;
         EnemyTracker.Killed -= OnKilled;
         SpitAttack.VolleyFired -= OnVolley;
-        SpitProjectile.DirectHit -= OnSpitHit;
         PlayerVitals.HealthLost -= OnHealthLost;
         Chest.AnyOpened -= OnChestOpened;
         if (inventory != null)
@@ -213,7 +214,6 @@ public class ItemEffects : MonoBehaviour
         EnemyTracker.StompHit += OnStompHit;
         EnemyTracker.Killed += OnKilled;
         SpitAttack.VolleyFired += OnVolley;
-        SpitProjectile.DirectHit += OnSpitHit;
         PlayerVitals.HealthLost += OnHealthLost;
         Chest.AnyOpened += OnChestOpened;
         if (PogoJump.Instance != null)
@@ -233,8 +233,6 @@ public class ItemEffects : MonoBehaviour
 
     public int Count(string id) => inventory != null ? inventory.Count(id) : 0;
 
-    private float Diminishing(float perItem, int n) =>
-        n <= 0 ? 0f : perItem * (1f - Mathf.Pow(diminishingFactor, n)) / (1f - diminishingFactor);
 
     // ¿Puede salir este objeto de un cofre? (copias máximas, topes, máximo 6 activas)
     public static bool CanOffer(ItemDefinition item)
@@ -256,7 +254,10 @@ public class ItemEffects : MonoBehaviour
                 return stats == null || stats.Get(PogoStat.PickupRadius) < 8f - 0.01f;
             case Silbato:
                 return stats == null || stats.Get(PogoStat.CritChance) < 0.999f;
+            // Tras el Contrato a Mano Pelona no salen objetos de escudo ni de regeneración (no servirían).
             case Placa:
+            case Botiquin:
+            case AguaBendita:
                 return PlayerVitals.Instance == null || PlayerVitals.Instance.NoShieldNoRegen == false;
             default:
                 return true;
@@ -276,17 +277,16 @@ public class ItemEffects : MonoBehaviour
                 if (jump != null) jump.ChargedJumpHeightMultiplier = 1f + chargedJumpHeightPerItem * count;
                 break;
             case Manubrio:
-                if (jump != null) jump.AirControlMultiplier = 1f + Diminishing(airControlPerItem, count);
+                if (jump != null) jump.AirControlMultiplier = 1f + airControlPerItem * count;
                 break;
             case Resorte:
-                if (count == 1 && stats != null) { stats.AddFlat(PogoStat.AirJumps, 1f); jump?.RefillAirJumps(); }
+                if (stats != null) { stats.AddFlat(PogoStat.AirJumps, 1f); jump?.RefillAirJumps(); }
                 break;
             case AguaBendita:
                 if (stats != null)
                 {
                     stats.AddFlat(PogoStat.Regeneration, 1f / healEverySeconds);
                     stats.AddPercent(PogoStat.SpitDamage, spitDamagePercent);
-                    stats.AddFlat(PogoStat.SpitArea, spitAreaBonus);
                 }
                 break;
             case Escapulario:
@@ -304,7 +304,8 @@ public class ItemEffects : MonoBehaviour
 
             // ---- Catálogo de 30 ----
             case Boquilla: stats?.AddFlat(PogoStat.SpitDamage, 2f); break;
-            case Balero: if (jump != null) jump.ExtraHopGain = 0.25f * Mathf.Min(count, 3); break;
+            case Balero: if (jump != null) jump.ExtraHopGain = 0.25f * count; break;
+            case Muela: stats?.AddFlat(PogoStat.SpitBounces, 2f); break;
             case Estambre: stats?.AddFlat(PogoStat.PickupRadius, 1f); break;
             case Placa: stats?.AddFlat(PogoStat.Shield, 10f); break;
             case Bolillo:
@@ -312,7 +313,7 @@ public class ItemEffects : MonoBehaviour
                 break;
             case Silbato: stats?.AddFlat(PogoStat.CritChance, 0.05f); break;
             case Botiquin:
-                if (vitals != null) { vitals.OverhealToShield = 0.4f; vitals.BonusShieldMax = count >= 2 ? 25f : 15f; }
+                if (vitals != null) { vitals.OverhealToShield = 0.4f; vitals.BonusShieldMax = 5f + 10f * count; }
                 break;
             case Contrato:
                 if (vitals != null) vitals.NoShieldNoRegen = true;
@@ -337,26 +338,17 @@ public class ItemEffects : MonoBehaviour
 
         // Daño y radio del pisotón que usará PogoPlayer en este paso.
         PogoBridge.SetFloat(player, "attackDamage", DirectPogoDamage);
-        float radius = baseStompRadius + 0.2f * Mathf.Min(Count(Plantilla), 3) + (TaponCharged ? 1.5f : 0f);
-        PogoBridge.SetFloat(player, "attackRadius", radius);
+        PogoBridge.SetFloat(player, "attackRadius", StompRadius);
 
         bool grounded = PogoBridge.IsGrounded(player);
         if (grounded && !wasGrounded)
             OnLanded();
         wasGrounded = grounded;
-
-        // Ficha del Futbolito: solo el suelo firme la rearma.
-        if (grounded && Count(Ficha) > 0 && OnFirmGround())
-            tokenArmed = true;
     }
 
     private Vector3 Feet => playerCollider != null
         ? new Vector3(player.transform.position.x, playerCollider.bounds.min.y, player.transform.position.z)
         : player.transform.position;
-
-    private bool OnFirmGround() =>
-        Physics.Raycast(Feet + Vector3.up * 0.3f, Vector3.down, out RaycastHit hit, 0.8f, ~0, QueryTriggerInteraction.Ignore) &&
-        hit.rigidbody == null;
 
     private void OnLanded()
     {
@@ -368,8 +360,8 @@ public class ItemEffects : MonoBehaviour
         }
         if (TimbreSlam)
             ItemActives.Instance?.TimbreLanded(Feet);
-        if (Count(Escrituras) > 0)
-            AddTrianglePoint(Feet);
+        if (Count(Escrituras) > 0 && ++landings % 4 == 0)
+            Tombstones(Feet);
     }
 
     private void Update()
@@ -390,12 +382,6 @@ public class ItemEffects : MonoBehaviour
                     ItemFx.Burst(player.transform.position + Vector3.up * 0.4f, 16, 0.6f, new Color(1f, 0.85f, 0.4f), fxMaterial);
             }
         }
-
-        // Escrituras: los puntos caducan a los 6 s.
-        triangleCooldown -= Time.deltaTime;
-        for (int i = triangle.Count - 1; i >= 0; i--)
-            if (Time.time - triangleTimes[i] > 6f)
-                RemoveTrianglePoint(i);
     }
 
     // ------------------------------------------------------------------ defensa
@@ -432,13 +418,13 @@ public class ItemEffects : MonoBehaviour
         if (ollaCharges >= 3)
         {
             ollaCharges = 0;
-            Explode(player.transform.position, n >= 2 ? 5f : 4f, PogoDamage * 1.8f, new Color(0.95f, 0.95f, 1f), steamClip);
+            Explode(player.transform.position, 3.5f + 0.75f * n, PogoDamage * (1.2f + 0.6f * n), new Color(0.95f, 0.95f, 1f), steamClip);
         }
     }
 
     private void OnChestOpened(Chest chest)
     {
-        int n = Mathf.Min(Count(Vale), 3);
+        int n = Count(Vale);
         if (n > 0 && PlayerVitals.Instance != null)
         {
             PlayerVitals.Instance.Heal(6f * n);
@@ -462,8 +448,6 @@ public class ItemEffects : MonoBehaviour
             Play(fireClip, Random.Range(0.9f, 1.1f), 0.7f);
         }
 
-        if (Count(Detonador) > 0)
-            ItemActives.Instance?.PlantCharge(enemy);
     }
 
     private void OnKilled(EnemyTracker enemy, HitSource source)
@@ -481,10 +465,10 @@ public class ItemEffects : MonoBehaviour
             stompKills++;
             int petardo = Count(Petardo);
             if (petardo > 0 && stompKills % 4 == 0)
-                Explode(enemy.Center, 3f + (petardo >= 2 ? 0.75f : 0f), PogoDamage * 0.8f, new Color(1f, 0.6f, 0.15f), explodeClip);
+                Explode(enemy.Center, 2.25f + 0.75f * petardo, PogoDamage * (0.5f + 0.3f * petardo), new Color(1f, 0.6f, 0.15f), explodeClip);
 
             int campana = Count(Campanita);
-            if (campana > 0 && stompKills % (campana >= 2 ? 5 : 6) == 0)
+            if (campana > 0 && stompKills % Mathf.Max(1, 7 - campana) == 0)
                 SpiritCompanion.Summon(this, enemy.Center);
         }
         else if (source == HitSource.Spit)
@@ -493,7 +477,7 @@ public class ItemEffects : MonoBehaviour
             int alc = Count(Alcancia);
             if (alc > 0 && spitKills % 8 == 0)
             {
-                PlayerStats.Instance?.AddCoins(alc >= 2 ? 4 : 3);
+                PlayerStats.Instance?.AddCoins(2 + alc);
                 ItemFx.Burst(enemy.Center, 20, 0.4f, new Color(1f, 0.85f, 0.3f), fxMaterial, 5f, 0.25f, 0.6f);
                 Play(coinThrowClip, 1.3f, 0.6f);
             }
@@ -508,47 +492,35 @@ public class ItemEffects : MonoBehaviour
         volleyCounter++;
         if (volleyCounter % 5 == 0)
         {
-            central.ExtraSplashRadius = 2.5f;
-            central.ExtraSplashFraction = n >= 2 ? 0.8f : 0.6f;
+            central.ExtraSplashRadius = 2f + 0.5f * n;
+            central.ExtraSplashFraction = 0.4f + 0.2f * n;
             central.transform.localScale *= 1.4f;
         }
-    }
-
-    // Muela de Rebote: el proyectil central rebota hacia otro enemigo.
-    private void OnSpitHit(SpitProjectile p, EnemyTracker enemy, Vector3 point)
-    {
-        int n = Count(Muela);
-        if (n <= 0 || !p.Central) return;
-        var skip = new List<EnemyTracker> { enemy };
-        EnemyTracker next = Nearest(point, 5f, skip);
-        if (next != null)
-            SpitBounce.Fire(point, next, p.Damage * 0.65f, n >= 2 ? p.Damage * 0.4f : 0f, skip, fxMaterial);
     }
 
     // ------------------------------------------------------------------ movimiento
     private void OnSlideJumped()
     {
         int n = Count(Chiflador);
-        if (n <= 0 || Time.time < chifladorReady || PogoJump.Instance == null || PogoJump.Instance.HorizontalSpeed < 16f) return;
+        if (n <= 0 || Time.time < chifladorReady) return;
         chifladorReady = Time.time + 3f;
         Vector3 dir = playerBody != null ? playerBody.linearVelocity : player.transform.forward;
         dir.y = 0f;
-        Rocket.Fire(player.transform.position + Vector3.up * 0.6f, dir.normalized, PogoDamage * (n >= 2 ? 0.9f : 0.7f), fxMaterial, explodeClip);
+        Rocket.Fire(player.transform.position + Vector3.up * 0.6f, dir.normalized, PogoDamage * (0.5f + 0.2f * n), fxMaterial, explodeClip);
         Play(rocketClip, Random.Range(0.95f, 1.1f), 0.8f);
     }
 
     private void OnAirJumped()
     {
         int n = Count(Ficha);
-        if (n <= 0 || !tokenArmed) return;
-        tokenArmed = false;
-        TokenDrop.Fire(Feet, PogoDamage * (n >= 2 ? 0.85f : 0.6f), coinMaterial, fxMaterial);
+        if (n <= 0) return;
+        TokenDrop.Fire(Feet, PogoDamage * (0.45f + 0.15f * n), coinMaterial, fxMaterial);
     }
 
     private void OnDashStarted(Vector3 at)
     {
         if (Count(Cerillos) > 0)
-            FireZone.Spawn(GroundAt(at), 1.1f, Count(Cerillos) >= 2 ? 3f : 2f, PogoDamage * 0.1f, fxMaterial);
+            FireZone.Spawn(GroundAt(at), 1.1f, 1.5f + 0.5f * Count(Cerillos), PogoDamage * 0.1f, fxMaterial);
 
         if (Count(Seguro) > 0 && Time.time >= seguroReady)
         {
@@ -561,7 +533,7 @@ public class ItemEffects : MonoBehaviour
     {
         int n = Count(Cerillos);
         if (n <= 0) return;
-        float dur = n >= 2 ? 3f : 2f;
+        float dur = 1.5f + 0.5f * n;
         Vector3 back = playerBody != null ? -playerBody.linearVelocity.normalized : -player.transform.forward;
         back.y = 0f;
         FireZone.Spawn(GroundAt(at + back * 3f), 1.1f, dur, PogoDamage * 0.1f, fxMaterial);
@@ -569,77 +541,25 @@ public class ItemEffects : MonoBehaviour
     }
 
     // ------------------------------------------------------------------ Escrituras del Panteón
-    private void AddTrianglePoint(Vector3 p)
+    // Cada 4 aterrizajes caen lápidas a tu alrededor.
+    private void Tombstones(Vector3 at)
     {
-        if (triangleCooldown > 0f) return;
-        // Cada lado entre 3 y 10 m y tolerancia vertical de 2 m; si no cabe, se descarta la marca más vieja.
-        foreach (Vector3 q in triangle)
-        {
-            float d = Vector2.Distance(new Vector2(p.x, p.z), new Vector2(q.x, q.z));
-            if (d < 3f) return;
-            if (d > 10f || Mathf.Abs(p.y - q.y) > 2f) { RemoveTrianglePoint(0); AddTrianglePoint(p); return; }
-        }
-        triangle.Add(p);
-        triangleTimes.Add(Time.time);
-        ItemFx.Burst(p + Vector3.up * 0.2f, 14, 0.4f, new Color(0.75f, 0.6f, 1f), fxMaterial, 2f, 0.3f, 0.6f);
-        if (triangle.Count >= 2)
-        {
-            Vector3 a = triangle[triangle.Count - 2];
-            Vector3 d = p - a; d.y = 0f;
-            triangleLines.Add(Telegraph.Strip(a, d, d.magnitude, 0.25f).SetColor(new Color(0.8f, 0.6f, 1f, 0.8f)));
-        }
-        if (triangle.Count == 3)
-            CloseTriangle();
-    }
-
-    private void RemoveTrianglePoint(int i)
-    {
-        triangle.RemoveAt(i);
-        triangleTimes.RemoveAt(i);
-        foreach (Telegraph t in triangleLines) if (t != null) Destroy(t.gameObject);
-        triangleLines.Clear();
-        for (int k = 1; k < triangle.Count; k++)
-        {
-            Vector3 d = triangle[k] - triangle[k - 1]; d.y = 0f;
-            triangleLines.Add(Telegraph.Strip(triangle[k - 1], d, d.magnitude, 0.25f).SetColor(new Color(0.8f, 0.6f, 1f, 0.8f)));
-        }
-    }
-
-    private void CloseTriangle()
-    {
-        Vector3 a = triangle[0], b = triangle[1], c = triangle[2];
-        float damage = PogoDamage * 1.6f;
         int hit = 0;
         foreach (EnemyTracker e in new List<EnemyTracker>(EnemyTracker.All))
         {
             if (e == null || e.IsDead) continue;
-            Vector3 p = e.Center;
-            if (InTriangle(new Vector2(p.x, p.z), new Vector2(a.x, a.z), new Vector2(b.x, b.z), new Vector2(c.x, c.z)))
-            {
-                e.Hit(damage);
-                ItemFx.Burst(p + Vector3.up * 1.5f, 16, 0.4f, new Color(0.7f, 0.65f, 0.6f), fxMaterial, 6f, 0.5f, 0.5f);
-                hit++;
-            }
+            Vector3 d = e.Center - at; d.y = 0f;
+            if (d.magnitude > 4f) continue;
+            e.Hit(PogoDamage * 1.6f * Count(Escrituras));
+            ItemFx.Burst(e.Center + Vector3.up * 1.5f, 16, 0.4f, new Color(0.7f, 0.65f, 0.6f), fxMaterial, 6f, 0.5f, 0.5f);
+            hit++;
         }
-        // Lápidas que caen: polvo en los tres lados.
-        for (int i = 0; i < 3; i++)
-            for (float k = 0f; k <= 1f; k += 0.25f)
-                ItemFx.Burst(Vector3.Lerp(triangle[i], triangle[(i + 1) % 3], k) + Vector3.up * 0.3f, 8, 0.3f, new Color(0.6f, 0.55f, 0.6f), fxMaterial, 4f, 0.4f, 0.6f);
-        Play(explodeClip, 0.7f, 0.8f);
-        foreach (Telegraph t in triangleLines) if (t != null) Destroy(t.gameObject);
-        triangleLines.Clear();
-        triangle.Clear();
-        triangleTimes.Clear();
-        triangleCooldown = 8f;
-    }
-
-    private static bool InTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
-    {
-        float d1 = (p.x - b.x) * (a.y - b.y) - (a.x - b.x) * (p.y - b.y);
-        float d2 = (p.x - c.x) * (b.y - c.y) - (b.x - c.x) * (p.y - c.y);
-        float d3 = (p.x - a.x) * (c.y - a.y) - (c.x - a.x) * (p.y - a.y);
-        bool neg = d1 < 0 || d2 < 0 || d3 < 0, pos = d1 > 0 || d2 > 0 || d3 > 0;
-        return !(neg && pos);
+        for (int i = 0; i < 10; i++)
+        {
+            float a = i / 10f * Mathf.PI * 2f;
+            ItemFx.Burst(at + new Vector3(Mathf.Cos(a), 0.3f, Mathf.Sin(a)) * 3.2f, 8, 0.3f, new Color(0.65f, 0.6f, 0.7f), fxMaterial, 4f, 0.4f, 0.6f);
+        }
+        Play(explodeClip, 0.7f, hit > 0 ? 0.8f : 0.4f);
     }
 
     // ------------------------------------------------------------------ utilidades

@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: salsa_de_la_casa
   displayName: Salsa de la Casa
-  description: "Cada quinta salva lleva una salpicadura extra de 2.5 m por 60 % del da\xF1o del escupitajo."
+  description: "Al escupir: cada 5 escupitajos uno salpica alrededor (60 % de su da\xF1o)."
   quote: "La receta se llev\xF3 al cocinero."
   icon: {fileID: 21300000, guid: cbc029bb49a5476228e916a0882d83b4, type: 3}
   weight: 1
   rarity: 1
-  maxCopies: 2
+  maxCopies: 0
   active: 0
   cursed: 0

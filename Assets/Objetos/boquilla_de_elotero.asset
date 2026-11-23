@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: boquilla_de_elotero
   displayName: Boquilla de Elotero
-  description: "Suma 2 de da\xF1o base al escupitajo."
+  description: "Siempre: +2 de da\xF1o del escupitajo."
   quote: Del que pica dos veces.
   icon: {fileID: 21300000, guid: 8c204d9868ff830c1aebdcc3ee2a3b09, type: 3}
   weight: 1
   rarity: 0
-  maxCopies: 5
+  maxCopies: 0
   active: 0
   cursed: 0

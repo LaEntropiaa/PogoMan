@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDefinition
   id: chiflador_de_banqueta
   displayName: Chiflador de Banqueta
-  description: "Saltar desde un slide a 16 m/s o m\xE1s dispara un chiflador al frente. Explota en 2.5 m por 70 % del da\xF1o del pogo."
+  description: "Al saltar desde el slide: disparas un cohete al frente que explota (70 % del da\xF1o del pogo). Uno cada 3 s."
   quote: "Se prende lejos de la cara. En teor\xEDa."
   icon: {fileID: 21300000, guid: c6d85743029ea2dc4afe07f1dd2fa9db, type: 3}
   weight: 1
   rarity: 1
-  maxCopies: 2
+  maxCopies: 0
   active: 0
   cursed: 0

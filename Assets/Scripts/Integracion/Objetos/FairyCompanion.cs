@@ -27,7 +27,6 @@ public class FairyCompanion : MonoBehaviour
         fairy.Build(bodyMaterial);
         if (owner.Player != null)
             go.transform.position = owner.Player.position + Vector3.up * 2f;
-        ItemFx.Burst(go.transform.position, 20, 0.4f, FairyColor, fxMaterial);
         return fairy;
     }
 
@@ -65,7 +64,6 @@ public class FairyCompanion : MonoBehaviour
             wr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
-        ItemFx.Trail(gameObject, FairyColor, 0.12f, 0.35f, fxMaterial);
 
         glow = gameObject.AddComponent<Light>();
         glow.type = LightType.Point;
@@ -134,7 +132,12 @@ public class FairyBolt : MonoBehaviour
         bolt.damage = damage;
         bolt.fxMaterial = fxMaterial;
         bolt.velocity = (Vector3.up + Random.insideUnitSphere * 0.8f).normalized * 6f;
-        ItemFx.Trail(go, new Color(0.7f, 1f, 0.85f), 0.18f, 0.25f, fxMaterial);
+        // Sin partículas: una bolita brillante.
+        var ball = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        Destroy(ball.GetComponent<Collider>());
+        ball.transform.SetParent(go.transform, false);
+        ball.transform.localScale = Vector3.one * 0.22f;
+        ItemFx.Paint(ball, new Color(0.7f, 1f, 0.85f), 2f);
     }
 
     private void Update()
@@ -151,7 +154,6 @@ public class FairyBolt : MonoBehaviour
         if (to.sqrMagnitude < 0.6f * 0.6f)
         {
             target.Hit(damage);
-            ItemFx.Burst(transform.position, 10, 0.2f, new Color(0.75f, 1f, 0.85f), fxMaterial, 3f, 0.15f, 0.3f);
             Destroy(gameObject);
             return;
         }
