@@ -496,6 +496,7 @@ public class DevilBoss : Enemy
         float angle = Mathf.Atan2(player.position.z - c.z, player.position.x - c.x) * Mathf.Rad2Deg + 70f;
         var beams = new List<Telegraph>();
         var lines = new List<LineRenderer>();
+        var halos = new List<LineRenderer>();
         for (int i = 0; i < 2; i++)
         {
             Telegraph t = Telegraph.Strip(c, Quaternion.Euler(0f, -(angle + i * 180f), 0f) * Vector3.right, 30f, 1.6f).SetColor(new Color(1f, 0.1f, 0.3f, 0.35f));
@@ -507,6 +508,13 @@ public class DevilBoss : Enemy
             lr.startColor = new Color(1f, 0.3f, 0.5f); lr.endColor = new Color(1f, 0.1f, 0.1f);
             if (fight.FxMaterial != null) lr.sharedMaterial = fight.FxMaterial;
             lines.Add(lr);
+            // Halo exterior (más ancho y tenue) para que el rayo tenga cuerpo.
+            var halo = new GameObject("Halo").AddComponent<LineRenderer>();
+            halo.transform.SetParent(go.transform, false);
+            halo.positionCount = 2;
+            halo.startColor = halo.endColor = new Color(1f, 0.15f, 0.35f, 0.35f);
+            if (fight.FxMaterial != null) halo.sharedMaterial = fight.FxMaterial;
+            halos.Add(halo);
         }
         float warn = 0.6f, sweep = 2.8f;
         bool hit = false;
@@ -522,6 +530,11 @@ public class DevilBoss : Enemy
                 lines[i].SetPosition(0, from);
                 lines[i].SetPosition(1, c + dir * 30f + Vector3.up * 0.4f);
                 lines[i].widthMultiplier = t < warn ? 0.15f : 1.8f + Mathf.Sin(t * 40f) * 0.3f;
+                halos[i].SetPosition(0, from);
+                halos[i].SetPosition(1, c + dir * 30f + Vector3.up * 0.4f);
+                halos[i].widthMultiplier = t < warn ? 0f : 4.5f + Mathf.Sin(t * 25f) * 0.6f;
+                if (t >= warn && Random.value < 0.08f)
+                    FxKit.FlameColumn(c + dir * Random.Range(4f, 28f), 0.9f, 2.5f, new Color(0.8f, 0.05f, 0.2f), new Color(1f, 0.3f, 0.45f), new Color(1f, 0.85f, 0.9f));
                 if (t >= warn && !hit)
                 {
                     Vector3 d = player.position - c; d.y = 0f;

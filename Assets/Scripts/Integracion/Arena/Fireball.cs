@@ -125,6 +125,13 @@ public class Fireball : MonoBehaviour
         ItemFx.Burst(at + Vector3.up * 0.2f, 25, radius * 0.3f, new Color(0.3f, 0.2f, 0.2f), fxMaterial, 4f, 0.9f, 0.9f);
         if (explodeClip != null)
             AudioSource.PlayClipAtPoint(explodeClip, at, 0.9f * GameSettings.SfxVolume);
+        if (damage > 0f)
+        {
+            FxKit.Ring(at, radius, new Color(1f, 0.85f, 0.45f), new Color(1f, 0.35f, 0.08f));
+            FxKit.Crack(at, radius * 0.6f, new Color(1f, 0.45f, 0.1f));
+        }
+        else
+            FxKit.FlameColumn(at, 1.4f, 4f, new Color(0.85f, 0.12f, 0.03f), new Color(1f, 0.5f, 0.08f), new Color(1f, 0.92f, 0.55f));
 
         PogoPlayer player = ArenaFight.Player;
         if (damage > 0f && player != null && !PogoBridge.IsDead(player))   // los meteoros de adorno no pegan

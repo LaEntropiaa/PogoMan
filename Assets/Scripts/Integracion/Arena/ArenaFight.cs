@@ -346,10 +346,12 @@ public class ArenaFight : MonoBehaviour
     {
         Play(slamClip, 1f, 1f);
         CameraShake.Add(0.5f, 0.8f);
-        for (int i = 0; i < 24; i++)
+        FxKit.Ring(at, 12f, new Color(1f, 0.8f, 0.4f), new Color(0.9f, 0.3f, 0.1f));
+        FxKit.Crack(at, 5f, new Color(1f, 0.4f, 0.08f));
+        for (int i = 0; i < 8; i++)
         {
-            float a = i / 24f * Mathf.PI * 2f;
-            ItemFx.Burst(at + new Vector3(Mathf.Cos(a), 0.3f, Mathf.Sin(a)) * 6f, 10, 0.6f, new Color(0.45f, 0.25f, 0.2f), fxMaterial, 8f, 0.7f, 0.7f);
+            float a = i / 8f * Mathf.PI * 2f;
+            ItemFx.Burst(at + new Vector3(Mathf.Cos(a), 0.3f, Mathf.Sin(a)) * 6f, 6, 0.6f, new Color(0.45f, 0.25f, 0.2f), fxMaterial, 8f, 0.7f, 0.7f);
         }
     }
 
@@ -361,11 +363,12 @@ public class ArenaFight : MonoBehaviour
         Play(kind == 2 ? laughClip : castClip, kind == 2 ? 0.8f : 0.7f, 0.9f);
     }
 
+    // Erupción: columna de fuego sólida + grietas y rocas (antes eran puras luces).
     public void OnPillarErupt(Vector3 at)
     {
-        Play(explodeClip, Random.Range(0.8f, 0.95f), 0.6f);
-        for (int i = 0; i < 6; i++)
-            ItemFx.Burst(at + Vector3.up * (i * 1.1f), 28, 1.6f, i % 2 == 0 ? new Color(1f, 0.45f, 0.05f) : new Color(1f, 0.85f, 0.3f), fxMaterial, 4f + i, 0.5f, 0.6f);
+        Play(explodeClip, Random.Range(0.8f, 0.95f), 0.5f);
+        FxKit.FlameColumn(at, 1.6f, 5.5f, new Color(0.85f, 0.12f, 0.03f), new Color(1f, 0.5f, 0.08f), new Color(1f, 0.92f, 0.55f));
+        ItemFx.Burst(at + Vector3.up * 1.5f, 8, 0.8f, new Color(1f, 0.6f, 0.15f), fxMaterial, 6f, 0.4f, 0.6f);
     }
 
     private float ringFx;

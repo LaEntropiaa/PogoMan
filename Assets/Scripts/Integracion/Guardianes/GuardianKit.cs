@@ -97,17 +97,23 @@ public class GuardianKit : MonoBehaviour
         Dust(ground, 2f);
     }
 
-    public void Dust(Vector3 at, float radius) =>
-        ItemFx.Burst(at + Vector3.up * 0.2f, 16, radius * 0.6f, new Color(0.35f, 0.18f, 0.14f), fxMaterial, 3.5f, 0.45f, 0.7f);
+    // Golpe al piso: grietas con rocas, onda y un poco de polvo.
+    public void Dust(Vector3 at, float radius)
+    {
+        ItemFx.Burst(at + Vector3.up * 0.2f, 8, radius * 0.6f, new Color(0.35f, 0.18f, 0.14f), fxMaterial, 3.5f, 0.45f, 0.7f);
+        FxKit.Crack(at, radius, new Color(1f, 0.55f, 0.2f));
+        FxKit.Ring(at, radius * 1.3f, new Color(1f, 0.9f, 0.6f), new Color(0.8f, 0.45f, 0.2f));
+    }
 
     public void Foam(Vector3 at) =>
         ItemFx.Burst(at + Vector3.up * 0.3f, 30, 0.8f, new Color(0.4f, 1f, 0.9f), fxMaterial, 2.5f, 0.35f, 1.1f);
 
     public void Pulse(Vector3 at)
     {
-        if (Time.time - lastPulseFx < 0.04f) return;
+        if (Time.time - lastPulseFx < 0.12f) return;
         lastPulseFx = Time.time;
-        ItemFx.Burst(at + Vector3.up * 0.3f, 6, 0.3f, new Color(0.8f, 0.4f, 1f), fxMaterial, 2f, 0.4f, 0.4f);
+        // Púas moradas que brotan del suelo por donde avanza la línea.
+        FxKit.FlameColumn(at, 0.45f, 1.8f, new Color(0.45f, 0.1f, 0.65f), new Color(0.75f, 0.35f, 1f), new Color(0.95f, 0.85f, 1f));
     }
 
     public void Windup(Guardian g, GuardianKind k, int attack)
