@@ -62,9 +62,12 @@ public class GuardianKit : MonoBehaviour
     private AudioClip MusicFor(GuardianKind k) =>
         k == GuardianKind.Fundidor ? musicFundidor : k == GuardianKind.Viuda ? musicViuda : k == GuardianKind.Recaudador ? musicRecaudador : musicBarquero;
 
+    // En el modo infinito suena su propia música: los guardianes no la cambian.
+    public static bool KeepMusic;
+
     public void OnGuardianSpawn(Guardian g)
     {
-        GameMusic music = FindAnyObjectByType<GameMusic>();
+        GameMusic music = KeepMusic ? null : FindAnyObjectByType<GameMusic>();
         if (music != null)
         {
             if (previousMusic == null) previousMusic = music.CurrentClip;
@@ -80,7 +83,7 @@ public class GuardianKit : MonoBehaviour
         // ¿Queda otro guardián vivo? Si no, regresa la música del mapa.
         foreach (Guardian other in Guardian.Alive)
             if (other != g && !other.IsDead) return;
-        GameMusic music = FindAnyObjectByType<GameMusic>();
+        GameMusic music = KeepMusic ? null : FindAnyObjectByType<GameMusic>();
         if (music != null && previousMusic != null)
         {
             music.SwitchTo(previousMusic, 2f);

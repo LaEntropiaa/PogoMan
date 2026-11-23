@@ -97,6 +97,14 @@ public class Guardian : Enemy
         voice.maxDistance = 50f;
     }
 
+    // Modo infinito: más vida y daño (se llama antes de su Start).
+    private float damageScale = 1f;
+    public void Empower(float scale)
+    {
+        maxHealth *= scale;
+        damageScale = scale;
+    }
+
     private void OnEnable() => Alive.Add(this);
     private void OnDisable() => Alive.Remove(this);
 
@@ -759,7 +767,7 @@ public class Guardian : Enemy
         if (hitPlayerThisAttack || isDead) return;
         hitPlayerThisAttack = true;
         if (!GuardianKit.TryHitPlayer()) return;   // respiro global entre golpes de guardián
-        PlayerVitals.Damage(pogo, damage);
+        PlayerVitals.Damage(pogo, damage * damageScale);
         if (knock)
         {
             var prb = pogo.GetComponent<Rigidbody>();

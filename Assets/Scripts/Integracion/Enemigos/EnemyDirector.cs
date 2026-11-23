@@ -102,7 +102,7 @@ public class EnemyDirector : MonoBehaviour
     }
 
     // Daño de los demonios ahora mismo (lo usan los contraataques).
-    public float DamageMultiplier => (1f + damagePerMinute * (Minutes + (EndlessMode.Active ? EndlessMode.Minutes * 1.5f : 0f))) * InfiniteScale;
+    public float DamageMultiplier => (1f + damagePerMinute * (Minutes + (EndlessMode.Active ? EndlessMode.Minutes * 1.5f : 0f))) * InfiniteScale * EndlessMode.Scale;
 
     // En la arena del Diablo no salen demonios solos: los invoca el jefe con SpawnEnemy.
     private bool arenaMode;
@@ -289,9 +289,11 @@ public class EnemyDirector : MonoBehaviour
 
         // Más vida y velocidad con el tiempo.
         float minutes = Minutes + (EndlessMode.Active ? EndlessMode.Minutes * 1.5f : 0f);
-        float infinite = InfiniteScale;
+        float infinite = InfiniteScale * EndlessMode.Scale;   // modo infinito: ×3 cada minuto
         EnemyTracker tracker = enemy.GetComponent<EnemyTracker>();
-        bool elite = eliteEvery > 0 && (tracker == null || !tracker.IsBoss) && ++spawnCounter % eliteEvery == 0;
+        // En el modo infinito salen más élites (cada vez más seguido).
+        int every = EndlessMode.Active ? Mathf.Max(6, 30 - 4 * EndlessMode.Level) : eliteEvery;
+        bool elite = every > 0 && (tracker == null || !tracker.IsBoss) && ++spawnCounter % every == 0;
         float health = PogoBridge.MaxHealth(enemy) * (1f + healthPerMinute * minutes) * infinite * (elite ? EliteEnemy.HealthFactor : 1f);
         PogoBridge.SetFloat(enemy, "maxHealth", health);
         PogoBridge.SetFloat(enemy, "currentHealth", health);

@@ -45,7 +45,7 @@ public class DevilOffer : MonoBehaviour
 
         first = Option(r, font, new Vector2(-380f, -40f), "ACABAR CON ÉL", "Termina la partida.\nEl infierno se queda sin tendero.",
             new Color(0.5f, 0.08f, 0.08f), () => Choose(onKill));
-        Option(r, font, new Vector2(380f, -40f), "ACEPTAR SU OFERTA", "Un objeto LEGENDARIO al azar\ny de vuelta al infierno: modo infinito.\nCada minuto, más demonios, monedas y cofres.",
+        Option(r, font, new Vector2(380f, -40f), "ACEPTAR SU OFERTA", "Un objeto LEGENDARIO al azar\ny de vuelta al infierno: modo infinito.\nEl infierno entero te va a cazar: cada minuto todo es ×3 más fuerte.",
             new Color(0.42f, 0.28f, 0.05f), () => Choose(onDeal));
         StartCoroutine(FadeIn());
     }

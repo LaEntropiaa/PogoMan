@@ -112,7 +112,7 @@ public class EliteEnemy : MonoBehaviour
         Material fx = ItemEffects.Instance != null ? ItemEffects.Instance.FxMaterial : null;
         ItemFx.Burst(e.Center, 50, 0.6f, ElitePurple, fx, 7f, 0.3f, 0.6f);
         ItemFx.Burst(e.Top, 25, 0.3f, CrownGold, fx, 5f, 0.2f, 0.5f);
-        if (Random.value >= ChestChance)
+        if (Random.value >= (EndlessMode.Active ? EndlessMode.EliteChestChance : ChestChance))
             return;
         Chest chest = ChestSpawner.Spawn(e.transform.position, 0, true);
         if (chest == null)

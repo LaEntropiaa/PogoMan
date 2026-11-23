@@ -34,6 +34,8 @@ public class ArenaFight : MonoBehaviour
     [SerializeField] private AudioClip arenaMusic;
     [Tooltip("Música de la segunda fase (FURIA).")]
     [SerializeField] private AudioClip furyMusic;
+    [Tooltip("Música del modo infinito (el infierno quiere eliminarte).")]
+    [SerializeField] private AudioClip endlessMusic;
     [SerializeField] private AudioClip laughClip;
     [SerializeField] private AudioClip castClip;
     [SerializeField] private AudioClip explodeClip;
@@ -540,7 +542,7 @@ public class ArenaFight : MonoBehaviour
         }
         if (PlayerVitals.Instance != null) PlayerVitals.Instance.InvulnerableUntil = Time.time + 3f;
         SceneNav.SetGameplayCursor(true);
-        EndlessMode.Begin(font);
+        EndlessMode.Begin(font, endlessMusic);
     }
 
     private IEnumerator Victory(DevilBoss boss)
