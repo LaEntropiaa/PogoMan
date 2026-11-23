@@ -10,9 +10,9 @@ public class DevilBoss : Enemy
     public enum Phase { Intro, Rising, Flying, Descending, Vulnerable, Dying, Enraging }
 
     [Header("Vida")]
-    [SerializeField] private float maxHealth = 2600f;
+    [SerializeField] private float maxHealth = 13000f;   // ×5
     [Tooltip("Vida extra por cada nivel de Pogoman (si llegas muy cheto, aguanta más).")]
-    [SerializeField] private float healthPerLevel = 140f;
+    [SerializeField] private float healthPerLevel = 700f;
 
     [Header("Fases")]
     [SerializeField] private float introTime = 4.5f;
@@ -34,12 +34,12 @@ public class DevilBoss : Enemy
     [SerializeField] private int miniBossesPerHorde = 1;
 
     [Header("Bolas de fuego")]
-    [SerializeField] private float fireballInterval = 2.8f;
-    [SerializeField] private float enragedFireballInterval = 1.7f;
+    [SerializeField] private float fireballInterval = 1.7f;
+    [SerializeField] private float enragedFireballInterval = 1.0f;
     [SerializeField] private float fireballDamage = 20f;
 
     [Header("Lluvia de magia (cada pocas bolas)")]
-    [SerializeField] private int rainEvery = 3;
+    [SerializeField] private int rainEvery = 2;
     [SerializeField] private int rainOrbs = 7;
     [SerializeField] private float rainDamage = 12f;
 
@@ -47,7 +47,7 @@ public class DevilBoss : Enemy
     [SerializeField] private float slamRadius = 6f;
     [SerializeField] private float slamDamage = 22f;
     [SerializeField] private float fireballRadius = 2.4f;
-    [SerializeField] private float fireballFlight = 1.3f;
+    [SerializeField] private float fireballFlight = 0.95f;
 
     [Header("Golpe del pogo")]
     [Tooltip("Qué tan cerca (horizontal) tienes que caer para que el pisotón le pegue.")]
@@ -58,7 +58,7 @@ public class DevilBoss : Enemy
     [SerializeField] private float kneelColliderHeight = 0.55f;
 
     [Header("Ataques especiales")]
-    [SerializeField] private float specialInterval = 6.5f;
+    [SerializeField] private float specialInterval = 3.8f;
     [SerializeField] private float pillarDamage = 24f;
     [SerializeField] private float ringDamage = 20f;
     [SerializeField] private float diveDamage = 30f;
@@ -400,7 +400,7 @@ public class DevilBoss : Enemy
         {
             Vector3 off = i == 0 ? Vector3.zero : (i % 2 == 1 ? side : -side) * ((i + 1) / 2);
             Vector3 t = i == 0 ? aim : fight.GroundAt(aim + off, aim);
-            Fireball.Launch(hand, t, flight, fireballDamage, fireballRadius, fight.FireballMaterial, fight.FxMaterial, fight.ExplodeClip);
+            Fireball.Launch(hand, t, flight, fireballDamage * Dmg, fireballRadius, fight.FireballMaterial, fight.FxMaterial, fight.ExplodeClip);
         }
         fight.OnFireball(hand);
         Rig?.Cast();
@@ -418,7 +418,7 @@ public class DevilBoss : Enemy
             Vector2 c = Random.insideUnitCircle * 7f;
             Vector3 from = player.position + new Vector3(c.x, 14f + Random.value * 4f, c.y);
             Vector3 v = Vector3.down * Random.Range(6f, 9f) + new Vector3(-c.x, 0f, -c.y) * 0.15f;
-            MagicOrb.Launch(from, v, i % 3 == 0 ? player : null, rainDamage, BossCaster.OrbMaterial, fight.FxMaterial, BossCaster.ImpactClip);
+            MagicOrb.Launch(from, v, i % 3 == 0 ? player : null, rainDamage * Dmg, BossCaster.OrbMaterial, fight.FxMaterial, BossCaster.ImpactClip);
         }
     }
 
@@ -430,7 +430,7 @@ public class DevilBoss : Enemy
         float flat = new Vector2(d.x, d.z).magnitude;
         if (flat <= slamRadius && d.y < 3f)
         {
-            PlayerVitals.Damage(pogo, slamDamage * (1f - flat / slamRadius * 0.5f));
+            PlayerVitals.Damage(pogo, Dmg * slamDamage * (1f - flat / slamRadius * 0.5f));
             var body = pogo.GetComponent<Rigidbody>();
             Vector3 push = new Vector3(d.x, 0f, d.z).normalized * 10f + Vector3.up * 7f;
             body.linearVelocity = push;
@@ -438,9 +438,156 @@ public class DevilBoss : Enemy
     }
 
     // ---- Segunda fase ----
+    private const float FuryHealth = 1.6f;
+    private const float FuryDamage = 1.6f;
+    // Daño de sus ataques (en la furia pegan más).
+    private float Dmg => Fury ? FuryDamage : 1f;
+
+    // ---- Ataques nuevos de la furia ----
+    // Tormenta de meteoros: 14 meteoros con aviso caen por la arena, uno tras otro, persiguiéndote.
+    private System.Collections.IEnumerator MeteorStorm()
+    {
+        Rig?.Summon();
+        fight.OnSpecial(0);
+        var falling = new List<(Vector3 at, float hitTime, Telegraph sign)>();
+        float start = Time.time;
+        for (int i = 0; i < 14; i++)
+        {
+            Vector2 r = Random.insideUnitCircle * (i % 3 == 0 ? 1.5f : 9f);
+            Vector3 g = fight.GroundAt(player.position + new Vector3(r.x, 0f, r.y), player.position);
+            Telegraph t = Telegraph.Disc(g, 2.6f).SetColor(new Color(1f, 0.2f, 0.05f, 0.5f));
+            signs.Add(t);
+            falling.Add((g, Time.time + 0.75f, t));
+            Fireball.Launch(g + Vector3.up * 35f + Random.insideUnitSphere * 4f, g, 0.75f, 0f, 0.1f, fight.FireballMaterial, fight.FxMaterial, null);
+            yield return new WaitForSeconds(0.16f);
+            UpdateFalling(falling);
+            if (isDead) yield break;
+        }
+        while (falling.Count > 0 && !isDead) { UpdateFalling(falling); yield return null; }
+    }
+
+    private void UpdateFalling(List<(Vector3 at, float hitTime, Telegraph sign)> list)
+    {
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            var m = list[i];
+            if (m.sign != null) m.sign.SetFill(1f - (m.hitTime - Time.time) / 0.75f);
+            if (Time.time < m.hitTime) continue;
+            signs.Remove(m.sign);
+            if (m.sign != null) Destroy(m.sign.gameObject);
+            fight.OnPillarErupt(m.at);
+            if (PlayerNear(player.position, m.at, 2.6f, 4f))
+            {
+                PlayerVitals.Damage(pogo, pillarDamage * 0.8f * Dmg);
+                Vector3 d = player.position - m.at; d.y = 0f;
+                pogo.GetComponent<Rigidbody>().linearVelocity = d.normalized * 9f + Vector3.up * 10f;
+            }
+            list.RemoveAt(i);
+        }
+    }
+
+    // Rayos infernales: dos rayos que salen del Diablo y barren la arena girando. Hay que saltarlos.
+    private System.Collections.IEnumerator HellBeams()
+    {
+        Rig?.Cast();
+        fight.OnSpecial(1);
+        Vector3 c = fight.GroundAt(center, groundPoint);
+        float angle = Mathf.Atan2(player.position.z - c.z, player.position.x - c.x) * Mathf.Rad2Deg + 70f;
+        var beams = new List<Telegraph>();
+        var lines = new List<LineRenderer>();
+        for (int i = 0; i < 2; i++)
+        {
+            Telegraph t = Telegraph.Strip(c, Quaternion.Euler(0f, -(angle + i * 180f), 0f) * Vector3.right, 30f, 1.6f).SetColor(new Color(1f, 0.1f, 0.3f, 0.35f));
+            signs.Add(t); beams.Add(t);
+            var go = new GameObject("RayoInfernal");
+            var lr = go.AddComponent<LineRenderer>();
+            lr.positionCount = 2;
+            lr.widthMultiplier = 0f;
+            lr.startColor = new Color(1f, 0.3f, 0.5f); lr.endColor = new Color(1f, 0.1f, 0.1f);
+            if (fight.FxMaterial != null) lr.sharedMaterial = fight.FxMaterial;
+            lines.Add(lr);
+        }
+        float warn = 0.7f, sweep = 3.2f;
+        bool hit = false;
+        for (float t = 0f; t < warn + sweep && !isDead; t += Time.deltaTime)
+        {
+            float spin = t < warn ? 0f : (t - warn) * 75f;   // grados por segundo
+            for (int i = 0; i < 2; i++)
+            {
+                Vector3 dir = Quaternion.Euler(0f, -(angle + spin + i * 180f), 0f) * Vector3.right;
+                beams[i].SetForward(dir);
+                beams[i].SetFill(t < warn ? t / warn : 1f);
+                Vector3 from = transform.position + Vector3.up * 4f;
+                lines[i].SetPosition(0, from);
+                lines[i].SetPosition(1, c + dir * 30f + Vector3.up * 0.4f);
+                lines[i].widthMultiplier = t < warn ? 0.08f : 0.9f + Mathf.Sin(t * 40f) * 0.15f;
+                if (t >= warn && !hit)
+                {
+                    Vector3 d = player.position - c; d.y = 0f;
+                    float along = Vector3.Dot(d, dir);
+                    float lateral = Mathf.Abs(Vector3.Dot(d, Vector3.Cross(Vector3.up, dir)));
+                    float height = player.position.y - 1f - Telegraph.GroundY(player.position, c.y);
+                    if (along > 0f && along < 30f && lateral < 1.1f && height < 1.3f)
+                    {
+                        hit = true;
+                        PlayerVitals.Damage(pogo, ringDamage * 1.3f * Dmg);
+                        pogo.GetComponent<Rigidbody>().linearVelocity = Vector3.Cross(Vector3.up, dir) * 10f + Vector3.up * 9f;
+                    }
+                }
+            }
+            if (t >= warn && Random.value < 0.3f) fight.OnRingTick(c, Random.Range(2f, 28f));
+            yield return null;
+        }
+        foreach (Telegraph t in beams) { signs.Remove(t); if (t != null) Destroy(t.gameObject); }
+        foreach (LineRenderer l in lines) if (l != null) Destroy(l.gameObject);
+    }
+
+    // Cruz de fuego: cuatro franjas desde el centro que hacen erupción; luego giran 45° y otra vez (3 veces).
+    private System.Collections.IEnumerator CrossOfFire()
+    {
+        Rig?.Summon();
+        fight.OnSpecial(0);
+        Vector3 c = fight.GroundAt(center, groundPoint);
+        float baseAngle = Random.value * 90f;
+        for (int round = 0; round < 3 && !isDead; round++)
+        {
+            var strips = new List<(Telegraph t, Vector3 dir)>();
+            for (int i = 0; i < 4; i++)
+            {
+                Vector3 dir = Quaternion.Euler(0f, baseAngle + round * 45f + i * 90f, 0f) * Vector3.forward;
+                Telegraph t = Telegraph.Strip(c, dir, 28f, 3f).SetColor(new Color(1f, 0.4f, 0.05f, 0.45f));
+                signs.Add(t);
+                strips.Add((t, dir));
+            }
+            for (float k = 0f; k < 0.65f; k += Time.deltaTime)
+            {
+                foreach (var s in strips) if (s.t != null) s.t.SetFill(k / 0.65f);
+                yield return null;
+            }
+            bool hit = false;
+            foreach (var s in strips)
+            {
+                signs.Remove(s.t);
+                if (s.t != null) Destroy(s.t.gameObject);
+                for (int j = 1; j <= 7; j++) fight.OnPillarErupt(c + s.dir * j * 4f);
+                Vector3 d = player.position - c; d.y = 0f;
+                float along = Vector3.Dot(d, s.dir);
+                float lateral = Mathf.Abs(Vector3.Dot(d, Vector3.Cross(Vector3.up, s.dir)));
+                if (!hit && along > 0f && along < 28f && lateral < 1.9f)
+                {
+                    hit = true;
+                    PlayerVitals.Damage(pogo, pillarDamage * Dmg);
+                    pogo.GetComponent<Rigidbody>().linearVelocity = Vector3.up * 14f;
+                }
+            }
+            CameraShake.Add(0.4f, 0.6f);
+            yield return new WaitForSeconds(0.35f);
+        }
+    }
     private void StartFury()
     {
         Fury = true;
+        maxHealth *= FuryHealth;   // la furia aguanta todavía más
         currentHealth = 0.01f;
         diveT = -1f;
         ClearSigns();
@@ -481,13 +628,16 @@ public class DevilBoss : Enemy
         specialTimer = specialInterval * Random.Range(0.85f, 1.15f) * (Fury ? furyCooldownFactor : 1f);
 
         int pick;
-        do pick = Random.Range(0, 3); while (pick == lastSpecial);
+        do pick = Random.Range(0, Fury ? 6 : 3); while (pick == lastSpecial);
         lastSpecial = pick;
         switch (pick)
         {
             case 0: StartCoroutine(FirePillars()); break;
             case 1: StartCoroutine(FireRing()); break;
-            default: StartDive(); break;
+            case 2: StartDive(); break;
+            case 3: StartCoroutine(MeteorStorm()); break;
+            case 4: StartCoroutine(HellBeams()); break;
+            default: StartCoroutine(CrossOfFire()); break;
         }
     }
 
@@ -509,7 +659,7 @@ public class DevilBoss : Enemy
         Rig?.Summon();
         fight.OnSpecial(0);
         int count = Fury ? 7 : 4;
-        float warn = Fury ? 0.85f : 1.2f;
+        float warn = Fury ? 0.6f : 0.8f;
         var spots = new List<Vector3>();
         Vector3 vel = pogo.GetComponent<Rigidbody>().linearVelocity; vel.y = 0f;
         for (int i = 0; i < count; i++)
@@ -536,7 +686,7 @@ public class DevilBoss : Enemy
             if (!hitDone && PlayerNear(player.position, g, 1.9f, 6f))
             {
                 hitDone = true;
-                PlayerVitals.Damage(pogo, pillarDamage);
+                PlayerVitals.Damage(pogo, pillarDamage * Dmg);
                 var body = pogo.GetComponent<Rigidbody>();
                 body.linearVelocity = new Vector3(body.linearVelocity.x, 13f, body.linearVelocity.z);
             }
@@ -551,7 +701,7 @@ public class DevilBoss : Enemy
         Vector3 c = fight.GroundAt(center, groundPoint);
         Telegraph t = Telegraph.Ring(c, 0.5f, 1.3f).SetColor(new Color(1f, 0.25f, 0.05f, 0.6f));
         signs.Add(t);
-        float speed = Fury ? 13f : 9f;
+        float speed = Fury ? 16f : 12f;
         float maxR = 30f;
         int rings = Fury ? 2 : 1;
         for (int n = 0; n < rings; n++)
@@ -569,7 +719,7 @@ public class DevilBoss : Enemy
                 if (!hit && Mathf.Abs(flat - r) < 0.9f && height < 1.1f)
                 {
                     hit = true;
-                    PlayerVitals.Damage(pogo, ringDamage);
+                    PlayerVitals.Damage(pogo, ringDamage * Dmg);
                     var body = pogo.GetComponent<Rigidbody>();
                     Vector3 out_ = new Vector3(d.x, 0f, d.z).normalized;
                     body.linearVelocity = out_ * 8f + Vector3.up * 9f;
@@ -606,7 +756,7 @@ public class DevilBoss : Enemy
         if (diveT < 0f)
             return false;
         diveT += dt;
-        float warn = Fury ? 0.8f : 1.15f, down = 0.35f, stay = 0.35f, up = 0.9f;
+        float warn = Fury ? 0.55f : 0.75f, down = 0.3f, stay = 0.35f, up = 0.9f;
         if (diveT < warn)
         {
             // Sigue un poquito a Pogoman mientras avisa.
@@ -633,7 +783,7 @@ public class DevilBoss : Enemy
                 fight.OnSlam(diveTo);
                 if (PlayerNear(player.position, diveTo, 4f, 3.5f))
                 {
-                    PlayerVitals.Damage(pogo, diveDamage);
+                    PlayerVitals.Damage(pogo, diveDamage * Dmg);
                     Vector3 d = player.position - diveTo; d.y = 0f;
                     pogo.GetComponent<Rigidbody>().linearVelocity = d.normalized * 12f + Vector3.up * 8f;
                 }

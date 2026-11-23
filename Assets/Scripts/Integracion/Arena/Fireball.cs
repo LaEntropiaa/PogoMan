@@ -127,7 +127,7 @@ public class Fireball : MonoBehaviour
             AudioSource.PlayClipAtPoint(explodeClip, at, 0.9f * GameSettings.SfxVolume);
 
         PogoPlayer player = ArenaFight.Player;
-        if (player != null && !PogoBridge.IsDead(player))
+        if (damage > 0f && player != null && !PogoBridge.IsDead(player))   // los meteoros de adorno no pegan
         {
             Vector3 d = player.transform.position - at;
             if (d.magnitude <= radius + 0.6f)
